@@ -12,6 +12,7 @@ source("graphics.R")
 # Data
 
 data1 <- readRDS("data/data1_depths_geno_prob.rds")
+
 data2 <- readRDS("data/data2_maps.rds")
 data3 <- readRDS("data/data3_coverage.rds")
 data4 <- readRDS("data/data4_filters.rds")
@@ -23,8 +24,10 @@ ErrorProb_choice <- as.list(levels(data1$ErrorProb))
 names(ErrorProb_choice) <- as.character(unique(data1$ErrorProb))
 SNPcall_choice <- as.list(levels(data1$SNPcall))
 names(SNPcall_choice) <- as.character(unique(data1$SNPcall))
-CountsFrom_choice <- as.list(levels(data1$CountsFrom))
+CountsFrom_choice <- as.list(unique(data1$CountsFrom))
 names(CountsFrom_choice) <- as.character(unique(data1$CountsFrom))
+depth_choice <- as.list(unique(data1$depth))
+names(depth_choice) <- as.character(unique(data1$depth))
 
 ########
 #  UI  #
@@ -59,11 +62,11 @@ body <- dashboardBody(
             fluidRow(
               column(width = 6,
                      box(
-                       title = "Graph1", width = NULL, status = "primary",
+                       title = "Graph1", width = NULL,
                        plotOutput("graph1_out")
                      ),
                      box(
-                       title = "Widgets", width = NULL, solidHeader = TRUE, status = "primary",
+                       width = NULL, solidHeader = TRUE,
                        fluidPage(
                          radioButtons("ErrorProb1", label = p("Genotype method"),
                                       choices = ErrorProb_choice,
@@ -93,6 +96,15 @@ body <- dashboardBody(
                          hr()
                        ),
                        
+                       fluidPage(
+                         
+                         selectInput("depth1", label = p("Depth"),
+                                     choices = depth_choice,
+                                     selected = depth_choice[[1]]),
+                         
+                         hr()
+                       ),
+                       
                        #helpText("Read counts from:"),
                        fluidPage(
                          
@@ -108,59 +120,126 @@ body <- dashboardBody(
               
               column(width = 6,
                      box(
-                       title = "Graph2", status = "warning", width = NULL,
+                       title = "Graph2", width = NULL,
                        plotOutput("graph2_out")
                      ),
                      box(
-                       title = "Widgets", width = NULL, solidHeader = TRUE, status = "warning",
-                             fluidPage(
-                               radioButtons("ErrorProb2", label = p("Genotype method"),
-                                                  choices = ErrorProb_choice,
-                                                  selected = "polyrad"),
-
-
-                               hr()
-                             ),
-
-                             #helpText("Select the SNP calling method"),
-                             fluidPage(
-                               radioButtons("SNPcall2", label = p("SNP calling method"),
-                                                  choices = SNPcall_choice,
-                                                  selected = "freebayes"),
-
-
-                               hr()
-                             ),
-
-                             #helpText("Select the family seed"),
-                             fluidPage(
-
-                               selectInput("seed2", label = p("Seed"),
-                                           choices = seeds_choice,
-                                           selected = seeds_choice[[1]]),
-
-                               hr()
-                             ),
-
-                             #helpText("Read counts from:"),
-                             fluidPage(
-
-                               radioButtons("CountsFrom2", label = p("Counts from"),
-                                            choices = CountsFrom_choice,
-                                            selected = "vcf"),
-
-                               hr()
-                             # ),
-                            )
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         radioButtons("ErrorProb2", label = p("Genotype method"),
+                                      choices = ErrorProb_choice,
+                                      selected = "polyrad"),
+                         
+                         
+                         hr()
+                       ),
+                       
+                       #helpText("Select the SNP calling method"),
+                       fluidPage(
+                         radioButtons("SNPcall2", label = p("SNP calling method"),
+                                      choices = SNPcall_choice,
+                                      selected = "freebayes"),
+                         
+                         
+                         hr()
+                       ),
+                       
+                       #helpText("Select the family seed"),
+                       fluidPage(
+                         
+                         selectInput("seed2", label = p("Seed"),
+                                     choices = seeds_choice,
+                                     selected = seeds_choice[[1]]),
+                         
+                         hr()
+                       ),
+                       
+                       fluidPage(
+                         
+                         selectInput("depth2", label = p("Depth"),
+                                     choices = depth_choice,
+                                     selected = depth_choice[[1]]),
+                         
+                         hr()
+                       ),
+                       
+                       #helpText("Read counts from:"),
+                       fluidPage(
+                         
+                         radioButtons("CountsFrom2", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         
+                         hr()
+                         # ),
+                       )
                      )
               )
             )
     ),
     
-
+    
     
     tabItem(tabName = "graph2",
-            h2("Dashboard tab content")
+            fluidRow(
+              column(width = 6,
+                     box(
+                       title = "Graph1", width = NULL,
+                       plotOutput("maps_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         radioButtons("ErrorProb3", label = p("Genotype method"),
+                                      choices = ErrorProb_choice,
+                                      selected = "polyrad"),
+                         
+                         
+                         hr()
+                       ),
+                       
+                       #helpText("Select the SNP calling method"),
+                       fluidPage(
+                         radioButtons("SNPcall3", label = p("SNP calling method"),
+                                      choices = SNPcall_choice,
+                                      selected = "freebayes"),
+                         
+                         
+                         hr()
+                       ),
+                       
+                       #helpText("Select the family seed"),
+                       fluidPage(
+                         
+                         selectInput("seed3", label = p("Seed"),
+                                     choices = seeds_choice,
+                                     selected = seeds_choice[[1]]),
+                         
+                         hr()
+                       ),
+                       
+                       fluidPage(
+                         
+                         selectInput("depth3", label = p("Depth"),
+                                     choices = depth_choice,
+                                     selected = depth_choice[[1]]),
+                         
+                         hr()
+                       ),
+                       
+                       #helpText("Read counts from:"),
+                       fluidPage(
+                         
+                         radioButtons("CountsFrom3", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         
+                         hr()
+                         # ),
+                       )
+                     )
+              )
+            )
     ),
     
     tabItem(tabName = "graph3",
@@ -181,7 +260,7 @@ body <- dashboardBody(
 )
 
 
-ui <- dashboardPage(header, sidebar, body)
+ui <- dashboardPage(header, sidebar, body, skin = "purple")
 
 
 
@@ -271,24 +350,32 @@ ui <- dashboardPage(header, sidebar, body)
 # 
 # # Define server logic required to draw a histogram ----
 server <- function(input, output) {
-
-    output$graph1_out <- renderPlot({
-      data <- data1 %>% filter(ErrorProb == input$ErrorProb1) %>%
-              filter(SNPcall == input$SNPcall1) %>%
-              filter(seed == input$seed1) %>%
-              filter(CountsFrom == input$CountsFrom1)
-      errorProb_graph(data)
-    })
-
-    output$graph2_out <- renderPlot({
-      data <- data1 %>% filter(ErrorProb == input$ErrorProb2) %>%
-        filter(SNPcall == input$SNPcall2) %>%
-        filter(seed == input$seed2) %>%
-        filter(CountsFrom == input$CountsFrom2)
-      errorProb_graph(data)
-    })
-
-
+  
+  output$graph1_out <- renderPlot({
+    data <- data1 %>% filter(ErrorProb == input$ErrorProb1) %>%
+      filter(SNPcall == input$SNPcall1) %>%
+      filter(seed == input$seed1) %>%
+      filter(CountsFrom == input$CountsFrom1)
+    errorProb_graph(data)
+  })
+  
+  output$graph2_out <- renderPlot({
+    data <- data1 %>% filter(ErrorProb == input$ErrorProb2) %>%
+      filter(SNPcall == input$SNPcall2) %>%
+      filter(seed == input$seed2) %>%
+      filter(CountsFrom == input$CountsFrom2)
+    errorProb_graph(data)
+  })
+  
+  output$maps_out <- renderPlot({
+    data <- data2 %>% filter(ErrorProb == input$ErrorProb3) %>%
+      filter(SNPcall == input$SNPcall3) %>%
+      filter(seed == input$seed3) %>%
+      filter(CountsFrom == input$CountsFrom3)
+    maps_graph(data)
+  })
+  
+  
 }
 
 # Create Shiny app ----
