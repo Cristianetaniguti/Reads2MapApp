@@ -11,17 +11,31 @@ source("graphics.R")
 
 # Data
 
-data1 <- readRDS("data/data1_depths_geno_prob.rds")
+data1 <- readRDS("data/data1.rds")
+data2 <- readRDS("data/data2.rds")
+data3 <- readRDS("data/data3.rds")
+data4 <- readRDS("data/data4.rds")
+data5 <- readRDS("data/data5.rds")
 
-data2 <- readRDS("data/data2_maps.rds")
-data3 <- readRDS("data/data3_coverage.rds")
-data4 <- readRDS("data/data4_filters.rds")
-data5 <- readRDS("data/data5_SNPcall_efficiency.rds")
+# The onemap genotype codification do not diferenciate the homozyotes for each parent
+# The code below use the marker type to do this diferentiation
+data1$gabGT[data1$gabGT == 3 | data1$gabGT == 1] <- "homozygous"
+data1$gabGT[data1$gabGT == 2] <- "heterozygote"
+data1$methGT[data1$methGT == "3" | data1$methGT == "1"] <- "homozygous"
+data1$methGT[data1$methGT == "2"] <- "heterozygote"
+data1$methGT[data1$methGT == "0"] <- "missing"
 
+data1$methGT <- factor(data1$methGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
+data1$gabGT <- factor(data1$gabGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
+
+# Defining the options
 seeds_choice <- as.list(unique(data1$seed))
 names(seeds_choice) <- as.character(unique(data1$seed))
 ErrorProb_choice <- as.list(levels(data1$ErrorProb))
 names(ErrorProb_choice) <- as.character(unique(data1$ErrorProb))
+GenotypeCall <- ErrorProb_choice[-1]
+names(GenotypeCall)[1] <- "genotype calling software = snp calling method"
+
 SNPcall_choice <- as.list(levels(data1$SNPcall))
 names(SNPcall_choice) <- as.character(unique(data1$SNPcall))
 CountsFrom_choice <- as.list(unique(data1$CountsFrom))
@@ -56,21 +70,31 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   tabItems(
     tabItem(tabName = "about",
-            h2("Widgets tab content")
+            includeMarkdown("about.Rmd")
     ),
     tabItem(tabName = "graph1",
             fluidRow(
               column(width = 6,
                      box(
-                       title = "Graph1", width = NULL,
+                       width = NULL,
                        plotOutput("graph1_out")
                      ),
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
                          radioButtons("ErrorProb1", label = p("Genotype method"),
-                                      choices = ErrorProb_choice,
+                                      choices = GenotypeCall,
                                       selected = "polyrad"),
+                         
+                         
+                         hr()
+                       ),
+                       
+                       fluidPage(
+                         radioButtons("real1", label = p("Real genotypes"),
+                                      choices = list("real_genotypes" = "real_genotypes", 
+                                                     "estimated_genotypes"="estimated_genotypes"),
+                                      selected = "estimated_genotypes"),
                          
                          
                          hr()
@@ -112,7 +136,8 @@ body <- dashboardBody(
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
                          
-                         hr()
+                         hr(),
+                         div(downloadButton("graph1_out_down"),style="float:right")
                          # ),
                        )
                      )
@@ -120,15 +145,25 @@ body <- dashboardBody(
               
               column(width = 6,
                      box(
-                       title = "Graph2", width = NULL,
+                       width = NULL,
                        plotOutput("graph2_out")
                      ),
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
                          radioButtons("ErrorProb2", label = p("Genotype method"),
-                                      choices = ErrorProb_choice,
+                                      choices = GenotypeCall,
                                       selected = "polyrad"),
+                         
+                         
+                         hr()
+                       ),
+                       
+                       fluidPage(
+                         radioButtons("real2", label = p("Real genotypes"),
+                                      choices = list("real_genotypes" = "real_genotypes", 
+                                                     "estimated_genotypes"="estimated_genotypes"),
+                                      selected = "estimated_genotypes"),
                          
                          
                          hr()
@@ -355,16 +390,46 @@ server <- function(input, output) {
     data <- data1 %>% filter(ErrorProb == input$ErrorProb1) %>%
       filter(SNPcall == input$SNPcall1) %>%
       filter(seed == input$seed1) %>%
-      filter(CountsFrom == input$CountsFrom1)
-    errorProb_graph(data)
+      filter(CountsFrom == input$CountsFrom1) %>%
+      filter(depth == input$depth1)
+    if(input$real1 == "real_genotypes"){
+      errorProb_graph(data, real_genotypes=T)
+    } else {
+      errorProb_graph(data)
+    }
   })
+
+  ## download
+  output$graph1_out_down <- downloadHandler(
+    filename =  function() {
+      paste("snp_genoype_call.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data1 %>% filter(ErrorProb == input$ErrorProb1) %>%
+        filter(SNPcall == input$SNPcall1) %>%
+        filter(seed == input$seed1) %>%
+        filter(CountsFrom == input$CountsFrom1) %>%
+        filter(depth == input$depth1)
+      if(input$real1 == "real_genotypes"){
+        p <- errorProb_graph(data, real_genotypes=T)
+      } else {
+        p <- errorProb_graph(data)
+      }
+      ggsave(file, p)
+    } 
+  )
   
   output$graph2_out <- renderPlot({
     data <- data1 %>% filter(ErrorProb == input$ErrorProb2) %>%
       filter(SNPcall == input$SNPcall2) %>%
       filter(seed == input$seed2) %>%
       filter(CountsFrom == input$CountsFrom2)
-    errorProb_graph(data)
+    if(input$real2 == "real_genotypes"){
+      errorProb_graph(data, real_genotypes=T)
+    } else {
+      errorProb_graph(data)
+    }
   })
   
   output$maps_out <- renderPlot({

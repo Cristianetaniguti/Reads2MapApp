@@ -1,15 +1,21 @@
 # Write the functions here
 
-errorProb_graph <- function(data){
-  data$methGT <- factor(data$methGT, labels = c("missing", "AA", "AB", "BB"), levels = c(0,1,2,3))
+errorProb_graph <- function(data, real_genotypes=F){
   
-  colors <- c("#58355e", "#4D9DE0", "#ADE25D", "#FE5D26")
-  names(colors) <- levels(data$methGT)
+  colors <- c("#58355e", "#4D9DE0", "#ADE25D")
+  names(colors) <-  c("missing", "homozygous", "heterozygote")
   
-  data %>% ggplot(aes(x=ref, y=alt, color=methGT)) + 
+  if(real_genotypes){
+  data %>% ggplot(aes(x=ref, y=alt, color=gabGT)) + 
     geom_point() +
     labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
     scale_colour_manual(name="Genotypes", values = colors)
+  }else {
+    data %>% ggplot(aes(x=ref, y=alt, color=methGT)) + 
+      geom_point() +
+      labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
+      scale_colour_manual(name="Genotypes", values = colors)
+  }
 
 }
 
