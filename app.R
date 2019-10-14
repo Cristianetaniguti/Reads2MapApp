@@ -16,9 +16,13 @@ data2 <- readRDS("data/data2.rds")
 data3 <- readRDS("data/data3.rds")
 data4 <- readRDS("data/data4.rds")
 data5 <- readRDS("data/data5.rds")
+data5 <- cbind(depth=20, data5) ### Tirar
+
+
+# For errors
+data1$errors <- apply(data1[,12:15], 1, function(x) 1 - x[which.max(x)])
 
 # The onemap genotype codification do not diferenciate the homozyotes for each parent
-# The code below use the marker type to do this diferentiation
 data1$gabGT[data1$gabGT == 3 | data1$gabGT == 1] <- "homozygous"
 data1$gabGT[data1$gabGT == 2] <- "heterozygote"
 data1$methGT[data1$methGT == "3" | data1$methGT == "1"] <- "homozygous"
@@ -28,20 +32,39 @@ data1$methGT[data1$methGT == "0"] <- "missing"
 data1$methGT <- factor(data1$methGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
 data1$gabGT <- factor(data1$gabGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
 
+#####
+data3 <- as.data.frame(data3)
+data3$coverage <- as.numeric(as.character(data3$coverage))
+
+data5 <- data5[,-6] ## Ajustar
+names(data5) <- c("depth", "SNPcall", "(1)", "(2)", "(3)", "(4)", "(5)") ## Ajustars
+data5 <- gather(data5, key,value,-SNPcall, -depth)
+
+data4$GenoCall <- factor(data4$GenoCall, labels = c("polyrad", "updog", "supermassa", "GQ"))
+data4 <- gather(data4,key,value, -CountsFrom, -seed, -depth, -SNPcall, -GenoCall)
+data4$key <- factor(data4$key, levels = c("n_markers", "redundant_markers", "distorted_markers"))
+
 # Defining the options
 seeds_choice <- as.list(unique(data1$seed))
 names(seeds_choice) <- as.character(unique(data1$seed))
 ErrorProb_choice <- as.list(levels(data1$ErrorProb))
 names(ErrorProb_choice) <- as.character(unique(data1$ErrorProb))
-GenotypeCall <- ErrorProb_choice[-1]
-names(GenotypeCall)[1] <- "genotype calling software = snp calling method"
-
+GenotypeCall_choice <- ErrorProb_choice[-1]
+names(GenotypeCall_choice)[1] <- "genotype calling software = snp calling method"
 SNPcall_choice <- as.list(levels(data1$SNPcall))
 names(SNPcall_choice) <- as.character(unique(data1$SNPcall))
 CountsFrom_choice <- as.list(unique(data1$CountsFrom))
 names(CountsFrom_choice) <- as.character(unique(data1$CountsFrom))
 depth_choice <- as.list(unique(data1$depth))
 names(depth_choice) <- as.character(unique(data1$depth))
+stats_choice <- list("mean", "median", "var", "total")
+names(stats_choice) <- c("mean", "median", "var", "total")
+avalSNPs_choice <- list("(1)", "(2)", "(3)", "(4)", "(5)")
+names(avalSNPs_choice) <- c("number of simulated SNPs (1)", 
+                            "number of SNPs identified (2)", 
+                            "number of correctly identified SNPs (3)",
+                            "number of correctly identified reference allele (4)",
+                            "number of correctly identified alternative allele (5)")
 
 ########
 #  UI  #
@@ -55,45 +78,43 @@ header <- dashboardHeader(
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("About", tabName = "about", icon = icon("lightbulb")),
-    menuItem("Depth and genotyping", icon = icon("chart-line"), tabName = "graph1"),
-    menuItem("Map size each family", icon = icon("chart-bar"), tabName = "graph2"),
-    menuItem("Overview map size", icon = icon("chart-bar"), tabName = "graph3"),
-    menuItem("Coverage", icon = icon("chart-bar"), tabName = "graph4"),
-    menuItem("SNP calling efficiency", icon = icon("chart-bar"), tabName = "graph5"),
-    menuItem("Error probabilities", icon = icon("chart-bar"), tabName = "graph6"),
-    
-    menuItem("Personal website", icon = icon("venus"), href= "http://cristianetaniguti.github.io/"),
-    menuItem("Laboratory website", icon = icon("users"), href="http://augustogarcia.me/statgen-esalq/")
+    menuItem("Depth and genotyping", icon = icon("chart-line"), tabName = "disper_depth"),
+    menuItem("Map size each family", icon = icon("chart-bar"), tabName = "ind_size"),
+    menuItem("Overview map size", icon = icon("chart-bar"), tabName = "all_size"),
+    menuItem("Coverage", icon = icon("chart-bar"), tabName = "coverage"),
+    menuItem("SNP calling efficiency", icon = icon("chart-bar"), tabName = "snpcall"),
+    menuItem("Filters", icon = icon("chart-bar"), tabName = "filters")
   )
 )
 
 body <- dashboardBody(
   tabItems(
+    ##########################################################
     tabItem(tabName = "about",
             includeMarkdown("about.Rmd")
     ),
-    tabItem(tabName = "graph1",
+    ##########################################################
+    tabItem(tabName = "disper_depth",
             fluidRow(
               column(width = 6,
                      box(
                        width = NULL,
-                       plotOutput("graph1_out")
+                       plotOutput("disper_depth_out")
                      ),
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
                          radioButtons("ErrorProb1", label = p("Genotype method"),
-                                      choices = GenotypeCall,
+                                      choices = GenotypeCall_choice,
                                       selected = "polyrad"),
-                         
-                         
                          hr()
                        ),
                        
                        fluidPage(
-                         radioButtons("real1", label = p("Real genotypes"),
+                         radioButtons("real1", label = p("Genotypes"),
                                       choices = list("real_genotypes" = "real_genotypes", 
-                                                     "estimated_genotypes"="estimated_genotypes"),
+                                                     "estimated_genotypes"="estimated_genotypes",
+                                                     "estimated_errors" = "estimated_errors"),
                                       selected = "estimated_genotypes"),
                          
                          
@@ -137,7 +158,7 @@ body <- dashboardBody(
                                       selected = "vcf"),
                          
                          hr(),
-                         div(downloadButton("graph1_out_down"),style="float:right")
+                         div(downloadButton("disper_depth_out_down"),style="float:right")
                          # ),
                        )
                      )
@@ -146,13 +167,13 @@ body <- dashboardBody(
               column(width = 6,
                      box(
                        width = NULL,
-                       plotOutput("graph2_out")
+                       plotOutput("disper_depth2_out")
                      ),
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
                          radioButtons("ErrorProb2", label = p("Genotype method"),
-                                      choices = GenotypeCall,
+                                      choices = GenotypeCall_choice,
                                       selected = "polyrad"),
                          
                          
@@ -160,9 +181,10 @@ body <- dashboardBody(
                        ),
                        
                        fluidPage(
-                         radioButtons("real2", label = p("Real genotypes"),
+                         radioButtons("real2", label = p("Genotypes"),
                                       choices = list("real_genotypes" = "real_genotypes", 
-                                                     "estimated_genotypes"="estimated_genotypes"),
+                                                     "estimated_genotypes"="estimated_genotypes",
+                                                     "estimated_errors" = "estimated_errors"),
                                       selected = "estimated_genotypes"),
                          
                          
@@ -212,22 +234,20 @@ body <- dashboardBody(
               )
             )
     ),
-    
-    
-    
-    tabItem(tabName = "graph2",
+    ##########################################################
+    tabItem(tabName = "ind_size",
             fluidRow(
-              column(width = 6,
+              column(width = 12,
                      box(
-                       title = "Graph1", width = NULL,
-                       plotOutput("maps_out")
+                       width = NULL,
+                       plotOutput("ind_size_out")
                      ),
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
-                         radioButtons("ErrorProb3", label = p("Genotype method"),
-                                      choices = ErrorProb_choice,
-                                      selected = "polyrad"),
+                         checkboxGroupInput("ErrorProb3", label = p("Genotype method"),
+                                            choices = GenotypeCall_choice,
+                                            selected = "polyrad"),
                          
                          
                          hr()
@@ -235,9 +255,9 @@ body <- dashboardBody(
                        
                        #helpText("Select the SNP calling method"),
                        fluidPage(
-                         radioButtons("SNPcall3", label = p("SNP calling method"),
-                                      choices = SNPcall_choice,
-                                      selected = "freebayes"),
+                         checkboxGroupInput("SNPcall3", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = "freebayes"),
                          
                          
                          hr()
@@ -269,138 +289,217 @@ body <- dashboardBody(
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
                          
-                         hr()
+                         hr(),
+                         div(downloadButton("ind_size_out_down"),style="float:right")
                          # ),
                        )
                      )
               )
             )
     ),
-    
-    tabItem(tabName = "graph3",
-            h2("Widgets tab content")
+    ######################################################################
+    tabItem(tabName = "all_size",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("all_size_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         radioButtons("stats1", label = p("Statistic"),
+                                      choices = stats_choice,
+                                      selected = "mean"),
+                         
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb4", label = p("Genotype method"),
+                                            choices = ErrorProb_choice,
+                                            selected = "polyrad"),
+                         
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall4", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = "freebayes"),
+                         
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         
+                         selectInput("depth4", label = p("Depth"),
+                                     choices = depth_choice,
+                                     selected = depth_choice[[1]]),
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         
+                         radioButtons("CountsFrom4", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         
+                         hr(),
+                         div(downloadButton("all_size_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
     ),
-    tabItem(tabName = "graph4",
-            h2("Dashboard tab content")
+    ###################################################################################
+    tabItem(tabName = "coverage",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("coverage_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb5", label = p("Genotype method"),
+                                            choices = GenotypeCall_choice,
+                                            selected = "polyrad"),
+                         
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall5", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = "freebayes"),
+                         
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         
+                         selectInput("depth5", label = p("Depth"),
+                                     choices = depth_choice,
+                                     selected = depth_choice[[1]]),
+                         
+                         hr(),
+                         div(downloadButton("coverage_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
     ),
-    
-    tabItem(tabName = "graph5",
-            h2("Widgets tab content")
+    ####################################################################################
+    tabItem(tabName = "snpcall",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("snpcall_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("avalSNPs1", label = p("Options"),
+                                            choices = avalSNPs_choice,
+                                            selected = "number of simulated SNPs"),
+                         
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall6", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = "freebayes"),
+                         
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         
+                         selectInput("depth6", label = p("Depth"),
+                                     choices = depth_choice,
+                                     selected = depth_choice[[1]]),
+                         
+                         hr(),
+                         div(downloadButton("snpcall_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
     ),
-    
-    tabItem(tabName = "graph5",
-            h2("Widgets tab content")
+    ################################################################################3
+    tabItem(tabName = "filters",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("filters_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb7", label = p("Genotype method"),
+                                            choices = GenotypeCall_choice,
+                                            selected = "polyrad"),
+                         
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall7", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = "freebayes"),
+                         
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         
+                         radioButtons("CountsFrom7", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         
+                         hr()
+                       ),
+                       fluidPage(
+                         
+                         selectInput("depth7", label = p("Depth"),
+                                     choices = depth_choice,
+                                     selected = depth_choice[[1]]),
+                         
+                         hr(),
+                         div(downloadButton("filters_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
     )
   )
 )
 
 
+
+
 ui <- dashboardPage(header, sidebar, body, skin = "purple")
 
 
-
-
-#   sidebarLayout(
-#     sidebarPanel(
-#       helpText("This app shows the results of reads simulations"),
-#       
-#       img(src = "LogoFundoTransp.jpg", height = 70, width = 200, align="center"),
-#       br(),
-#       br(),
-#       a("Lab homepage", href = "http://augustogarcia.me/statgen-esalq/"),
-#       br(),
-#       a("Cristiane homepage", href = "http://cristianetaniguti.github.io/"),
-#       hr(),
-#       
-#       helpText("Select the genotyping method"),
-#       fluidPage(
-#         radioButtons("ErrorProb", label = h3("Genotype method"), 
-#                            choices = list("Freebayes" = "GQ", "GATK" = "GQ", 
-#                                           "polyrad" = "polyrad", "updog" = "updog",
-#                                           "supermassa" = "supermassa"),
-#                            selected = "polyrad"),
-#         
-#         
-#         hr()
-#       ),
-#       
-#       # helpText("An overview of the SNP calling efficiency"),
-#       # fluidPage(
-#       #   checkboxGroupInput("SNPcall_ef", label = h3("SNP calling efficiency"), 
-#       #                      choices = list("simulated SNPs" = 1, "identified SNP" = 2, 
-#       #                                     "SNPs ok" = 2, "fake SNPs" = 3,
-#       #                                     "ref allele ok" = 4, "alt allele ok"= 5),
-#       #                      selected = 1),
-#       #   
-#       #   
-#       #   hr()
-#       # ),
-#       # 
-#       helpText("Select the SNP calling method"),
-#       fluidPage(
-#         radioButtons("SNPcall", label = h3("SNP calling method"), 
-#                            choices = list("Freebayes" = "freebayes", "GATK" = "gatk"),
-#                            selected = "freebayes"),
-#         
-#         
-#         hr()
-#       ),
-#       
-#       helpText("Select the family seed"),
-#       fluidPage(
-# 
-#         selectInput("seed", label = h3("Seed"), 
-#                     choices = seeds_choice, 
-#                     selected = seeds_choice[[1]]),
-#         
-#         hr()
-#       ),
-#       
-#       helpText("Read counts from:"),
-#       fluidPage(
-# 
-#         radioButtons("CountsFrom", label = h3("Counts from"),
-#                      choices = list("vcf" = "vcf", "bam" = "bam"), 
-#                      selected = "vcf"),
-#         
-#         hr()
-#       # ),
-#       
-#       # helpText("Choose the statistics to an overview of the recombination fractions"),
-#       # fluidPage(
-#       #   
-#       #   radioButtons("stat", label = h3("Overview"),
-#       #                choices = list("median" = 1, "mean" = 2,
-#       #                               "variance"= 3, "Total size" = 3), 
-#       #                selected = 1),
-#       #   
-#       #   hr()
-#       )
-#     ),
-#     mainPanel(
-#       plotOutput("ErrorProb_out")
-#     )
-#   )
-# )
-# 
-# # Define server logic required to draw a histogram ----
+## Define server logic required to draw a histogram ----
 server <- function(input, output) {
-  
-  output$graph1_out <- renderPlot({
+  ##################################################################
+  output$disper_depth_out <- renderPlot({
     data <- data1 %>% filter(ErrorProb == input$ErrorProb1) %>%
       filter(SNPcall == input$SNPcall1) %>%
       filter(seed == input$seed1) %>%
       filter(CountsFrom == input$CountsFrom1) %>%
       filter(depth == input$depth1)
-    if(input$real1 == "real_genotypes"){
-      errorProb_graph(data, real_genotypes=T)
-    } else {
-      errorProb_graph(data)
-    }
+    errorProb_graph(data, input$real1)
   })
-
+  
   ## download
-  output$graph1_out_down <- downloadHandler(
+  output$disper_depth_out_down <- downloadHandler(
     filename =  function() {
       paste("snp_genoype_call.pdf")
     },
@@ -411,36 +510,155 @@ server <- function(input, output) {
         filter(seed == input$seed1) %>%
         filter(CountsFrom == input$CountsFrom1) %>%
         filter(depth == input$depth1)
-      if(input$real1 == "real_genotypes"){
-        p <- errorProb_graph(data, real_genotypes=T)
-      } else {
-        p <- errorProb_graph(data)
-      }
+      p <- errorProb_graph(data, input$real1)
       ggsave(file, p)
     } 
   )
   
-  output$graph2_out <- renderPlot({
+  output$disper_depth2_out <- renderPlot({
     data <- data1 %>% filter(ErrorProb == input$ErrorProb2) %>%
       filter(SNPcall == input$SNPcall2) %>%
       filter(seed == input$seed2) %>%
-      filter(CountsFrom == input$CountsFrom2)
-    if(input$real2 == "real_genotypes"){
-      errorProb_graph(data, real_genotypes=T)
-    } else {
-      errorProb_graph(data)
-    }
+      filter(CountsFrom == input$CountsFrom2) %>%
+      filter(depth == input$depth2)
+    errorProb_graph(data, input$real2)
   })
   
-  output$maps_out <- renderPlot({
-    data <- data2 %>% filter(ErrorProb == input$ErrorProb3) %>%
-      filter(SNPcall == input$SNPcall3) %>%
+  ##################################################################
+  output$ind_size_out <- renderPlot({
+    data <- data2 %>% filter(ErrorProb %in% input$ErrorProb3) %>%
+      filter(SNPcall %in% input$SNPcall3) %>%
       filter(seed == input$seed3) %>%
       filter(CountsFrom == input$CountsFrom3)
-    maps_graph(data)
+    ind_size_graph(data)
   })
   
+  ## download
+  output$ind_size_out_down <- downloadHandler(
+    filename =  function() {
+      paste("ind_size.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb3) %>%
+        filter(SNPcall %in% input$SNPcall3) %>%
+        filter(seed == input$seed3) %>%
+        filter(CountsFrom == input$CountsFrom3)
+      p <- ind_size_graph(data)
+      ggsave(file, p)
+    } 
+  )
+  ##################################################################
+  output$all_size_out <- renderPlot({
+    data <- data2 %>% filter(ErrorProb %in% input$ErrorProb4) %>%
+      filter(SNPcall %in% input$SNPcall4) %>%
+      filter(CountsFrom == input$CountsFrom4) %>%
+      group_by(seed,ErrorProb, SNPcall, CountsFrom, depth)
+    
+    data <- switch(input$stats1,
+                   "mean" = summarise(data, value = mean(rf, na.rm=T)),
+                   "median" = summarise(data, value = median(rf, na.rm=T)),
+                   "var" = summarise(data, value = var(rf, na.rm=T)),
+                   "total" = summarise(data, value = sum(rf, na.rm=T)))
+    
+    all_size_graph(data, input$stats1)
+  })
   
+  ## download
+  output$all_size_out_down <- downloadHandler(
+    filename =  function() {
+      paste("all_size.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb4) %>%
+        filter(SNPcall %in% input$SNPcall4) %>%
+        filter(CountsFrom == input$CountsFrom4) %>%
+        group_by(seed,ErrorProb, SNPcall, CountsFrom, depth)
+      
+      data <- switch(input$stats1,
+                     "mean" = summarise(data, value = mean(rf, na.rm=T)),
+                     "median" = summarise(data, value = median(rf, na.rm=T)),
+                     "var" = summarise(data, value = var(rf, na.rm=T)),
+                     "total" = summarise(data, value = sum(rf, na.rm=T)))
+      
+      p <- all_size_graph(data, input$stat1)
+      ggsave(file, p)
+    } 
+  )
+  #######################################################################
+  output$coverage_out <- renderPlot({
+    data <- data3 %>% filter(ErrorProb %in% input$ErrorProb5) %>%
+      filter(SNPcall %in% input$SNPcall5) %>%
+      filter(depth == input$depth5)
+    
+    coverage_graph(data)
+  })
+  
+  ## download
+  output$coverage_out_down <- downloadHandler(
+    filename =  function() {
+      paste("coverage_size.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data3 %>% filter(ErrorProb %in% input$ErrorProb5) %>%
+        filter(SNPcall %in% input$SNPcall5) %>%
+        filter(depth == input$depth5)
+      
+      p <- coverage_graph(data)
+      ggsave(file, p)
+    } 
+  )
+  ##########################################################################
+  output$snpcall_out <- renderPlot({
+    data <- data5 %>% filter(key %in% input$avalSNPs1) %>%
+      filter(SNPcall %in% input$SNPcall6) %>%
+      filter(depth == input$depth6)
+    
+    avalSNPs_graph(data)
+  })
+  
+  ## download
+  output$snpcall_out_down <- downloadHandler(
+    filename =  function() {
+      paste("snpcall.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data5 %>% filter(key %in% input$avalSNPs1) %>%
+        filter(SNPcall %in% input$SNPcall6) %>%
+        filter(depth == input$depth6)
+      
+      p <- avalSNPs_graph(data)
+      ggsave(file, p)
+    } 
+  )
+  ##################################################################
+  output$filters_out <- renderPlot({
+    data <- data4 %>% filter(GenoCall %in% input$ErrorProb7) %>%
+      filter(SNPcall %in% input$SNPcall7) %>%
+      filter(depth == input$depth7) %>%
+      filter(CountsFrom == input$CountsFrom7)
+    
+    filters_graph(data)
+  })
+  
+  ## download
+  output$filters_out_down <- downloadHandler(
+    filename =  function() {
+      paste("filters.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data5 %>% filter(key %in% input$avalSNPs1) %>%
+        filter(SNPcall %in% input$SNPcall6) %>%
+        filter(depth == input$depth6)
+      
+      p <- avalSNPs_graph(data)
+      ggsave(file, p)
+    } 
+  )
 }
 
 # Create Shiny app ----
