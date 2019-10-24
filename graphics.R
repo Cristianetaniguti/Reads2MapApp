@@ -74,7 +74,7 @@ filters_graph <- function(data){
   colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
   names(colors) <- levels(data$ErrorProb)
 
-  data %>% ggplot(aes(x=GenoCall, y=value, fill= key)) +
+  data %>% ggplot(aes(x= key, y=value, fill= GenoCall)) +
     geom_boxplot()  +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = "percent covered") +

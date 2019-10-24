@@ -16,8 +16,7 @@ data2 <- readRDS("data/data2.rds")
 data3 <- readRDS("data/data3.rds")
 data4 <- readRDS("data/data4.rds")
 data5 <- readRDS("data/data5.rds")
-data5 <- cbind(depth=20, data5) ### Tirar
-
+#load("data/results1.RData")
 
 # For errors
 data1$errors <- apply(data1[,12:15], 1, function(x) 1 - x[which.max(x)])
@@ -36,8 +35,8 @@ data1$gabGT <- factor(data1$gabGT, labels = c("missing", "homozygous", "heterozy
 data3 <- as.data.frame(data3)
 data3$coverage <- as.numeric(as.character(data3$coverage))
 
-data5 <- data5[,-6] ## Ajustar
-names(data5) <- c("depth", "SNPcall", "(1)", "(2)", "(3)", "(4)", "(5)") ## Ajustars
+data5 <- data5[,-7] ## Ajustar
+names(data5) <- c("depth", "seed", "SNPcall", "(1)", "(2)", "(3)", "(4)", "(5)") ## Ajustars
 data5 <- gather(data5, key,value,-SNPcall, -depth)
 
 data4$GenoCall <- factor(data4$GenoCall, labels = c("polyrad", "updog", "supermassa", "GQ"))
@@ -83,7 +82,8 @@ sidebar <- dashboardSidebar(
     menuItem("Overview map size", icon = icon("chart-bar"), tabName = "all_size"),
     menuItem("Coverage", icon = icon("chart-bar"), tabName = "coverage"),
     menuItem("SNP calling efficiency", icon = icon("chart-bar"), tabName = "snpcall"),
-    menuItem("Filters", icon = icon("chart-bar"), tabName = "filters")
+    menuItem("Filters", icon = icon("chart-bar"), tabName = "filters"),
+    menuItem("Parallel map", icon = icon("chart-bar"), tabName = "parallel")
   )
 )
 
@@ -476,7 +476,12 @@ body <- dashboardBody(
                      )
               )
             )
+    ),
+    ####################################################################################
+    tabItem(tabName = "parallel",
+            includeHTML("parallel.html")
     )
+    ####################################################################################
   )
 )
 
