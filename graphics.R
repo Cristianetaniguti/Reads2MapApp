@@ -33,7 +33,8 @@ ind_size_graph <- function(data){
   
   data %>% ggplot(aes(x=ErrorProb, y=rf, fill=SNPcall)) +
     geom_boxplot() + geom_hline(yintercept=0, color="red") +
-    scale_fill_manual(name="SNP call", values = colors)
+    scale_fill_manual(name="SNP call", values = colors) +
+    facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
 }
 
 all_size_graph <- function(data, stat){
@@ -44,8 +45,22 @@ all_size_graph <- function(data, stat){
   data %>% ggplot(aes(x=ErrorProb, y=value, fill=SNPcall)) +
     geom_boxplot() + geom_hline(yintercept=0, color="red") +
     scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = paste(stat, "cM (haldane)"))
+    labs(x = "Genotyping method", y = paste(stat, "cM (haldane)")) + 
+    facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
 }
+
+phases_graph <- function(data){
+  
+  colors <- c("#58355e", "#4D9DE0")
+  names(colors) <- levels(data$SNPcall)
+  
+  data %>% ggplot(aes(x=ErrorProb, y=value, fill=SNPcall)) +
+    geom_boxplot()  +
+    scale_fill_manual(name="SNP call", values = colors) + 
+    labs(x = "Genotyping method", y = "percent of corrected phases") +
+    facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
+}
+
 
 coverage_graph <- function(data){
   
@@ -55,7 +70,8 @@ coverage_graph <- function(data){
   data %>% ggplot(aes(x=ErrorProb, y=coverage, fill=SNPcall)) +
     geom_boxplot()  +
     scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = "percent covered")
+    labs(x = "Genotyping method", y = "percent covered") +
+    facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
 }
 
 avalSNPs_graph <- function(data){
@@ -66,7 +82,8 @@ avalSNPs_graph <- function(data){
   data %>% ggplot(aes(x=key, y=value, fill= SNPcall)) +
     geom_boxplot()  +
     scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = "percent covered")
+    labs(x = "Genotyping method", y = "percent covered") + 
+    facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
 }
 
 filters_graph <- function(data){

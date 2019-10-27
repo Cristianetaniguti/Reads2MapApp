@@ -11,11 +11,11 @@ source("graphics.R")
 
 # Data
 
-data1 <- readRDS("data/data1.rds")
-data2 <- readRDS("data/data2.rds")
-data3 <- readRDS("data/data3.rds")
-data4 <- readRDS("data/data4.rds")
-data5 <- readRDS("data/data5.rds")
+data1 <- readRDS("data/data1_tot.rds")
+data2 <- readRDS("data/data2_tot.rds")
+data3 <- readRDS("data/data3_tot.rds")
+data4 <- readRDS("data/data4_tot.rds")
+data5 <- readRDS("data/data5_tot.rds")
 #load("data/results1.RData")
 
 # For errors
@@ -50,6 +50,8 @@ ErrorProb_choice <- as.list(levels(data1$ErrorProb))
 names(ErrorProb_choice) <- as.character(unique(data1$ErrorProb))
 GenotypeCall_choice <- ErrorProb_choice[-1]
 names(GenotypeCall_choice)[1] <- "genotype calling software = snp calling method"
+maps_choice <- as.list(levels(data2$ErrorProb))
+names(maps_choice) <- as.character(unique(data2$ErrorProb))
 SNPcall_choice <- as.list(levels(data1$SNPcall))
 names(SNPcall_choice) <- as.character(unique(data1$SNPcall))
 CountsFrom_choice <- as.list(unique(data1$CountsFrom))
@@ -80,6 +82,7 @@ sidebar <- dashboardSidebar(
     menuItem("Depth and genotyping", icon = icon("chart-line"), tabName = "disper_depth"),
     menuItem("Map size each family", icon = icon("chart-bar"), tabName = "ind_size"),
     menuItem("Overview map size", icon = icon("chart-bar"), tabName = "all_size"),
+    menuItem("Phases", icon = icon("chart-bar"), tabName = "phases"),
     menuItem("Coverage", icon = icon("chart-bar"), tabName = "coverage"),
     menuItem("SNP calling efficiency", icon = icon("chart-bar"), tabName = "snpcall"),
     menuItem("Filters", icon = icon("chart-bar"), tabName = "filters"),
@@ -116,8 +119,6 @@ body <- dashboardBody(
                                                      "estimated_genotypes"="estimated_genotypes",
                                                      "estimated_errors" = "estimated_errors"),
                                       selected = "estimated_genotypes"),
-                         
-                         
                          hr()
                        ),
                        
@@ -126,8 +127,6 @@ body <- dashboardBody(
                          radioButtons("SNPcall1", label = p("SNP calling method"),
                                       choices = SNPcall_choice,
                                       selected = "freebayes"),
-                         
-                         
                          hr()
                        ),
                        
@@ -137,7 +136,6 @@ body <- dashboardBody(
                          selectInput("seed1", label = p("Seed"),
                                      choices = seeds_choice,
                                      selected = seeds_choice[[1]]),
-                         
                          hr()
                        ),
                        
@@ -146,7 +144,6 @@ body <- dashboardBody(
                          selectInput("depth1", label = p("Depth"),
                                      choices = depth_choice,
                                      selected = depth_choice[[1]]),
-                         
                          hr()
                        ),
                        
@@ -156,7 +153,6 @@ body <- dashboardBody(
                          radioButtons("CountsFrom1", label = p("Counts from"),
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
-                         
                          hr(),
                          div(downloadButton("disper_depth_out_down"),style="float:right")
                          # ),
@@ -175,8 +171,6 @@ body <- dashboardBody(
                          radioButtons("ErrorProb2", label = p("Genotype method"),
                                       choices = GenotypeCall_choice,
                                       selected = "polyrad"),
-                         
-                         
                          hr()
                        ),
                        
@@ -186,8 +180,6 @@ body <- dashboardBody(
                                                      "estimated_genotypes"="estimated_genotypes",
                                                      "estimated_errors" = "estimated_errors"),
                                       selected = "estimated_genotypes"),
-                         
-                         
                          hr()
                        ),
                        
@@ -196,8 +188,6 @@ body <- dashboardBody(
                          radioButtons("SNPcall2", label = p("SNP calling method"),
                                       choices = SNPcall_choice,
                                       selected = "freebayes"),
-                         
-                         
                          hr()
                        ),
                        
@@ -207,7 +197,6 @@ body <- dashboardBody(
                          selectInput("seed2", label = p("Seed"),
                                      choices = seeds_choice,
                                      selected = seeds_choice[[1]]),
-                         
                          hr()
                        ),
                        
@@ -216,7 +205,6 @@ body <- dashboardBody(
                          selectInput("depth2", label = p("Depth"),
                                      choices = depth_choice,
                                      selected = depth_choice[[1]]),
-                         
                          hr()
                        ),
                        
@@ -226,7 +214,6 @@ body <- dashboardBody(
                          radioButtons("CountsFrom2", label = p("Counts from"),
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
-                         
                          hr()
                          # ),
                        )
@@ -246,10 +233,8 @@ body <- dashboardBody(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
                          checkboxGroupInput("ErrorProb3", label = p("Genotype method"),
-                                            choices = GenotypeCall_choice,
-                                            selected = "polyrad"),
-                         
-                         
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
                          hr()
                        ),
                        
@@ -257,9 +242,7 @@ body <- dashboardBody(
                        fluidPage(
                          checkboxGroupInput("SNPcall3", label = p("SNP calling method"),
                                             choices = SNPcall_choice,
-                                            selected = "freebayes"),
-                         
-                         
+                                            selected = unlist(SNPcall_choice)),
                          hr()
                        ),
                        
@@ -269,16 +252,14 @@ body <- dashboardBody(
                          selectInput("seed3", label = p("Seed"),
                                      choices = seeds_choice,
                                      selected = seeds_choice[[1]]),
-                         
                          hr()
                        ),
                        
                        fluidPage(
                          
-                         selectInput("depth3", label = p("Depth"),
+                         checkboxGroupInput("depth3", label = p("Depth"),
                                      choices = depth_choice,
-                                     selected = depth_choice[[1]]),
-                         
+                                     selected = unlist(depth_choice)),
                          hr()
                        ),
                        
@@ -288,7 +269,6 @@ body <- dashboardBody(
                          radioButtons("CountsFrom3", label = p("Counts from"),
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
-                         
                          hr(),
                          div(downloadButton("ind_size_out_down"),style="float:right")
                          # ),
@@ -311,42 +291,71 @@ body <- dashboardBody(
                          radioButtons("stats1", label = p("Statistic"),
                                       choices = stats_choice,
                                       selected = "mean"),
-                         
-                         
                          hr()
                        ),
                        fluidPage(
                          checkboxGroupInput("ErrorProb4", label = p("Genotype method"),
-                                            choices = ErrorProb_choice,
-                                            selected = "polyrad"),
-                         
-                         
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
                          hr()
                        ),
                        fluidPage(
                          checkboxGroupInput("SNPcall4", label = p("SNP calling method"),
                                             choices = SNPcall_choice,
-                                            selected = "freebayes"),
-                         
-                         
+                                            selected = names(SNPcall_choice)),
                          hr()
                        ),
                        fluidPage(
-                         
-                         selectInput("depth4", label = p("Depth"),
+                         checkboxGroupInput("depth4", label = p("Depth"),
                                      choices = depth_choice,
-                                     selected = depth_choice[[1]]),
-                         
+                                     selected = unlist(depth_choice)),
                          hr()
                        ),
                        fluidPage(
-                         
                          radioButtons("CountsFrom4", label = p("Counts from"),
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
-                         
                          hr(),
                          div(downloadButton("all_size_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
+    ),
+    ###################################################################################
+    tabItem(tabName = "phases",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("phases_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb8", label = p("Genotype method"),
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall8", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = names(SNPcall_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("depth8", label = p("Depth"),
+                                     choices = depth_choice,
+                                     selected = unlist(depth_choice)),
+                         hr()
+                         ),
+                        fluidPage(
+                         radioButtons("CountsFrom8", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr(),
+                         div(downloadButton("phases_out_down"),style="float:right")
                        )
                      )
               )
@@ -364,26 +373,20 @@ body <- dashboardBody(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
                          checkboxGroupInput("ErrorProb5", label = p("Genotype method"),
-                                            choices = GenotypeCall_choice,
-                                            selected = "polyrad"),
-                         
-                         
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
                          hr()
                        ),
                        fluidPage(
                          checkboxGroupInput("SNPcall5", label = p("SNP calling method"),
                                             choices = SNPcall_choice,
-                                            selected = "freebayes"),
-                         
-                         
+                                            selected = names(SNPcall_choice)),
                          hr()
                        ),
                        fluidPage(
-                         
-                         selectInput("depth5", label = p("Depth"),
+                         checkboxGroupInput("depth5", label = p("Depth"),
                                      choices = depth_choice,
-                                     selected = depth_choice[[1]]),
-                         
+                                     selected = unlist(depth_choice)),
                          hr(),
                          div(downloadButton("coverage_out_down"),style="float:right")
                        )
@@ -404,25 +407,19 @@ body <- dashboardBody(
                        fluidPage(
                          checkboxGroupInput("avalSNPs1", label = p("Options"),
                                             choices = avalSNPs_choice,
-                                            selected = "number of simulated SNPs"),
-                         
-                         
+                                            selected = unlist(avalSNPs_choice)),
                          hr()
                        ),
                        fluidPage(
                          checkboxGroupInput("SNPcall6", label = p("SNP calling method"),
                                             choices = SNPcall_choice,
-                                            selected = "freebayes"),
-                         
-                         
+                                            selected = names(SNPcall_choice)),
                          hr()
                        ),
                        fluidPage(
-                         
-                         selectInput("depth6", label = p("Depth"),
+                         checkboxGroupInput("depth6", label = p("Depth"),
                                      choices = depth_choice,
-                                     selected = depth_choice[[1]]),
-                         
+                                     selected = unlist(depth_choice)),
                          hr(),
                          div(downloadButton("snpcall_out_down"),style="float:right")
                        )
@@ -443,33 +440,25 @@ body <- dashboardBody(
                        fluidPage(
                          checkboxGroupInput("ErrorProb7", label = p("Genotype method"),
                                             choices = GenotypeCall_choice,
-                                            selected = "polyrad"),
-                         
-                         
+                                            selected = unlist(GenotypeCall_choice)),
                          hr()
                        ),
                        fluidPage(
                          checkboxGroupInput("SNPcall7", label = p("SNP calling method"),
                                             choices = SNPcall_choice,
-                                            selected = "freebayes"),
-                         
-                         
+                                            selected = names(SNPcall_choice)),
                          hr()
                        ),
                        fluidPage(
-                         
                          radioButtons("CountsFrom7", label = p("Counts from"),
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
-                         
                          hr()
                        ),
                        fluidPage(
-                         
                          selectInput("depth7", label = p("Depth"),
                                      choices = depth_choice,
                                      selected = depth_choice[[1]]),
-                         
                          hr(),
                          div(downloadButton("filters_out_down"),style="float:right")
                        )
@@ -485,11 +474,7 @@ body <- dashboardBody(
   )
 )
 
-
-
-
 ui <- dashboardPage(header, sidebar, body, skin = "purple")
-
 
 ## Define server logic required to draw a histogram ----
 server <- function(input, output) {
@@ -534,7 +519,8 @@ server <- function(input, output) {
     data <- data2 %>% filter(ErrorProb %in% input$ErrorProb3) %>%
       filter(SNPcall %in% input$SNPcall3) %>%
       filter(seed == input$seed3) %>%
-      filter(CountsFrom == input$CountsFrom3)
+      filter(CountsFrom == input$CountsFrom3) %>%
+      filter(depth == input$depth3)
     ind_size_graph(data)
   })
   
@@ -548,7 +534,8 @@ server <- function(input, output) {
       data <- data2 %>% filter(ErrorProb %in% input$ErrorProb3) %>%
         filter(SNPcall %in% input$SNPcall3) %>%
         filter(seed == input$seed3) %>%
-        filter(CountsFrom == input$CountsFrom3)
+        filter(CountsFrom == input$CountsFrom3) %>%
+        filter(depth == input$depth3)
       p <- ind_size_graph(data)
       ggsave(file, p)
     } 
@@ -558,6 +545,7 @@ server <- function(input, output) {
     data <- data2 %>% filter(ErrorProb %in% input$ErrorProb4) %>%
       filter(SNPcall %in% input$SNPcall4) %>%
       filter(CountsFrom == input$CountsFrom4) %>%
+      filter(depth == input$depth4) %>%
       group_by(seed,ErrorProb, SNPcall, CountsFrom, depth)
     
     data <- switch(input$stats1,
@@ -579,6 +567,7 @@ server <- function(input, output) {
       data <- data2 %>% filter(ErrorProb %in% input$ErrorProb4) %>%
         filter(SNPcall %in% input$SNPcall4) %>%
         filter(CountsFrom == input$CountsFrom4) %>%
+        filter(depth==input$depth4) %>%
         group_by(seed,ErrorProb, SNPcall, CountsFrom, depth)
       
       data <- switch(input$stats1,
@@ -588,6 +577,35 @@ server <- function(input, output) {
                      "total" = summarise(data, value = sum(rf, na.rm=T)))
       
       p <- all_size_graph(data, input$stat1)
+      ggsave(file, p)
+    } 
+  )
+  #######################################################################
+  output$phases_out <- renderPlot({
+    data <- data2 %>% filter(ErrorProb %in% input$ErrorProb8) %>%
+      filter(SNPcall %in% input$SNPcall8) %>%
+      filter(CountsFrom == input$CountsFrom8) %>%
+      filter(depth == input$depth8) %>%
+      group_by(seed,ErrorProb, SNPcall, CountsFrom, depth) %>%
+      summarise(value= 100*sum(est.phases == real.phases)/length(real.phases))
+    
+    phases_graph(data)
+  })
+  
+  ## download
+  output$phases_out_down <- downloadHandler(
+    filename =  function() {
+      paste("phases.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb8) %>%
+        filter(SNPcall %in% input$SNPcall8) %>%
+        filter(depth == input$depth8) %>%
+        group_by(seed,ErrorProb, SNPcall, CountsFrom, depth) %>%
+        summarise(value= 100*sum(est.phases == real.phases)/length(real.phases))
+      
+      p <- phases_graph(data)
       ggsave(file, p)
     } 
   )
@@ -656,11 +674,12 @@ server <- function(input, output) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data5 %>% filter(key %in% input$avalSNPs1) %>%
-        filter(SNPcall %in% input$SNPcall6) %>%
-        filter(depth == input$depth6)
+      data <- data4 %>% filter(GenoCall %in% input$ErrorProb7) %>%
+        filter(SNPcall %in% input$SNPcall7) %>%
+        filter(depth == input$depth7) %>%
+        filter(CountsFrom == input$CountsFrom7)
       
-      p <- avalSNPs_graph(data)
+      p <- filters_graph(data)
       ggsave(file, p)
     } 
   )
