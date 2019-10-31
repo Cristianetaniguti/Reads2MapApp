@@ -367,9 +367,9 @@ body <- dashboardBody(
                          hr()
                        ),
                        fluidPage(
-                         checkboxGroupInput("depth10", label = p("Depth"),
+                         radioButtons("depth10", label = p("Depth"),
                                             choices = depth_choice,
-                                            selected = unlist(depth_choice)),
+                                            selected = depth_choice[[1]]),
                          hr()
                        ),
                        fluidPage(
@@ -686,8 +686,9 @@ server <- function(input, output) {
       filter(SNPcall %in% input$SNPcall10) %>%
       filter(CountsFrom == input$CountsFrom10) %>%
       filter(depth == input$depth10) %>%
-      group_by(type, ErrorProb, SNPcall, CountsFrom, depth) %>%
-      summarise(n = n())
+      group_by(type, real.type, ErrorProb, SNPcall, CountsFrom, depth) %>%
+      summarise(n = n()) %>%
+      gather(key, value, -ErrorProb, -SNPcall, -CountsFrom, -depth,-n)
     
     marker_type_graph(data)
   })
@@ -699,13 +700,15 @@ server <- function(input, output) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb8) %>%
-        filter(SNPcall %in% input$SNPcall8) %>%
-        filter(depth == input$depth8) %>%
-        group_by(seed,ErrorProb, SNPcall, CountsFrom, depth) %>%
-        summarise(value= 100*sum(est.phases == real.phases)/length(real.phases))
+      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb10) %>%
+        filter(SNPcall %in% input$SNPcall10) %>%
+        filter(CountsFrom == input$CountsFrom10) %>%
+        filter(depth == input$depth10) %>%
+        group_by(type, real.type, ErrorProb, SNPcall, CountsFrom, depth) %>%
+        summarise(n = n()) %>%
+        gather(key, value, -ErrorProb, -SNPcall, -CountsFrom, -depth,-n)
       
-      p <- phases_graph(data)
+      p <- marker_type_graph(data)
       ggsave(file, p)
     } 
   )
