@@ -102,6 +102,7 @@ sidebar <- dashboardSidebar(
     menuItem("Depth and genotyping", icon = icon("chart-line"), tabName = "disper_depth"),
     menuItem("Map size each family", icon = icon("chart-bar"), tabName = "ind_size"),
     menuItem("Overview map size", icon = icon("chart-bar"), tabName = "all_size"),
+    menuItem("Markers type", icon = icon("chart-bar"), tabName = "marker_type"),
     menuItem("Phases", icon = icon("chart-bar"), tabName = "phases"),
     menuItem("Times", icon = icon("chart-bar"), tabName = "times"),
     menuItem("Coverage", icon = icon("chart-bar"), tabName = "coverage"),
@@ -338,6 +339,45 @@ body <- dashboardBody(
                                       selected = "vcf"),
                          hr(),
                          div(downloadButton("all_size_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
+    ),
+    ###################################################################################
+    tabItem(tabName = "marker_type",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("marker_type_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb10", label = p("Genotype method"),
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall10", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = names(SNPcall_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("depth10", label = p("Depth"),
+                                            choices = depth_choice,
+                                            selected = unlist(depth_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         radioButtons("CountsFrom10", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr(),
+                         div(downloadButton("marker_type_out_down"),style="float:right")
                        )
                      )
               )
@@ -641,6 +681,35 @@ server <- function(input, output) {
     } 
   )
   #######################################################################
+  output$marker_type_out <- renderPlot({
+    data <- data2 %>% filter(ErrorProb %in% input$ErrorProb10) %>%
+      filter(SNPcall %in% input$SNPcall10) %>%
+      filter(CountsFrom == input$CountsFrom10) %>%
+      filter(depth == input$depth10) %>%
+      group_by(type, ErrorProb, SNPcall, CountsFrom, depth) %>%
+      summarise(n = n())
+    
+    marker_type_graph(data)
+  })
+  
+  ## download
+  output$phases_out_down <- downloadHandler(
+    filename =  function() {
+      paste("phases.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb8) %>%
+        filter(SNPcall %in% input$SNPcall8) %>%
+        filter(depth == input$depth8) %>%
+        group_by(seed,ErrorProb, SNPcall, CountsFrom, depth) %>%
+        summarise(value= 100*sum(est.phases == real.phases)/length(real.phases))
+      
+      p <- phases_graph(data)
+      ggsave(file, p)
+    } 
+  )
+  #######################################################################
   output$phases_out <- renderPlot({
     data <- data2 %>% filter(ErrorProb %in% input$ErrorProb8) %>%
       filter(SNPcall %in% input$SNPcall8) %>%
@@ -686,13 +755,12 @@ server <- function(input, output) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb8) %>%
-        filter(SNPcall %in% input$SNPcall8) %>%
-        filter(depth == input$depth8) %>%
-        group_by(seed,ErrorProb, SNPcall, CountsFrom, depth) %>%
-        summarise(value= 100*sum(est.phases == real.phases)/length(real.phases))
+      data <- data6 %>% filter(Genocall %in% input$ErrorProb9) %>%
+        filter(SNPcall %in% input$SNPcall9) %>%
+        filter(CountsFrom == input$CountsFrom9) %>%
+        filter(depth == input$depth9) 
       
-      p <- phases_graph(data)
+      p <- times_graph(data)      
       ggsave(file, p)
     } 
   )
