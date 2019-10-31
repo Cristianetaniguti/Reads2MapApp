@@ -10,12 +10,23 @@ source("graphics.R")
 
 
 # Data
+datas <- list()
+datas[[1]] <- Sys.glob("data/data1*")
+datas[[2]] <- Sys.glob("data/data2*")
+datas[[3]] <- Sys.glob("data/data3*")
+datas[[4]] <- Sys.glob("data/data4*")
+datas[[5]] <- Sys.glob("data/data5*")
+datas[[6]] <- Sys.glob("data/data6*")
 
-data1 <- readRDS("data/data1_tot.rds")
-data2 <- readRDS("data/data2_tot.rds")
-data3 <- readRDS("data/data3_tot.rds")
-data4 <- readRDS("data/data4_tot.rds")
-data5 <- readRDS("data/data5_tot.rds")
+# Joint all depths
+data1 <- data2 <- data3 <- data4 <- data5 <- data6 <- vector()
+for(i in 1:length(datas)){
+  for(j in 1:length(datas[[i]])){
+    temp <-  readRDS(datas[[i]][[j]])
+    assign(paste0("data",i), rbind(get(paste0("data",i)), temp))
+  }
+}
+
 #load("data/results1.RData")
 
 # For errors
@@ -44,8 +55,17 @@ data4 <- gather(data4,key,value, -CountsFrom, -seed, -depth, -SNPcall, -GenoCall
 data4$key <- factor(data4$key, levels = c("n_markers", "redundant_markers", "distorted_markers"))
 
 # Defining the options
-seeds_choice <- as.list(unique(data1$seed))
-names(seeds_choice) <- as.character(unique(data1$seed))
+cout <- table(data1$seed, data1$depth)
+depthNames <- colnames(cout)
+seeds <- seedsNames <- vector()
+for(i in 1:length(depthNames)){
+  temp <- names(which(table(data1$seed, data1$depth)[,i] != 0))
+  seeds <- c(seeds, temp)
+  seedsNames <- c(seedsNames, paste0("Depth ", depthNames[i], " seed ", temp))
+}
+
+seeds_choice <- as.list(seeds)
+names(seeds_choice) <- as.character(seedsNames)
 ErrorProb_choice <- as.list(levels(data1$ErrorProb))
 names(ErrorProb_choice) <- as.character(unique(data1$ErrorProb))
 GenotypeCall_choice <- ErrorProb_choice[-1]
@@ -83,6 +103,7 @@ sidebar <- dashboardSidebar(
     menuItem("Map size each family", icon = icon("chart-bar"), tabName = "ind_size"),
     menuItem("Overview map size", icon = icon("chart-bar"), tabName = "all_size"),
     menuItem("Phases", icon = icon("chart-bar"), tabName = "phases"),
+    menuItem("Times", icon = icon("chart-bar"), tabName = "times"),
     menuItem("Coverage", icon = icon("chart-bar"), tabName = "coverage"),
     menuItem("SNP calling efficiency", icon = icon("chart-bar"), tabName = "snpcall"),
     menuItem("Filters", icon = icon("chart-bar"), tabName = "filters"),
@@ -257,7 +278,7 @@ body <- dashboardBody(
                        
                        fluidPage(
                          
-                         checkboxGroupInput("depth3", label = p("Depth"),
+                         selectInput("depth3", label = p("Depth"),
                                      choices = depth_choice,
                                      selected = unlist(depth_choice)),
                          hr()
@@ -356,6 +377,45 @@ body <- dashboardBody(
                                       selected = "vcf"),
                          hr(),
                          div(downloadButton("phases_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
+    ),
+    ###################################################################################
+    tabItem(tabName = "times",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("times_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb9", label = p("Genotype method"),
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall9", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = names(SNPcall_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("depth9", label = p("Depth"),
+                                            choices = depth_choice,
+                                            selected = unlist(depth_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         radioButtons("CountsFrom9", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr(),
+                         div(downloadButton("times_out_down"),style="float:right")
                        )
                      )
               )
@@ -590,6 +650,33 @@ server <- function(input, output) {
       summarise(value= 100*sum(est.phases == real.phases)/length(real.phases))
     
     phases_graph(data)
+  })
+  
+  ## download
+  output$phases_out_down <- downloadHandler(
+    filename =  function() {
+      paste("phases.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb8) %>%
+        filter(SNPcall %in% input$SNPcall8) %>%
+        filter(depth == input$depth8) %>%
+        group_by(seed,ErrorProb, SNPcall, CountsFrom, depth) %>%
+        summarise(value= 100*sum(est.phases == real.phases)/length(real.phases))
+      
+      p <- phases_graph(data)
+      ggsave(file, p)
+    } 
+  )
+  #######################################################################
+  output$times_out <- renderPlot({
+    data <- data6 %>% filter(Genocall %in% input$ErrorProb9) %>%
+      filter(SNPcall %in% input$SNPcall9) %>%
+      filter(CountsFrom == input$CountsFrom9) %>%
+      filter(depth == input$depth9) 
+    
+    times_graph(data)
   })
   
   ## download
