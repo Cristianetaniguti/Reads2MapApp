@@ -50,14 +50,14 @@ all_size_graph <- function(data, stat){
 
 marker_type_graph <- function(data){
   
-  colors <- c("#58355e", "#4D9DE0", "#ADE25D")
+  colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
   names(colors) <- levels(data$type)
   
-  data %>% ggplot(aes(x=ErrorProb, y = n, fill=type)) +
+  data %>% ggplot(aes(x=ErrorProb, y = n, fill=value)) +
     geom_bar(stat="identity", position=position_dodge())  +
     scale_fill_manual(name="Marker type", values = colors) + 
     labs(x = "Genotyping method", y = "Number of markers") +
-    facet_grid(depth~SNPcall) 
+    facet_grid(SNPcall~key) 
 }
 
 
