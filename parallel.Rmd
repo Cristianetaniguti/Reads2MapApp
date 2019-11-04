@@ -7,7 +7,7 @@ The goal here is to optimize the speed of OneMap HMM algorithm to distance estim
 
 Tests:
 
-All scenarios have 1 chromosome, 1 family F1, progeny size of 150 individuals, 504 markers, 6 cores and overlap of 5 markers.
+All scenarios have 1 chromosome, 5 family F1, progeny size of 150 individuals, 504 markers, 6 cores and overlap of 5 markers.
 
 * **Scenario 1**: 28 markers of each one of the 18 possible types, without missing data
 * **Scenario 2**: 168 markers of D1.10, D2.15 and B3.7 types, without missing data
@@ -97,7 +97,7 @@ parmap <- function(input.seq=NULL, cores=3, overlap=4, tol=10E-5){
 
 
 runcomp <- function(n.marker, mk.types, n.types, miss.perc,tol=10E-5){
-  n.fam <- 1
+  n.fam <- 5
   int.tot.size <- par.tot.size <- int.time <- par.time <- int.cms <- par.cms <-  diff2 <- vector()
   for(w in 1:n.fam){
     run_pedsim(chromosome = c("Chr1"), n.marker = n.marker, tot.size.cm = c(100), centromere = c(50),
@@ -222,14 +222,14 @@ cen4.tol <- runcomp(n.marker = 504,
                     n.types = rep(168,3),
                     miss.perc = 25, tol=10E-4)
 
-save.image("data/results1.RData")
+save.image("data/results5.RData")
 ```
 
 
 # Avaliations
 
 ```{r, message=F, warning=F}
-load("data/results1.RData")
+load("data/results5.RData")
 tot.size.cm <- 100
 n.marker <- 504
 int <- tot.size.cm/n.marker
@@ -266,8 +266,8 @@ for(i in 1:length(tot.cen)){
   temp.int <- t(apply(tot.cen[[i]][[6]],1, function(x) sqrt((x-pos[-1])^2)))
   temp.par <- t(apply(tot.cen[[i]][[7]],1, function(x) sqrt((x-pos[-1])^2)))
   
-  colnames(temp.int) <- paste0("MK",1:length(temp.int))
-  colnames(temp.par) <- paste0("MK",1:length(temp.par))
+  colnames(temp.int) <- paste0("MK",1:dim(temp.int)[2])
+  colnames(temp.par) <- paste0("MK",1:dim(temp.par)[2])
   temp.int <- data.frame(simu = paste0("simu", 1:length(tot.cen[[i]][[2]])),
                          temp.int)
   temp.int <- gather(temp.int, key, value,-simu)
