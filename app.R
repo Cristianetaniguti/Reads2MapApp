@@ -57,14 +57,15 @@ data4$key <- factor(data4$key, levels = c("n_markers", "redundant_markers", "dis
 # Defining the options
 cout <- table(data1$seed, data1$depth)
 depthNames <- colnames(cout)
-seeds <- seedsNames <- vector()
+seeds <- seedsNames <-  depths <- vector()
 for(i in 1:length(depthNames)){
   temp <- names(which(table(data1$seed, data1$depth)[,i] != 0))
   seeds <- c(seeds, temp)
+  depths <- c(depths, rep(depthNames[i], length(temp)))
   seedsNames <- c(seedsNames, paste0("Depth ", depthNames[i], " seed ", temp))
 }
 
-seeds_choice <- as.list(seeds)
+seeds_choice <- as.list(1:length(seedsNames))
 names(seeds_choice) <- as.character(seedsNames)
 ErrorProb_choice <- as.list(levels(data1$ErrorProb))
 names(ErrorProb_choice) <- as.character(unique(data1$ErrorProb))
@@ -157,15 +158,7 @@ body <- dashboardBody(
                          
                          selectInput("seed1", label = p("Seed"),
                                      choices = seeds_choice,
-                                     selected = seeds_choice[[1]]),
-                         hr()
-                       ),
-                       
-                       fluidPage(
-                         
-                         selectInput("depth1", label = p("Depth"),
-                                     choices = depth_choice,
-                                     selected = depth_choice[[1]]),
+                                     selected = names(seeds_choice)[1]),
                          hr()
                        ),
                        
@@ -218,15 +211,7 @@ body <- dashboardBody(
                          
                          selectInput("seed2", label = p("Seed"),
                                      choices = seeds_choice,
-                                     selected = seeds_choice[[1]]),
-                         hr()
-                       ),
-                       
-                       fluidPage(
-                         
-                         selectInput("depth2", label = p("Depth"),
-                                     choices = depth_choice,
-                                     selected = depth_choice[[1]]),
+                                     selected = names(seeds_choice)[1]),
                          hr()
                        ),
                        
@@ -273,15 +258,7 @@ body <- dashboardBody(
                          
                          selectInput("seed3", label = p("Seed"),
                                      choices = seeds_choice,
-                                     selected = seeds_choice[[1]]),
-                         hr()
-                       ),
-                       
-                       fluidPage(
-                         
-                         selectInput("depth3", label = p("Depth"),
-                                     choices = depth_choice,
-                                     selected = unlist(depth_choice)),
+                                     selected = names(seeds_choice)[1]),
                          hr()
                        ),
                        
@@ -582,9 +559,9 @@ server <- function(input, output) {
   output$disper_depth_out <- renderPlot({
     data <- data1 %>% filter(ErrorProb == input$ErrorProb1) %>%
       filter(SNPcall == input$SNPcall1) %>%
-      filter(seed == input$seed1) %>%
+      filter(seed == seeds[as.numeric(input$seed1)]) %>%
       filter(CountsFrom == input$CountsFrom1) %>%
-      filter(depth == input$depth1)
+      filter(depth == depths[as.numeric(input$seed1)])
     errorProb_graph(data, input$real1)
   })
   
@@ -597,9 +574,9 @@ server <- function(input, output) {
     content = function(file) {
       data <- data1 %>% filter(ErrorProb == input$ErrorProb1) %>%
         filter(SNPcall == input$SNPcall1) %>%
-        filter(seed == input$seed1) %>%
+        filter(seed == seeds[as.numeric(input$seed1)]) %>%
         filter(CountsFrom == input$CountsFrom1) %>%
-        filter(depth == input$depth1)
+        filter(depth == depths[as.numeric(input$seed1)])
       p <- errorProb_graph(data, input$real1)
       ggsave(file, p)
     } 
@@ -608,9 +585,9 @@ server <- function(input, output) {
   output$disper_depth2_out <- renderPlot({
     data <- data1 %>% filter(ErrorProb == input$ErrorProb2) %>%
       filter(SNPcall == input$SNPcall2) %>%
-      filter(seed == input$seed2) %>%
+      filter(seed == seeds[as.numeric(input$seed2)]) %>%
       filter(CountsFrom == input$CountsFrom2) %>%
-      filter(depth == input$depth2)
+      filter(depth == depths[as.numeric(input$seed2)])
     errorProb_graph(data, input$real2)
   })
   
@@ -618,9 +595,9 @@ server <- function(input, output) {
   output$ind_size_out <- renderPlot({
     data <- data2 %>% filter(ErrorProb %in% input$ErrorProb3) %>%
       filter(SNPcall %in% input$SNPcall3) %>%
-      filter(seed == input$seed3) %>%
+      filter(seed == seeds[as.numeric(input$seed3)]) %>%
       filter(CountsFrom == input$CountsFrom3) %>%
-      filter(depth == input$depth3)
+      filter(depth == depths[as.numeric(input$seed3)])
     ind_size_graph(data)
   })
   
@@ -633,9 +610,9 @@ server <- function(input, output) {
     content = function(file) {
       data <- data2 %>% filter(ErrorProb %in% input$ErrorProb3) %>%
         filter(SNPcall %in% input$SNPcall3) %>%
-        filter(seed == input$seed3) %>%
+        filter(seed == seeds[as.numeric(input$seed3)]) %>%
         filter(CountsFrom == input$CountsFrom3) %>%
-        filter(depth == input$depth3)
+        filter(depth == depths[as.numeric(input$seed3)])
       p <- ind_size_graph(data)
       ggsave(file, p)
     } 
