@@ -722,8 +722,7 @@ server <- function(input, output) {
   output$times_out <- renderPlot({
     data <- data6 %>% filter(Genocall %in% input$ErrorProb9) %>%
       filter(SNPcall %in% input$SNPcall9) %>%
-      filter(CountsFrom == input$CountsFrom9) %>%
-      filter(depth == input$depth9) 
+      filter(CountsFrom == input$CountsFrom9)
     
     times_graph(data)
   })
