@@ -32,7 +32,7 @@ library(tidyverse)
 
 ## Funções
 
-```{r}
+```{r, eval=FALSE}
 runcomp <- function(n.marker, mk.types, n.types, miss.perc,tol=10E-5){
   n.fam <- 5
   int.tot.size <- par.tot.size <- int.time <- par.time <- int.cms <- par.cms <-  diff2 <- vector()
@@ -66,17 +66,17 @@ runcomp <- function(n.marker, mk.types, n.types, miss.perc,tol=10E-5){
     batch.cms <- rbind(batch.cms, cumsum(c(0, haldane(batch.map[[1]]$seq.rf))))
     batch.tot.size <- c(batch.tot.size, batch.cms[length(batch.cms)])
     
-    #int.time <- rbind(int.time, system.time(int.map <- map(seq1, tol=tol)))
-    #int.cms <- rbind(int.cms, cumsum(c(0,haldane(int.map$seq.rf))))
-    #int.tot.size <- c(int.tot.size, int.cms[length(int.cms)])
-    
-    #par.time <- rbind(par.time, system.time(map2 <- parmap(input.seq = seq1, cores = 6, overlap = 5, tol=tol)))
-    
-    #diff2 <- rbind(diff2, map2[[1]])
-    
-    #par.map <- map2[[2]]
-    #par.cms <- rbind(par.cms, cumsum(c(0,haldane(par.map$seq.rf))))
-    #par.tot.size <- c(par.tot.size, par.cms[length(par.cms)])
+    int.time <- rbind(int.time, system.time(int.map <- map(seq1, tol=tol)))
+    int.cms <- rbind(int.cms, cumsum(c(0,haldane(int.map$seq.rf))))
+    int.tot.size <- c(int.tot.size, int.cms[length(int.cms)])
+
+    par.time <- rbind(par.time, system.time(map2 <- parmap(input.seq = seq1, cores = 6, overlap = 5, tol=tol)))
+
+    diff2 <- rbind(diff2, map2[[1]])
+
+    par.map <- map2[[2]]
+    par.cms <- rbind(par.cms, cumsum(c(0,haldane(par.map$seq.rf))))
+    par.tot.size <- c(par.tot.size, par.cms[length(par.cms)])
   }
   result <- list(diff2, int.tot.size, par.tot.size, batch.tot.size, 
                  int.time, par.time, batch.time, int.cms, par.cms, batch.cms)
@@ -91,7 +91,7 @@ runcomp <- function(n.marker, mk.types, n.types, miss.perc,tol=10E-5){
 
 * scenario (1)
 
-```{r}
+```{r, eval=FALSE}
 cen1 <- runcomp(n.marker = 504, 
                 mk.types = c("A1", "A2", "A3", "A4", "B1.5", "B2.6", "B3.7",
                              "C.8", "D1.9", "D1.10", "D1.11", "D1.12", "D1.13",
@@ -102,7 +102,7 @@ cen1 <- runcomp(n.marker = 504,
 
 * scenario (2)
 
-```{r}
+```{r, eval=FALSE}
 cen2 <- runcomp(n.marker = 504, 
                 mk.types = c("B3.7","D1.10", "D2.15"),
                 n.types = rep(168,3),
@@ -111,7 +111,7 @@ cen2 <- runcomp(n.marker = 504,
 
 * scenario (3)
 
-```{r}
+```{r, eval=FALSE}
 cen3 <- runcomp(n.marker = 504, 
                 mk.types = c("A1", "A2", "A3", "A4", "B1.5", "B2.6", "B3.7",
                              "C.8", "D1.9", "D1.10", "D1.11", "D1.12", "D1.13",
@@ -122,7 +122,7 @@ cen3 <- runcomp(n.marker = 504,
 
 * scenario (4)
 
-```{r}
+```{r, eval=FALSE}
 cen4 <- runcomp(n.marker = 504, 
                 mk.types = c("B3.7","D1.10", "D2.15"),
                 n.types = rep(168,3),
@@ -132,7 +132,7 @@ cen4 <- runcomp(n.marker = 504,
 
 * scenario (1) tol
 
-```{r}
+```{r, eval=FALSE}
 cen1.tol <- runcomp(n.marker = 504, 
                     mk.types = c("A1", "A2", "A3", "A4", "B1.5", "B2.6", "B3.7",
                                  "C.8", "D1.9", "D1.10", "D1.11", "D1.12", "D1.13",
@@ -143,7 +143,7 @@ cen1.tol <- runcomp(n.marker = 504,
 
 * scenario (2) tol
 
-```{r}
+```{r, eval=FALSE}
 cen2.tol <- runcomp(n.marker = 504, 
                     mk.types = c("B3.7","D1.10", "D2.15"),
                     n.types = rep(168,3),
@@ -152,7 +152,7 @@ cen2.tol <- runcomp(n.marker = 504,
 
 * Scenario (3) tol
 
-```{r}
+```{r, eval=FALSE}
 cen3.tol <- runcomp(n.marker = 504, 
                     mk.types = c("A1", "A2", "A3", "A4", "B1.5", "B2.6", "B3.7",
                                  "C.8", "D1.9", "D1.10", "D1.11", "D1.12", "D1.13",
@@ -163,19 +163,20 @@ cen3.tol <- runcomp(n.marker = 504,
 
 * Scenario (4) tol
 
-```{r}
+```{r, eval=FALSE}
 cen4.tol <- runcomp(n.marker = 504, 
                     mk.types = c("B3.7","D1.10", "D2.15"),
                     n.types = rep(168,3),
                     miss.perc = 25, tol=10E-4)
 
-save.image("data/results.batch.RData")
+save.image("data/results.RData")
 ```
 
 # Avaliations
 
-```{r, message=F, warning=F, eval=FALSE}
-load("data/results.batch.RData")
+```{r, message=F, warning=F}
+load("data/results.RData")
+
 tot.size.cm <- 100
 n.marker <- 504
 int <- tot.size.cm/n.marker
@@ -194,16 +195,17 @@ for(i in 1:length(tot.cen)){
   df_diff <- rbind(df_diff, data.frame(scen= names(tot.cen)[i], diff))
   
   # tot.size
-  temp.df <- data.frame(tot.cen[[i]][2:3])
-  temp.df <- cbind(simu = paste0("simu", length(tot.cen[[i]][[2]])), temp.df)
-  colnames(temp.df) <- c("simu", "all", "parallel")
+  temp.df <- data.frame(tot.cen[[i]][c(2:3,8)]) # change here
+  temp.df <- cbind(simu = paste0("simu", 1:length(tot.cen[[i]][[2]])), temp.df)
+  colnames(temp.df) <- c("simu", "all", "parmap", "batchmap")
   df_tot_size <- rbind(df_tot_size, data.frame(scen= names(tot.cen)[i],temp.df))
   
   # time
   temp.df <- data.frame(simu = paste0("simu", 1:length(tot.cen[[i]][[2]])),
                         int.time= tot.cen[[i]][[4]][,3], 
-                        par.time = tot.cen[[i]][[5]][,3])
-  colnames(temp.df) <- c("simu", "all", "parallel")
+                        par.time = tot.cen[[i]][[5]][,3],
+                        batch.time = tot.cen[[i]][[9]][,3]) # change here
+  colnames(temp.df) <- c("simu", "all", "parallel", "batchmap")
   df_times <- rbind(df_times, data.frame(scen= names(tot.cen)[i],temp.df))
   
   
@@ -211,17 +213,25 @@ for(i in 1:length(tot.cen)){
   
   temp.int <- t(apply(tot.cen[[i]][[6]],1, function(x) sqrt((x-pos[-1])^2)))
   temp.par <- t(apply(tot.cen[[i]][[7]],1, function(x) sqrt((x-pos[-1])^2)))
+  temp.batch <- t(apply(tot.cen[[i]][[10]],1, function(x) sqrt((x-pos[-1])^2)))
   
   colnames(temp.int) <- paste0("MK",1:dim(temp.int)[2])
   colnames(temp.par) <- paste0("MK",1:dim(temp.par)[2])
+  colnames(temp.batch) <- paste0("MK",1:dim(temp.batch)[2])
+  
   temp.int <- data.frame(simu = paste0("simu", 1:length(tot.cen[[i]][[2]])),
                          temp.int)
   temp.int <- gather(temp.int, key, value,-simu)
   temp.par <- data.frame(simu = paste0("simu", 1:length(tot.cen[[i]][[2]])),
                          temp.par)
   temp.par <- gather(temp.par, key, value,-simu)
+  temp.batch <- data.frame(simu = paste0("simu", 1:length(tot.cen[[i]][[2]])),
+                         temp.batch)
+  temp.batch <- gather(temp.batch, key, value,-simu)
+  
   temp.df <- merge(temp.int, temp.par, by = c("simu", "key"))
-  colnames(temp.df) <- c("simu", "mk", "all", "parallel")
+  temp.df <- merge(temp.df, temp.batch, by=c("simu", "key"))
+  colnames(temp.df) <- c("simu", "mk", "all", "parmap", "batchmap")
   df_sizes <- rbind(df_sizes, data.frame(scen = names(tot.cen)[i],temp.df))
 }
 
