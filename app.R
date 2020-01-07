@@ -100,15 +100,18 @@ header <- dashboardHeader(
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("About", tabName = "about", icon = icon("lightbulb")),
-    menuItem("Depth and genotyping", icon = icon("chart-line"), tabName = "disper_depth"),
-    menuItem("Map size each family", icon = icon("chart-bar"), tabName = "ind_size"),
-    menuItem("Overview map size", icon = icon("chart-bar"), tabName = "all_size"),
-    menuItem("Markers type", icon = icon("chart-bar"), tabName = "marker_type"),
-    menuItem("Phases", icon = icon("chart-bar"), tabName = "phases"),
-    menuItem("Times", icon = icon("chart-bar"), tabName = "times"),
-    menuItem("Coverage", icon = icon("chart-bar"), tabName = "coverage"),
-    menuItem("SNP calling efficiency", icon = icon("chart-bar"), tabName = "snpcall"),
-    menuItem("Filters", icon = icon("chart-bar"), tabName = "filters"),
+    
+    menuItem("Simulation results", icon = icon("poll"), startExpanded=T,
+      menuSubItem("Depth and genotyping", icon = icon("chart-line"), tabName = "disper_depth"),
+      menuSubItem("Map size each family", icon = icon("chart-bar"), tabName = "ind_size"),
+      menuSubItem("Overview map size", icon = icon("chart-bar"), tabName = "all_size"),
+      menuSubItem("Markers type", icon = icon("chart-bar"), tabName = "marker_type"),
+      menuSubItem("Phases", icon = icon("chart-bar"), tabName = "phases"),
+      menuSubItem("Times", icon = icon("chart-bar"), tabName = "times"),
+      menuSubItem("Coverage", icon = icon("chart-bar"), tabName = "coverage"),
+      menuSubItem("SNP calling efficiency", icon = icon("chart-bar"), tabName = "snpcall"),
+      menuSubItem("Filters", icon = icon("chart-bar"), tabName = "filters")),
+    
     menuItem("Parallel map", icon = icon("chart-bar"), tabName = "parallel")
   )
 )
