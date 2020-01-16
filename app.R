@@ -4,10 +4,19 @@
 library(shiny)
 library(shinydashboard)
 library(tidyverse)
+library(onemap)
+library(GUSMap)
 
 # Functions
+## Simulations
 source("graphics.R")
+## Empirical
+source("graphics_emp.R")
 
+
+##################################################
+# Simulations
+##################################################
 
 # Data
 datas <- list()
@@ -88,6 +97,16 @@ names(avalSNPs_choice) <- c("number of simulated SNPs (1)",
                             "number of correctly identified reference allele (4)",
                             "number of correctly identified alternative allele (5)")
 
+####################################################################
+# Empirical
+####################################################################
+
+data_map <- readRDS("data/data_map.rds")
+data_depths <- readRDS("data/data_depths.rds")
+data_times <- readRDS("data/data_times.rds")
+data_filters <- readRDS("data/data_filters.rds")
+load("data/data_RDatas.RData")
+
 ########
 #  UI  #
 ########
@@ -99,20 +118,31 @@ header <- dashboardHeader(
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
+    id = "tabs",
     menuItem("About", tabName = "about", icon = icon("lightbulb")),
+    #menuItem("Parallel map", icon = icon("dot-circle"), tabName = "parallel"), 
     
-    menuItem("Simulation results", icon = icon("poll"), startExpanded=T,
-      menuSubItem("Depth and genotyping", icon = icon("chart-line"), tabName = "disper_depth"),
-      menuSubItem("Map size each family", icon = icon("chart-bar"), tabName = "ind_size"),
-      menuSubItem("Overview map size", icon = icon("chart-bar"), tabName = "all_size"),
-      menuSubItem("Markers type", icon = icon("chart-bar"), tabName = "marker_type"),
-      menuSubItem("Phases", icon = icon("chart-bar"), tabName = "phases"),
-      menuSubItem("Times", icon = icon("chart-bar"), tabName = "times"),
-      menuSubItem("Coverage", icon = icon("chart-bar"), tabName = "coverage"),
-      menuSubItem("SNP calling efficiency", icon = icon("chart-bar"), tabName = "snpcall"),
-      menuSubItem("Filters", icon = icon("chart-bar"), tabName = "filters")),
+    menuItem("Simulation results", icon = icon("dot-circle"), tabName= "simulations",
+             menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth"),
+             menuSubItem("Map size each family", icon = icon("circle"), tabName = "ind_size"),
+             menuSubItem("Overview map size", icon = icon("circle"), tabName = "all_size"),
+             menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type"),
+             menuSubItem("Phases", icon = icon("circle"), tabName = "phases"),
+             menuSubItem("Times", icon = icon("circle"), tabName = "times"),
+             menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage"),
+             menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall"),
+             menuSubItem("Filters", icon = icon("circle"), tabName = "filters")),
     
-    menuItem("Parallel map", icon = icon("chart-bar"), tabName = "parallel")
+    menuItem("Empirical data results", icon = icon("dot-circle" ), tabName = "empirical",
+             menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth_emp"),
+             menuSubItem("Map size", icon = icon("circle"), tabName = "ind_size_emp"),
+             menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type_emp"),
+             menuSubItem("Times", icon = icon("circle"), tabName = "times_emp"),
+             menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
+             menuSubItem("Filters", icon = icon("circle"), tabName = "filters_emp"),
+             menuSubItem("Heatmaps", icon = icon("circle"), tabName = "heatmaps_emp"),
+             menuSubItem("Maps", icon = icon("circle"), tabName = "map_emp"),
+             menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp"))
   )
 )
 
@@ -122,6 +152,13 @@ body <- dashboardBody(
     tabItem(tabName = "about",
             includeMarkdown("about.Rmd")
     ),
+    ####################################################################################
+    # tabItem(tabName = "parallel", # Se eu deixo isso funcional o menu deixa de ser dinamico
+    #         includeHTML("parallel.html")
+    #         #includeMarkdown("parallel.Rmd")
+    # ),
+    ##########################################################
+    # Simulations
     ##########################################################
     tabItem(tabName = "disper_depth",
             fluidRow(
@@ -309,8 +346,8 @@ body <- dashboardBody(
                        ),
                        fluidPage(
                          checkboxGroupInput("depth4", label = p("Depth"),
-                                     choices = depth_choice,
-                                     selected = unlist(depth_choice)),
+                                            choices = depth_choice,
+                                            selected = unlist(depth_choice)),
                          hr()
                        ),
                        fluidPage(
@@ -348,8 +385,8 @@ body <- dashboardBody(
                        ),
                        fluidPage(
                          radioButtons("depth10", label = p("Depth"),
-                                            choices = depth_choice,
-                                            selected = depth_choice[[1]]),
+                                      choices = depth_choice,
+                                      selected = depth_choice[[1]]),
                          hr()
                        ),
                        fluidPage(
@@ -387,11 +424,11 @@ body <- dashboardBody(
                        ),
                        fluidPage(
                          checkboxGroupInput("depth8", label = p("Depth"),
-                                     choices = depth_choice,
-                                     selected = unlist(depth_choice)),
+                                            choices = depth_choice,
+                                            selected = unlist(depth_choice)),
                          hr()
-                         ),
-                        fluidPage(
+                       ),
+                       fluidPage(
                          radioButtons("CountsFrom8", label = p("Counts from"),
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
@@ -465,8 +502,8 @@ body <- dashboardBody(
                        ),
                        fluidPage(
                          checkboxGroupInput("depth5", label = p("Depth"),
-                                     choices = depth_choice,
-                                     selected = unlist(depth_choice)),
+                                            choices = depth_choice,
+                                            selected = unlist(depth_choice)),
                          hr(),
                          div(downloadButton("coverage_out_down"),style="float:right")
                        )
@@ -498,8 +535,8 @@ body <- dashboardBody(
                        ),
                        fluidPage(
                          checkboxGroupInput("depth6", label = p("Depth"),
-                                     choices = depth_choice,
-                                     selected = unlist(depth_choice)),
+                                            choices = depth_choice,
+                                            selected = unlist(depth_choice)),
                          hr(),
                          div(downloadButton("snpcall_out_down"),style="float:right")
                        )
@@ -546,11 +583,362 @@ body <- dashboardBody(
               )
             )
     ),
-    ####################################################################################
-    tabItem(tabName = "parallel",
-            includeHTML("parallel.html")
+    ##########################################################
+    # Empirical
+    ##########################################################
+    tabItem(tabName = "disper_depth_emp",
+            fluidRow(
+              column(width = 6,
+                     box(
+                       width = NULL,
+                       plotOutput("disper_depth_emp_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         radioButtons("ErrorProb1_emp", label = p("Genotype method"),
+                                      choices = GenotypeCall_choice,
+                                      selected = "polyrad"),
+                         hr()
+                       ),
+                       
+                       fluidPage(
+                         radioButtons("real1_emp", label = p("Display the:"),
+                                      choices = list("estimated_genotypes"="estimated_genotypes",
+                                                     "estimated_errors" = "estimated_errors"),
+                                      selected = "estimated_genotypes"),
+                         hr()
+                       ),
+                       
+                       fluidPage(
+                         radioButtons("geno_from1_emp", label = p("Genotypes"),
+                                      choices = list("vcf"="vcf",
+                                                     "onemap" = "onemap"),
+                                      selected = "onemap"),
+                         hr()
+                       ),
+                       #helpText("Select the SNP calling method"),
+                       fluidPage(
+                         radioButtons("SNPcall1_emp", label = p("SNP calling method"),
+                                      choices = SNPcall_choice,
+                                      selected = "freebayes"),
+                         hr()
+                       ),
+                       
+                       #helpText("Read counts from:"),
+                       fluidPage(
+                         
+                         radioButtons("CountsFrom1_emp", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr(),
+                         div(downloadButton("disper_depth_emp_out_down"),style="float:right")
+                         # ),
+                       )
+                     )
+              ),
+              
+              column(width = 6,
+                     box(
+                       width = NULL,
+                       plotOutput("disper_depth2_emp_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         radioButtons("ErrorProb2_emp", label = p("Genotype method"),
+                                      choices = GenotypeCall_choice,
+                                      selected = "polyrad"),
+                         hr()
+                       ),
+                       
+                       fluidPage(
+                         radioButtons("real2_emp", label = p("Genotypes"),
+                                      choices = list("estimated_genotypes"="estimated_genotypes",
+                                                     "estimated_errors" = "estimated_errors"),
+                                      selected = "estimated_genotypes"),
+                         hr()
+                       ),
+                       
+                       #helpText("Select the SNP calling method"),
+                       fluidPage(
+                         radioButtons("SNPcall2_emp", label = p("SNP calling method"),
+                                      choices = SNPcall_choice,
+                                      selected = "freebayes"),
+                         hr()
+                       ),
+                       
+                       fluidPage(
+                         radioButtons("geno_from2_emp", label = p("Genotypes"),
+                                      choices = list("vcf"="vcf",
+                                                     "onemap" = "onemap"),
+                                      selected = "onemap"),
+                         hr()
+                       ),
+                       
+                       #helpText("Read counts from:"),
+                       fluidPage(
+                         
+                         radioButtons("CountsFrom2_emp", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr()
+                         # ),
+                       )
+                     )
+              )
+            )
+    ),
+    ##########################################################
+    tabItem(tabName = "ind_size_emp",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("ind_size_emp_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb3_emp", label = p("Genotype method"),
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
+                         hr()
+                       ),
+                       
+                       #helpText("Select the SNP calling method"),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall3_emp", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = unlist(SNPcall_choice)),
+                         hr()
+                       ),
+                       
+                       #helpText("Read counts from:"),
+                       fluidPage(
+                         
+                         radioButtons("CountsFrom3_emp", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr(),
+                         div(downloadButton("ind_size_out_emp_down"),style="float:right")
+                         # ),
+                       )
+                     )
+              )
+            )
+    ),
+    ###################################################################################
+    tabItem(tabName = "marker_type_emp",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("marker_type_emp_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb10_emp", label = p("Genotype method"),
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall10_emp", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = names(SNPcall_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         radioButtons("CountsFrom10_emp", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr(),
+                         div(downloadButton("marker_type_emp_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
+    ),
+    ###################################################################################
+    tabItem(tabName = "times_emp",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("times_emp_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb9_emp", label = p("Genotype method"),
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall9_emp", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = names(SNPcall_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         radioButtons("CountsFrom9_emp", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr(),
+                         div(downloadButton("times_emp_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
+    ),
+    ###################################################################################
+    tabItem(tabName = "coverage_emp",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("coverage_emp_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb5_emp", label = p("Genotype method"),
+                                            choices = maps_choice,
+                                            selected = names(maps_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall5_emp", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = names(SNPcall_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         radioButtons("CountsFrom5_emp", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr()
+                       ),
+                       
+                       fluidPage(
+                         numericInput("chr_size", label = p("Chromosome size"), value = "complete here"),
+                         
+                         hr(),
+                         div(downloadButton("coverage_emp_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
+    ),
+    ################################################################################3
+    tabItem(tabName = "filters_emp",
+            fluidRow(
+              column(width = 12,
+                     box(
+                       width = NULL,
+                       plotOutput("filters_emp_out")
+                     ),
+                     box(
+                       width = NULL, solidHeader = TRUE,
+                       fluidPage(
+                         checkboxGroupInput("ErrorProb7_emp", label = p("Genotype method"),
+                                            choices = GenotypeCall_choice,
+                                            selected = unlist(GenotypeCall_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         checkboxGroupInput("SNPcall7_emp", label = p("SNP calling method"),
+                                            choices = SNPcall_choice,
+                                            selected = names(SNPcall_choice)),
+                         hr()
+                       ),
+                       fluidPage(
+                         radioButtons("CountsFrom7_emp", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         hr(),
+                         div(downloadButton("filters_emp_out_down"),style="float:right")
+                       )
+                     )
+              )
+            )
+    ),
+    ################################################################################3
+    tabItem(tabName = "heatmaps_emp",
+            fluidRow(
+              box(
+                width = NULL,
+                plotlyOutput("heatmaps_emp_out", height = 650)
+              )
+            ),
+            fluidRow(
+              box(
+                width = 4, 
+                fluidPage(
+                  radioButtons("ErrorProb8_emp", label = p("Genotype method"),
+                               choices = GenotypeCall_choice,
+                               selected = "polyrad"),
+                  hr()
+                )
+              ),
+              
+              #helpText("Select the SNP calling method"),
+              box(width = 4,
+                  fluidPage( # Tenho q acertar isso aqui
+                    radioButtons("SNPcall8_emp", label = p("SNP calling method"),
+                                 choices = SNPcall_choice,
+                                 selected = "freebayes"),
+                    hr()
+                  )
+              ),
+              
+              #helpText("Read counts from:"),
+              box(width = 4,
+                  fluidPage(
+                    radioButtons("CountsFrom8_emp", label = p("Counts from"),
+                                 choices = CountsFrom_choice,
+                                 selected = "vcf"),
+                    hr(),
+                    div(downloadButton("heatmaps_emp_out_down"),style="float:right")
+                    # ),
+                  )
+              )
+            )
+    ),
+    ################################################################################3
+    tabItem(tabName = "map_emp",
+            fluidRow(
+              column(width = 8,
+                     box(
+                       width = NULL,
+                       plotOutput("map1_emp_out"),
+                       box(
+                         radioButtons("ErrorProb11_emp", label = p("Genotype method"),
+                                      choices = maps_choice,
+                                      selected = "updog"),
+                       ),
+                       box(
+                         radioButtons("SNPcall11_emp", label = p("SNP calling method"),
+                                      choices = SNPcall_choice,
+                                      selected = "gatk"),
+                       ),
+                       box(
+                         radioButtons("CountsFrom11_emp", label = p("Counts from"),
+                                      choices = CountsFrom_choice,
+                                      selected = "vcf"),
+                         div(downloadButton("map_emp_out_down"),style="float:right")
+                       )
+                     )
+              ),
+              column(width = 4,
+                     imageOutput("map_emp_out")
+              )
+            )
     )
-    ####################################################################################
+    ############################################################################
   )
 )
 
@@ -559,6 +947,9 @@ ui <- dashboardPage(header, sidebar, body, skin = "purple")
 ## Define server logic required to draw a histogram ----
 server <- function(input, output) {
   ##################################################################
+  # Simulations
+  ##################################################################
+  
   output$disper_depth_out <- renderPlot({
     data <- data1 %>% filter(ErrorProb == input$ErrorProb1) %>%
       filter(SNPcall == input$SNPcall1) %>%
@@ -820,6 +1211,251 @@ server <- function(input, output) {
       ggsave(file, p)
     } 
   )
+  
+  ##################################################################
+  # Empirical 
+  ##################################################################
+  
+  output$disper_depth_emp_out <- renderPlot({
+    
+    data <- data_depths %>% filter(GenoCall == input$ErrorProb1_emp) %>%
+      filter(SNPCall == input$SNPcall1_emp) %>%
+      filter(CountsFrom == input$CountsFrom1_emp)
+    errorProb_graph_emp(data, input$real1_emp, input$geno_from1_emp)
+  })
+  
+  ## download
+  output$disper_depth_emp_out_down <- downloadHandler(
+    filename =  function() {
+      paste("depths.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data_depths %>% filter(GenoCall == input$ErrorProb1_emp) %>%
+        filter(SNPCall == input$SNPcall1_emp) %>%
+        filter(CountsFrom == input$CountsFrom1_emp)
+      p <- errorProb_graph_emp(data, input$real1_emp, input$geno_from1_emp)
+      ggsave(file, p)
+    } 
+  )
+  
+  output$disper_depth2_emp_out <- renderPlot({
+    data <- data_depths %>% filter(GenoCall == input$ErrorProb2_emp) %>%
+      filter(SNPCall == input$SNPcall2_emp) %>%
+      filter(CountsFrom == input$CountsFrom2_emp)
+    errorProb_graph_emp(data, input$real2_emp, input$geno_from2_emp)
+  })
+  
+  ##################################################################
+  output$ind_size_emp_out <- renderPlot({
+    data <- data_map %>% filter(GenoCall %in% input$ErrorProb3_emp) %>%
+      filter(SNPCall %in% input$SNPcall3_emp) %>%
+      filter(CountsFrom == input$CountsFrom3_emp) 
+    ind_size_graph_emp(data)
+  })
+  
+  ## download
+  output$ind_size_emp_out_down <- downloadHandler(
+    filename =  function() {
+      paste("ind_size.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data_map %>% filter(GenoCall %in% input$ErrorProb3_emp) %>%
+        filter(SNPCall %in% input$SNPcall3_emp) %>%
+        filter(CountsFrom == input$CountsFrom3_emp) 
+      p <- ind_size_graph_emp(data)
+      ggsave(file, p)
+    } 
+  )
+  #######################################################################
+  output$marker_type_emp_out <- renderPlot({
+    data <- data_map %>% filter(GenoCall %in% input$ErrorProb10_emp) %>%
+      filter(SNPCall %in% input$SNPcall10_emp) %>%
+      filter(CountsFrom == input$CountsFrom10_emp) %>%
+      group_by(type, GenoCall, SNPCall, CountsFrom) %>%
+      summarise(n = n()) %>%
+      gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
+    
+    marker_type_graph_emp(data)
+  })
+  
+  ## download
+  output$phases_out_down <- downloadHandler(
+    filename =  function() {
+      paste("phases.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb10) %>%
+        filter(SNPcall %in% input$SNPcall10) %>%
+        filter(CountsFrom == input$CountsFrom10) %>%
+        filter(depth == input$depth10) %>%
+        group_by(type, real.type, ErrorProb, SNPcall, CountsFrom, depth) %>%
+        summarise(n = n()) %>%
+        gather(key, value, -ErrorProb, -SNPcall, -CountsFrom, -depth,-n)
+      
+      p <- marker_type_graph(data)
+      ggsave(file, p)
+    } 
+  )
+  
+  #######################################################################
+  output$times_emp_out <- renderPlot({
+    
+    data_n <- data_map %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
+      filter(SNPCall %in% input$SNPcall9_emp) %>%
+      filter(CountsFrom == input$CountsFrom9_emp) %>%
+      group_by(GenoCall, SNPCall, CountsFrom) %>%
+      summarise(n = n()) 
+    
+    
+    data <- data_times %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
+      filter(SNPCall %in% input$SNPcall9_emp) %>%
+      filter(CountsFrom == input$CountsFrom9_emp)
+    
+    data<- merge(data, data_n) %>%
+      gather(key, value, -GenoCall, -SNPCall, -CountsFrom)
+    
+    data$key <- gsub("n", "number of markers", data$key)
+    data$key <- gsub("time_par.3.", "time (seconds)", data$key)
+    
+    times_graph_emp(data)
+  })
+  
+  ## download
+  output$times_emp_out_down <- downloadHandler(
+    filename =  function() {
+      paste("times.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data_times %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
+        filter(SNPCall %in% input$SNPcall9_emp) %>%
+        filter(CountsFrom == input$CountsFrom9_emp)
+      
+      p <- times_graph_emp(data)
+      
+      ggsave(file, p)
+    } 
+  )
+  ####################################################################### 
+  output$coverage_emp_out <- renderPlot({
+    data <- data_map %>% filter(GenoCall %in% input$ErrorProb5_emp) %>%
+      filter(SNPCall %in% input$SNPcall5_emp) %>%
+      filter(CountsFrom %in% input$CountsFrom5_emp) %>%
+      group_by(GenoCall, SNPCall, CountsFrom) %>%
+      summarise(max = max(pos), min = min(pos)) 
+    
+    data$coverage <- ((data$max - data$min)/input$chr_size)*100
+    coverage_graph_emp(data)
+  })
+  
+  ## download
+  output$coverage_emp_out_down <- downloadHandler(
+    filename =  function() {
+      paste("coverage_size.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data_map %>% filter(GenoCall %in% input$ErrorProb5_emp) %>%
+        filter(SNPCall %in% input$SNPcall5_emp) %>%
+        filter(CountsFrom %in% input$CountsFrom5_emp) %>%
+        group_by(GenoCall, SNPCall, CountsFrom) %>%
+        summarise(max = max(pos), min = min(pos)) 
+      
+      data$coverage <- ((data$max - data$min)/input$chr_size)*100
+      p <- coverage_graph_emp(data)
+      ggsave(file, p)
+    } 
+  )
+  ##################################################################
+  output$filters_emp_out <- renderPlot({
+    data <- data_filters %>% filter(GenoCall %in% input$ErrorProb7_emp) %>%
+      filter(SNPCall %in% input$SNPcall7_emp) %>%
+      filter(CountsFrom == input$CountsFrom7_emp) %>%
+      gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
+    
+    filters_graph_emp(data)
+  })
+  
+  ## download
+  output$filters_emp_out_down <- downloadHandler(
+    filename =  function() {
+      paste("filters.pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data_filters %>% filter(GenoCall %in% input$ErrorProb7_emp) %>%
+        filter(SNPCall %in% input$SNPcall7_emp) %>%
+        filter(CountsFrom == input$CountsFrom7_emp) %>%
+        gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
+      
+      p <- filters_graph_emp(data)
+      ggsave(file, p)
+    } 
+  )
+  ##################################################################
+  output$heatmaps_emp_out <- renderPlotly({
+    data <- data_RDatas[[paste0(input$SNPcall8_emp, "_", input$CountsFrom8_emp, "_", input$ErrorProb8_emp)]]
+    rf_graph_table(data, inter = T, html.file = "temp.html",display = F) 
+  })
+  
+  ## download
+  output$heatmaps_emp_out_down <- downloadHandler(
+    filename =  function() {
+      paste("heatmap.html")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data_RDatas[[paste0(input$SNPcall8_emp, "_", input$CountsFrom8_emp, "_", input$ErrorProb8_emp)]]
+      outfile <- paste0("heatmap.", sample(10000,1),".html")
+      p <- rf_graph_table(data, inter = T, display = F) 
+      htmlwidgets::saveWidget(p, file = outfile)
+    } 
+  )
+  
+  ################################################################# 
+  output$map_emp_out <- renderImage({
+    data <- data_map %>% filter(GenoCall %in% input$ErrorProb11_emp) %>%
+      filter(SNPCall %in% input$SNPcall11_emp) %>%
+      filter(CountsFrom == input$CountsFrom11_emp) 
+    
+    data <-   data.frame(data$mks, data$rf)
+      
+    outfile <- paste0("temp.", sample(10000,1),".png")
+    draw_map2(data, output = outfile)
+    
+    list(src = outfile,
+         contentType = 'image/png',
+         width = 300,
+         height = 800)
+  }, deleteFile = TRUE)
+  
+  output$map1_emp_out <- renderPlot({
+    data <- data_RDatas[paste0(input$SNPcall11_emp, "_", input$CountsFrom11_emp, "_", input$ErrorProb11_emp)]
+    if(input$ErrorProb11_emp == "gusmap"){
+      data[[1]]$rf_2pt()
+      data[[1]]$plotChr(mat="rf", parent = "both")
+    } else {
+      rf_graph_table(data[[1]], inter = F)
+    }
+  })
+  
+  ## download
+  output$map_emp_out_down <- downloadHandler(
+    filename =  function() {
+      paste("map.png")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      data <- data_RDatas[[paste0(input$SNPcall9_emp, "_", input$CountsFrom9_emp, "_", input$ErrorProb9_emp)]]
+      outfile <- paste0("temp.", sample(10000,1),".png")
+      draw_map2(data, output = outfile)
+    } 
+  )
+  
+  
 }
 
 # Create Shiny app ----

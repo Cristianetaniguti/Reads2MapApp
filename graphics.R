@@ -1,4 +1,4 @@
-# Write the functions here
+# Functions to build graphics for the data from simulations
 
 errorProb_graph <- function(data, genotypes){
   
@@ -24,7 +24,7 @@ errorProb_graph <- function(data, genotypes){
 }
 
 ind_size_graph <- function(data){
-
+  
   # colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
   # names(colors) <- levels(data$ErrorProb)
   
@@ -37,7 +37,7 @@ ind_size_graph <- function(data){
 }
 
 all_size_graph <- function(data, stat){
-
+  
   colors <- c("#58355e", "#4D9DE0")
   names(colors) <- levels(data$SNPcall)
   
@@ -113,7 +113,7 @@ filters_graph <- function(data){
   
   colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
   names(colors) <- levels(data$ErrorProb)
-
+  
   data %>% ggplot(aes(x= key, y=value, fill= GenoCall)) +
     geom_boxplot()  +
     scale_fill_manual(name="SNP call", values = colors) + 
