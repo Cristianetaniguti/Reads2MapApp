@@ -31,9 +31,15 @@ ind_size_graph <- function(data){
   colors <- c("#58355e", "#4D9DE0")
   names(colors) <- levels(data$SNPcall)
   
-  data %>% ggplot(aes(x=ErrorProb, y=rf, fill=SNPcall)) +
-    geom_boxplot() + geom_hline(yintercept=0, color="red") +
-    scale_fill_manual(name="SNP call", values = colors) 
+  colors_dots <- c("blue", "red")
+  names(colors_dots) <- c( "true markers", "false positives")
+  
+  data %>% ggplot(aes(x=Genocall, y=rf)) +
+    geom_boxplot(alpha = 0.6, aes(fill=SNPcall)) + 
+    geom_point(position=position_jitterdodge(jitter.width=1, dodge.width = 0), 
+               aes(color=factor(real.mks)), show.legend = T) +
+    scale_fill_manual(name="SNP call", values = colors) +
+    scale_color_manual(name=" ", values = colors_dots)
 }
 
 all_size_graph <- function(data, stat){
