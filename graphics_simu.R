@@ -28,18 +28,14 @@ ind_size_graph <- function(data){
   # colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
   # names(colors) <- levels(data$ErrorProb)
   
-  colors <- c("#58355e", "#4D9DE0")
-  names(colors) <- levels(data$SNPcall)
-  
   colors_dots <- c("blue", "red")
   names(colors_dots) <- c( "true markers", "false positives")
   
   data %>% ggplot(aes(x=Genocall, y=rf)) +
-    geom_boxplot(alpha = 0.6, aes(fill=SNPcall)) + 
-    geom_point(position=position_jitterdodge(jitter.width=1, dodge.width = 0), 
-               aes(color=factor(real.mks)), show.legend = T) +
-    scale_fill_manual(name="SNP call", values = colors) +
-    scale_color_manual(name=" ", values = colors_dots)
+    geom_boxplot(alpha = 0.6) + 
+    geom_point(position=position_jitterdodge(jitter.width=0.5, dodge.width = 0.5),aes(color = factor(real.mks))) +
+    facet_grid(SNPcall~.) +
+    scale_color_manual("Markers", values = colors_dots)
 }
 
 all_size_graph <- function(data, stat){
@@ -47,7 +43,7 @@ all_size_graph <- function(data, stat){
   colors <- c("#58355e", "#4D9DE0")
   names(colors) <- levels(data$SNPcall)
   
-  data %>% ggplot(aes(x=ErrorProb, y=value, fill=SNPcall)) +
+  data %>% ggplot(aes(x=Genocall, y=value, fill=SNPcall)) +
     geom_boxplot() + geom_hline(yintercept=0, color="red") +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = paste(stat, "cM (haldane)")) + 
@@ -59,11 +55,11 @@ marker_type_graph <- function(data){
   colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
   names(colors) <- levels(data$type)
   
-  data %>% ggplot(aes(x=ErrorProb, y = n, fill=value)) +
+  data %>% ggplot(aes(x=Genocall, y = n, fill=value)) +
     geom_bar(stat="identity", position=position_dodge())  +
     scale_fill_manual(name="Marker type", values = colors) + 
     labs(x = "Genotyping method", y = "Number of markers") +
-    facet_grid(SNPcall~key) 
+    facet_grid(key~SNPcall) 
 }
 
 
@@ -72,7 +68,7 @@ phases_graph <- function(data){
   colors <- c("#58355e", "#4D9DE0")
   names(colors) <- levels(data$SNPcall)
   
-  data %>% ggplot(aes(x=ErrorProb, y=value, fill=SNPcall)) +
+  data %>% ggplot(aes(x=Genocall, y=value, fill=SNPcall)) +
     geom_boxplot()  +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = "percent of corrected phases") +
@@ -84,11 +80,12 @@ times_graph <- function(data){
   colors <- c("#58355e", "#4D9DE0")
   names(colors) <- levels(data$SNPcall)
   
-  data %>% ggplot(aes(x=Genocall, y=times, fill=SNPcall)) +
-    geom_boxplot()  +
+  data %>% ggplot(aes(x=Genocall, y=value, fill=SNPcall)) +
+    geom_boxplot(position=position_dodge())  +
+    geom_text(aes(label= round(value,1)), position=position_dodge(width=0.9), vjust=-0.25) +
     scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = "Time (seconds)") +
-    facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
+    labs(x = "Genotyping method", y = "") +
+    facet_wrap( key~depth, ncol=1, scales = "free", strip.position = "right")
 }
 
 coverage_graph <- function(data){
@@ -96,7 +93,7 @@ coverage_graph <- function(data){
   colors <- c("#58355e", "#4D9DE0")
   names(colors) <- levels(data$SNPcall)
   
-  data %>% ggplot(aes(x=ErrorProb, y=coverage, fill=SNPcall)) +
+  data %>% ggplot(aes(x=Genocall, y=coverage, fill=SNPcall)) +
     geom_boxplot()  +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = "percent covered") +
@@ -118,9 +115,9 @@ avalSNPs_graph <- function(data){
 filters_graph <- function(data){
   
   colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
-  names(colors) <- levels(data$ErrorProb)
+  names(colors) <- levels(data$Genocall)
   
-  data %>% ggplot(aes(x= key, y=value, fill= GenoCall)) +
+  data %>% ggplot(aes(x= key, y=value, fill= Genocall)) +
     geom_boxplot()  +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = "percent covered") +
