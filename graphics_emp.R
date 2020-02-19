@@ -102,8 +102,9 @@ filters_graph_emp <- function(data){
   data %>% ggplot(aes(x= key, y=value, fill= GenoCall)) +
     geom_bar(stat="identity", position=position_dodge())  +
     geom_text(aes(label= round(value,2)), position=position_dodge(width=0.9), vjust=-0.25) +
+    expand_limits(y = max(data$value) * 1.05) +
     scale_fill_manual(name="Genotype method", values = colors) + 
     labs(x = "", y = "Number of markers") +
-    facet_wrap( ~SNPCall, ncol=1, scales = "free", strip.position = "right") +
+    facet_grid(SNPCall~., scales = "free") +
     theme(axis.text.x = element_text(angle = 35, hjust=1))
 }

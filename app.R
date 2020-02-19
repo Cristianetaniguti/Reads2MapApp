@@ -25,15 +25,29 @@ datas[[2]] <- Sys.glob("data/data2*")
 datas[[3]] <- Sys.glob("data/data3*")
 datas[[4]] <- Sys.glob("data/data4*")
 datas[[5]] <- Sys.glob("data/data5*")
+datas[[6]] <- Sys.glob("data/data6*")
 
 # Joint all depths
-data1 <- data2 <- data3 <- data4 <- data5 <- vector()
+data1 <- data2 <- data3 <- data4 <- data5 <- rdata_n <- vector()
+z <- 1
+data6 <- list()
 for(i in 1:length(datas)){
   for(j in 1:length(datas[[i]])){
-    temp <-  readRDS(datas[[i]][[j]])
-    assign(paste0("data",i), rbind(get(paste0("data",i)), temp))
+    if(i == 6){
+      load(datas[[i]][[j]])
+      temp <- Rdatas
+      temp_n <- names(Rdatas)[1]
+      temp_n <- paste0(lapply(strsplit(temp_n, "_"), "[", 1:2)[[1]], collapse = "_")
+      rdata_n <- c(rdata_n, temp_n)
+      data6[[z]] <- Rdatas
+    } else {
+      temp <-  readRDS(datas[[i]][[j]])
+      assign(paste0("data",i), rbind(get(paste0("data",i)), temp))
+    }
   }
 }
+
+names(data6) <- rdata_n
 
 # For errors
 data1$errors <- apply(data1[,8:11], 1, function(x) 1 - x[which.max(x)])
@@ -84,16 +98,16 @@ for(i in 1:length(depthNames)){
 
 seeds_choice <- as.list(1:length(seedsNames))
 names(seeds_choice) <- as.character(seedsNames)
-ErrorProb_choice <- as.list(levels(data1$Genocall))
-names(ErrorProb_choice) <- as.character(unique(data1$Genocall))
-GenotypeCall_choice <- ErrorProb_choice[-c(1)]
+ErrorProb_choice <- as.list(sort(levels(data1$Genocall)))
+names(ErrorProb_choice) <- as.character(sort(levels(data1$Genocall)))
+GenotypeCall_choice <- ErrorProb_choice[-c(2)]
 names(GenotypeCall_choice)[1] <- "genotype calling software = snp calling method"
-maps_choice <- as.list(levels(data2$Genocall))
-names(maps_choice) <- as.character(unique(data2$Genocall))
-SNPcall_choice <- as.list(levels(data1$SNPcall))
-names(SNPcall_choice) <- as.character(unique(data1$SNPcall))
-CountsFrom_choice <- as.list(as.character(unique(data1$CountsFrom)))
-names(CountsFrom_choice) <- as.character(unique(data1$CountsFrom))
+maps_choice <- as.list(sort(levels(data2$Genocall)))
+names(maps_choice) <- as.character(sort(levels(data2$Genocall)))
+SNPcall_choice <- as.list(sort(levels(data1$SNPcall)))
+names(SNPcall_choice) <- as.character(sort(levels(data1$SNPcall)))
+CountsFrom_choice <- as.list(as.character(sort(levels(data1$CountsFrom))))
+names(CountsFrom_choice) <- as.character(sort(levels(data1$CountsFrom)))
 depth_choice <- as.list(unique(data1$depth))
 names(depth_choice) <- as.character(unique(data1$depth))
 stats_choice <- list("mean", "median", "var", "total")
@@ -112,9 +126,13 @@ names(fake_choices) <- c("yes", "no")
 ####################################################################
 
 data_map <- readRDS("data/data_map.rds")
+data_map$GenoCall <- factor(data_map$GenoCall, levels = sort(levels(data_map$GenoCall)))
 data_depths <- readRDS("data/data_depths.rds")
+data_depths$GenoCall <- factor(data_depths$GenoCall, levels = sort(levels(data_depths$GenoCall)))
 data_times <- readRDS("data/data_times.rds")
+data_times$GenoCall <- factor(data_times$GenoCall, levels= sort(levels(data_times$GenoCall)))
 data_filters <- readRDS("data/data_filters.rds")
+data_filters$GenoCall <- factor(data_filters$GenoCall, levels= sort(levels(data_filters$GenoCall)))
 load("data/data_RDatas.RData")
 
 ########
@@ -286,7 +304,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("ind_size_out")
-                     ),
+                     )
+              ),
+              column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -302,35 +322,37 @@ body <- dashboardBody(
                                             choices = SNPcall_choice,
                                             selected = unlist(SNPcall_choice)),
                          hr()
-                       ),
-                       
-                       #helpText("Select the family seed"),
-                       fluidPage(
-                         
-                         selectInput("seed3", label = p("Seed"),
-                                     choices = seeds_choice,
-                                     selected = names(seeds_choice)[1]),
-                         hr()
-                       ),
-                       
-                       #helpText("Read counts from:"),
-                       fluidPage(
-                         
-                         radioButtons("CountsFrom3", label = p("Counts from"),
-                                      choices = CountsFrom_choice,
-                                      selected = "vcf"),
-                         hr()
-                       ),
-                       
-                       fluidPage(
-                         
-                         radioButtons("fake1", label = p("Allow false positives?"),
-                                      choices = fake_choices,
-                                      selected = "without-false"),
-                         hr(),
-                         div(downloadButton("ind_size_out_down"),style="float:right")
-                         # ),
                        )
+                     )
+              ),
+              column(width=6,
+                     box(width = NULL, solidHeader = TRUE,
+                         #helpText("Select the family seed"),
+                         fluidPage(
+                           selectInput("seed3", label = p("Seed"),
+                                       choices = seeds_choice,
+                                       selected = names(seeds_choice)[1]),
+                           hr()
+                         ),
+                         
+                         #helpText("Read counts from:"),
+                         fluidPage(
+                           
+                           radioButtons("CountsFrom3", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr()
+                         ),
+                         
+                         fluidPage(
+                           
+                           radioButtons("fake1", label = p("Allow false positives?"),
+                                        choices = fake_choices,
+                                        selected = "without-false"),
+                           hr(),
+                           div(downloadButton("ind_size_out_down"),style="float:right")
+                           # ),
+                         )
                      )
               )
             )
@@ -342,7 +364,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("all_size_out")
-                     ),
+                     )
+              ),
+              column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -362,28 +386,31 @@ body <- dashboardBody(
                                             choices = SNPcall_choice,
                                             selected = names(SNPcall_choice)),
                          hr()
-                       ),
-                       fluidPage(
-                         checkboxGroupInput("depth4", label = p("Depth"),
-                                            choices = depth_choice,
-                                            selected = unlist(depth_choice)),
-                         hr()
-                       ),
-                       fluidPage(
-                         radioButtons("CountsFrom4", label = p("Counts from"),
-                                      choices = CountsFrom_choice,
-                                      selected = "vcf"),
-                         hr()
-                       ),
-                       
-                       fluidPage(
-                         
-                         radioButtons("fake2", label = p("Allow false positives?"),
-                                      choices = fake_choices,
-                                      selected = "without-false"),
-                         hr(),
-                         div(downloadButton("all_size_out_down"),style="float:right")
                        )
+                     )),
+              column(width=6,
+                     box(width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("depth4", label = p("Depth"),
+                                              choices = depth_choice,
+                                              selected = unlist(depth_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("CountsFrom4", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr()
+                         ),
+                         
+                         fluidPage(
+                           
+                           radioButtons("fake2", label = p("Allow false positives?"),
+                                        choices = fake_choices,
+                                        selected = "without-false"),
+                           hr(),
+                           div(downloadButton("all_size_out_down"),style="float:right")
+                         )
                      )
               )
             )
@@ -395,7 +422,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("marker_type_out")
-                     ),
+                     )
+              ),
+              column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -409,28 +438,31 @@ body <- dashboardBody(
                                             choices = SNPcall_choice,
                                             selected = names(SNPcall_choice)),
                          hr()
-                       ),
-                       fluidPage(
-                         radioButtons("depth10", label = p("Depth"),
-                                      choices = depth_choice,
-                                      selected = depth_choice[[1]]),
-                         hr()
-                       ),
-                       fluidPage(
-                         radioButtons("CountsFrom10", label = p("Counts from"),
-                                      choices = CountsFrom_choice,
-                                      selected = "vcf"),
-                         hr()
-                       ),
-                       
-                       fluidPage(
+                       ))
+              ),
+              column(width=6,
+                     box(width=NULL, solidHeader = T,
+                         fluidPage(
+                           radioButtons("depth10", label = p("Depth"),
+                                        choices = depth_choice,
+                                        selected = depth_choice[[1]]),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("CountsFrom10", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr()
+                         ),
                          
-                         radioButtons("fake3", label = p("Allow false positives?"),
-                                      choices = fake_choices,
-                                      selected = "without-false"),
-                         hr(),
-                         div(downloadButton("marker_type_out_down"),style="float:right")
-                       )
+                         fluidPage(
+                           
+                           radioButtons("fake3", label = p("Allow false positives?"),
+                                        choices = fake_choices,
+                                        selected = "without-false"),
+                           hr(),
+                           div(downloadButton("marker_type_out_down"),style="float:right")
+                         )
                      )
               )
             )
@@ -442,7 +474,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("phases_out")
-                     ),
+                     )
+              ),
+              column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -456,7 +490,12 @@ body <- dashboardBody(
                                             choices = SNPcall_choice,
                                             selected = names(SNPcall_choice)),
                          hr()
-                       ),
+                       )
+                     )
+              ),
+              column(width=6,
+                     box(
+                       width=NULL, solidHeader = T,
                        fluidPage(
                          checkboxGroupInput("depth8", label = p("Depth"),
                                             choices = depth_choice,
@@ -489,7 +528,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("times_out")
-                     ),
+                     )
+              ),
+              column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -503,29 +544,33 @@ body <- dashboardBody(
                                             choices = SNPcall_choice,
                                             selected = names(SNPcall_choice)),
                          hr()
-                       ),
-                       fluidPage(
-                         checkboxGroupInput("depth9", label = p("Depth"),
-                                            choices = depth_choice,
-                                            selected = unlist(depth_choice)),
-                         hr()
-                       ),
-                       fluidPage(
-                         radioButtons("CountsFrom9", label = p("Counts from"),
-                                      choices = CountsFrom_choice,
-                                      selected = "vcf"),
-                         hr()
-                       ),
-                       
-                       fluidPage(
-                         
-                         radioButtons("fake5", label = p("Allow false positives?"),
-                                      choices = fake_choices,
-                                      selected = "without-false"),
-                         hr(),
-                         
-                         div(downloadButton("times_out_down"),style="float:right")
                        )
+                     )
+              ),
+              column(width=6,
+                     box(width=NULL, solidHeader = T,
+                         fluidPage(
+                           checkboxGroupInput("depth9", label = p("Depth"),
+                                              choices = depth_choice,
+                                              selected = unlist(depth_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("CountsFrom9", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr()
+                         ),
+                         
+                         fluidPage(
+                           
+                           radioButtons("fake5", label = p("Allow false positives?"),
+                                        choices = fake_choices,
+                                        selected = "without-false"),
+                           hr(),
+                           
+                           div(downloadButton("times_out_down"),style="float:right")
+                         )
                      )
               )
             )
@@ -537,7 +582,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("coverage_out")
-                     ),
+                     )
+              ),
+              column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -557,27 +604,31 @@ body <- dashboardBody(
                                             choices = depth_choice,
                                             selected = unlist(depth_choice)),
                          hr()
-                       ),
-                       fluidPage(
-                         radioButtons("CountsFrom5", label = p("Counts from:"),
-                                      choices = CountsFrom_choice,
-                                      selected = "vcf"),
-                         hr()
-                       ),
-                       fluidPage(
-                         
-                         radioButtons("fake6", label = p("Allow false positives?"),
-                                      choices = fake_choices,
-                                      selected = "without-false"),
-                         hr()
-                       ),
-                       
-                       fluidPage(
-                         numericInput("chr_size1", label = p("Chromosome size"), value = "complete here"),
-                         
-                         hr(),
-                         div(downloadButton("coverage_out_down"),style="float:right")
                        )
+                     )
+              ),
+              column(width=6,
+                     box(width = NULL, solidHeader = T,
+                         fluidPage(
+                           radioButtons("CountsFrom5", label = p("Counts from:"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr()
+                         ),
+                         fluidPage(
+                           
+                           radioButtons("fake6", label = p("Allow false positives?"),
+                                        choices = fake_choices,
+                                        selected = "without-false"),
+                           hr()
+                         ),
+                         
+                         fluidPage(
+                           numericInput("chr_size1", label = p("Chromosome size"), value = "complete here"),
+                           
+                           hr(),
+                           div(downloadButton("coverage_out_down"),style="float:right")
+                         )
                      )
               )
             )
@@ -589,7 +640,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("snpcall_out")
-                     ),
+                     )
+              ),
+              column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -597,20 +650,24 @@ body <- dashboardBody(
                                             choices = avalSNPs_choice,
                                             selected = unlist(avalSNPs_choice)),
                          hr()
-                       ),
-                       fluidPage(
-                         checkboxGroupInput("SNPcall6", label = p("SNP calling method"),
-                                            choices = SNPcall_choice,
-                                            selected = names(SNPcall_choice)),
-                         hr()
-                       ),
-                       fluidPage(
-                         checkboxGroupInput("depth6", label = p("Depth"),
-                                            choices = depth_choice,
-                                            selected = unlist(depth_choice)),
-                         hr(),
-                         div(downloadButton("snpcall_out_down"),style="float:right")
                        )
+                     )
+              ),
+              column(width = 6,
+                     box(width = 6, solidHeader = T,
+                         fluidPage(
+                           checkboxGroupInput("SNPcall6", label = p("SNP calling method"),
+                                              choices = SNPcall_choice,
+                                              selected = names(SNPcall_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           checkboxGroupInput("depth6", label = p("Depth"),
+                                              choices = depth_choice,
+                                              selected = unlist(depth_choice)),
+                           hr(),
+                           div(downloadButton("snpcall_out_down"),style="float:right")
+                         )
                      )
               )
             )
@@ -622,7 +679,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("filters_out")
-                     ),
+                     )
+              ),
+              column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -636,20 +695,24 @@ body <- dashboardBody(
                                             choices = SNPcall_choice,
                                             selected = names(SNPcall_choice)),
                          hr()
-                       ),
-                       fluidPage(
-                         radioButtons("CountsFrom7", label = p("Counts from"),
-                                      choices = CountsFrom_choice,
-                                      selected = "vcf"),
-                         hr()
-                       ),
-                       fluidPage(
-                         selectInput("depth7", label = p("Depth"),
-                                     choices = depth_choice,
-                                     selected = depth_choice[[1]]),
-                         hr(),
-                         div(downloadButton("filters_out_down"),style="float:right")
                        )
+                     )
+              ),
+              column(width = 6,
+                     box(width = NULL, solidHeader = T,
+                         fluidPage(
+                           radioButtons("CountsFrom7", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr()
+                         ),
+                         fluidPage(
+                           selectInput("depth7", label = p("Depth"),
+                                       choices = depth_choice,
+                                       selected = depth_choice[[1]]),
+                           hr(),
+                           div(downloadButton("filters_out_down"),style="float:right")
+                         )
                      )
               )
             )
@@ -661,37 +724,37 @@ body <- dashboardBody(
               column(width = 8,
                      box(
                        width = NULL,
-                       plotOutput("map1_out"),
-                       box(
-                         radioButtons("ErrorProb11", label = p("Genotype method"),
-                                      choices = maps_choice,
-                                      selected = "updog"),
+                       plotOutput("map_out"),
+                       box(solidHeader = T,
+                           radioButtons("ErrorProb11", label = p("Genotype method"),
+                                        choices = maps_choice,
+                                        selected = "updog"),
                        ),
-                       box(
-                         radioButtons("SNPcall11", label = p("SNP calling method"),
-                                      choices = SNPcall_choice,
-                                      selected = "gatk"),
+                       box(solidHeader = T,
+                           radioButtons("SNPcall11", label = p("SNP calling method"),
+                                        choices = SNPcall_choice,
+                                        selected = "gatk"),
                        ),
-                       box(
-                         selectInput("seed1", label = p("Seed"),
-                                     choices = seeds_choice,
-                                     selected = names(seeds_choice)[1]),
+                       box(solidHeader = T,
+                           selectInput("seed11", label = p("Seed"),
+                                       choices = seeds_choice,
+                                       selected = names(seeds_choice)[1]),
                        ),
-                       box(
-                         radioButtons("fake11", label = p("Allow false positives"),
-                                      choices = SNPcall_choice,
-                                      selected = "gatk"),
+                       box(solidHeader = T,
+                           radioButtons("fake11", label = p("Allow false positives"),
+                                        choices = fake_choices,
+                                        selected = "without-false"),
                        ),
-                       box(
-                         radioButtons("CountsFrom11", label = p("Counts from"),
-                                      choices = CountsFrom_choice,
-                                      selected = "vcf"),
-                         div(downloadButton("map_out_down"),style="float:right")
+                       box(solidHeader = T,
+                           radioButtons("CountsFrom11", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           div(downloadButton("map1_out_down"),style="float:right")
                        )
                      )
               ),
               column(width = 4,
-                     imageOutput("map_out")
+                     imageOutput("map1_out")
               )
             )
     ),
@@ -773,6 +836,14 @@ body <- dashboardBody(
                          hr()
                        ),
                        
+                       fluidPage(
+                         radioButtons("geno_from2_emp", label = p("Genotypes"),
+                                      choices = list("vcf"="vcf",
+                                                     "onemap" = "onemap"),
+                                      selected = "onemap"),
+                         hr()
+                       ),
+                       
                        #helpText("Select the SNP calling method"),
                        fluidPage(
                          radioButtons("SNPcall2_emp", label = p("SNP calling method"),
@@ -781,13 +852,6 @@ body <- dashboardBody(
                          hr()
                        ),
                        
-                       fluidPage(
-                         radioButtons("geno_from2_emp", label = p("Genotypes"),
-                                      choices = list("vcf"="vcf",
-                                                     "onemap" = "onemap"),
-                                      selected = "onemap"),
-                         hr()
-                       ),
                        
                        #helpText("Read counts from:"),
                        fluidPage(
@@ -809,7 +873,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("ind_size_emp_out")
-                     ),
+                     )
+              ),
+              column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -817,26 +883,29 @@ body <- dashboardBody(
                                             choices = maps_choice,
                                             selected = names(maps_choice)),
                          hr()
-                       ),
-                       
-                       #helpText("Select the SNP calling method"),
-                       fluidPage(
-                         checkboxGroupInput("SNPcall3_emp", label = p("SNP calling method"),
-                                            choices = SNPcall_choice,
-                                            selected = unlist(SNPcall_choice)),
-                         hr()
-                       ),
-                       
-                       #helpText("Read counts from:"),
-                       fluidPage(
-                         
-                         radioButtons("CountsFrom3_emp", label = p("Counts from"),
-                                      choices = CountsFrom_choice,
-                                      selected = "vcf"),
-                         hr(),
-                         div(downloadButton("ind_size_out_emp_down"),style="float:right")
-                         # ),
                        )
+                     )
+              ),
+              column(width = 6,
+                     box(width = NULL, solidHeader = T,
+                         #helpText("Select the SNP calling method"),
+                         fluidPage(
+                           checkboxGroupInput("SNPcall3_emp", label = p("SNP calling method"),
+                                              choices = SNPcall_choice,
+                                              selected = unlist(SNPcall_choice)),
+                           hr()
+                         )
+                         ,
+                         #helpText("Read counts from:"),
+                         fluidPage(
+                           
+                           radioButtons("CountsFrom3_emp", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr(),
+                           div(downloadButton("ind_size_out_emp_down"),style="float:right")
+                           # ),
+                         )
                      )
               )
             )
@@ -953,7 +1022,9 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("filters_emp_out")
-                     ),
+                     )
+              ),
+              column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -967,14 +1038,18 @@ body <- dashboardBody(
                                             choices = SNPcall_choice,
                                             selected = names(SNPcall_choice)),
                          hr()
-                       ),
-                       fluidPage(
-                         radioButtons("CountsFrom7_emp", label = p("Counts from"),
-                                      choices = CountsFrom_choice,
-                                      selected = "vcf"),
-                         hr(),
-                         div(downloadButton("filters_emp_out_down"),style="float:right")
                        )
+                     )
+              ),
+              column(width = 6,
+                     box(width = NULL, solidHeader = T,
+                         fluidPage(
+                           radioButtons("CountsFrom7_emp", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr(),
+                           div(downloadButton("filters_emp_out_down"),style="float:right")
+                         )
                      )
               )
             )
@@ -1376,40 +1451,61 @@ server <- function(input, output) {
   )
   
   #################################
-  output$map_out <- renderImage({
+  output$map1_out <- renderImage({
     data <- data2 %>% filter(Genocall %in% input$ErrorProb11) %>%
       filter(SNPcall %in% input$SNPcall11) %>%
-      filter(CountsFrom == input$CountsFrom11) 
+      filter(seed == seeds[as.numeric(input$seed11)]) %>%
+      filter(CountsFrom == input$CountsFrom11) %>%
+      filter(depth == depths[as.numeric(input$seed11)]) %>%
+      filter(fake == input$fake11)
     
-    data <-   data.frame(data$mks, data$rf)
-    
-    outfile <- paste0("temp.", sample(10000,1),".png")
-    draw_map2(data, output = outfile)
-    
+    if(input$fake11 == "with-false"){
+      false_mks <- as.character(data$mk.name[data$real.mks == "false positives"])
+      data <-   data.frame(data$mk.name, data$rf)
+      outfile <- paste0("temp.", sample(10000,1),".png")
+      draw_map2(data, output = outfile, tag = false_mks, col.tag = "darkblue", pos = T, id = F)  
+    } else {
+      data <-   data.frame(data$mk.name, data$rf)
+      outfile <- paste0("temp.", sample(10000,1),".png")
+      draw_map2(data, output = outfile)
+    }
     list(src = outfile,
          contentType = 'image/png',
-         width = 300,
-         height = 800)
+         width = 400,
+         height = 900)
   }, deleteFile = TRUE)
   
-  output$map1_out <- renderPlot({
-    data <- data_RDatas[paste0(input$SNPcall11, "_", input$CountsFrom11, "_", input$ErrorProb11)]
+  output$map_out <- renderPlot({
+    temp_n <- paste0(seeds[as.numeric(input$seed11)], "_",depths[as.numeric(input$seed11)])
+    data <- data6[[temp_n]]
+    if(input$fake11 == "with-false") fake <- T else fake <- F
+    temp_n <- paste0(temp_n, "_map_",input$SNPcall11, "_", input$CountsFrom11, "_", input$ErrorProb11, "_", fake)
+    data <- data[[temp_n]]
+    
     if(input$ErrorProb11 == "gusmap"){
-      data[[1]]$rf_2pt()
-      data[[1]]$plotChr(mat="rf", parent = "both")
+      data$rf_2pt()
+      data$plotChr(mat="rf", parent = "both")
     } else {
-      rf_graph_table(data[[1]], inter = F)
+      rf_graph_table(data, inter = F)
     }
   })
   
   ## download
-  output$map_out_down <- downloadHandler(
+  output$map1_out_down <- downloadHandler(
     filename =  function() {
       paste("map.png")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data_RDatas[[paste0(input$SNPcall11, "_", input$CountsFrom11, "_", input$ErrorProb11)]]
+      data <- data2 %>% filter(Genocall %in% input$ErrorProb11) %>%
+        filter(SNPcall %in% input$SNPcall11) %>%
+        filter(seed == seeds[as.numeric(input$seed11)]) %>%
+        filter(CountsFrom == input$CountsFrom11) %>%
+        filter(depth == depths[as.numeric(input$seed11)]) %>%
+        filter(fake == input$fake11)
+      
+      data <-   data.frame(data$mk.name, data$rf)
+      
       outfile <- paste0("temp.", sample(10000,1),".png")
       draw_map2(data, output = outfile)
     } 
