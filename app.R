@@ -124,9 +124,9 @@ body <- dashboardBody(
                        fluidPage(
                          # Copy the line below to make a select box 
                          selectInput("example_simu", label = h4(tags$b("SimulatedReads.wdl example results")), 
-                                     choices = list("Populus chromosome 10" = "data/toy_sample/SimulatedReads_20.tar.gz",#c("data/populus/SimulatedReads_10.tar.gz", "data/populus/SimulatedReads_20.tar.gz", "data/populus/SimulatedReads_100.tar.gz" ), 
-                                                    "Eucalyptus chromosome 10" = c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" ), 
-                                                    "Acca chromosome 10" = c("data/acca/SimulatedReads_10.tar.gz", "data/acca/SimulatedReads_20.tar.gz", "data/acca/SimulatedReads_100.tar.gz" )), 
+                                     choices = list("Populus chromosome 10" = "populus",
+                                                    "Eucalyptus chromosome 10" = "eucalyptus", 
+                                                    "Acca chromosome 10" = "acca"), 
                                      selected = "Populus chromosome 10"),
                        ),
                        verbatimTextOutput("simulatedreads_out")
@@ -1196,9 +1196,15 @@ server <- function(input, output,session) {
     if(!is.null(x)){
       data.gz <- x[,4]
       path = "data/"
-    } else {
-      data.gz <- input$example_simu
-      path <- unlist(strsplit(input$example_simu, "/"))
+    } else { ######## Available examples
+      if(input$example_simu == "populus"){
+        data.gz <- c("data/toy_sample/SimulatedReads_20.tar.gz", "data/toy_sample/SimulatedReads_10.tar.gz")
+      } else if(input$example_simu == "eucalyptus"){
+        data.gz <- c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" )
+      } else if(input$example_simu == "acca"){
+        data.gz <- c("data/acca/SimulatedReads_10.tar.gz", "data/acca/SimulatedReads_20.tar.gz", "data/acca/SimulatedReads_100.tar.gz" )
+      }
+      path <- unlist(strsplit(data.gz[1], "/"))
       path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
     }
     list_files <- list()
