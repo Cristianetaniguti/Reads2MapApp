@@ -13,129 +13,27 @@ source("graphics_simu.R")
 ## Empirical
 source("graphics_emp.R")
 
+## Permanently choices - If add more softwares in workflow comparision this part requires update
+ErrorProb_choice <- list("OneMap_version2" = "OneMap_version2",
+                         "polyrad"="polyrad",
+                         "SNPCaller"="SNPCaller",
+                         "supermassa"="supermassa",
+                         "updog"="updog")
 
-##################################################
-# Simulations
-##################################################
+global0.05_choices <- list("Global error of 0.05"=TRUE,
+                           "Variable error" = FALSE)
 
-# Data
-datas <- list()
-datas[[1]] <- Sys.glob("data/data1*")
-datas[[2]] <- Sys.glob("data/data2*")
-datas[[3]] <- Sys.glob("data/data3*")
-datas[[4]] <- Sys.glob("data/data4*")
-datas[[5]] <- Sys.glob("data/data5*")
-datas[[6]] <- Sys.glob("data/data6*")
+maps_choice <- list("gusmap" = "gusmap",
+                    "OneMap_version2" = "OneMap_version2",
+                    "polyrad"="polyrad",
+                    "SNPCaller"="SNPCaller",
+                    "supermassa"="supermassa",
+                    "updog"="updog")
+SNPCall_choice <- list("freebayes"="freebayes",
+                       "gatk" = "gatk")
+CountsFrom_choice <- list("bam"="bam",
+                          "vcf"="vcf")
 
-# Joint all depths
-data1 <- data2 <- data3 <- data4 <- data5 <- rdata_n <- vector()
-data6 <- list()
-
-for(i in 1:length(datas)){
-  for(j in 1:length(datas[[i]])){
-    if(i == 6){
-      temp <- load(datas[[i]][[j]])
-      temp <- get(temp)
-      temp_n <- names(Rdatas)[1]
-      temp_n <- paste0(lapply(strsplit(temp_n, "_"), "[", 1:2)[[1]], collapse = "_")
-      rdata_n <- c(rdata_n, temp_n)
-      data6[[j]] <- Rdatas
-    } else {
-      temp <-  readRDS(datas[[i]][[j]])
-      assign(paste0("data",i), rbind(get(paste0("data",i)), temp))
-    }
-  }
-}
-
-names(data6) <- rdata_n
-
-# For errors
-data1$errors <- apply(data1[,10:13], 1, function(x) if(all(x==1)) NA else 1 - x[which.max(x)])
-data1$ref <- as.numeric(data1$ref)
-# The onemap genotype codification do not diferenciate the homozyotes for each parent
-data1$gabGT[data1$gabGT == 3 | data1$gabGT == 1] <- "homozygous"
-data1$gabGT[data1$gabGT == 2] <- "heterozygote"
-data1$methGT[data1$methGT == "3" | data1$methGT == "1"] <- "homozygous"
-data1$methGT[data1$methGT == "2"] <- "heterozygote"
-data1$methGT[data1$methGT == "0"] <- "missing"
-
-data1$methGT <- factor(data1$methGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
-data1$gabGT <- factor(data1$gabGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
-
-temp <- levels(data1$GenoCall)
-temp[1:2] <- c("OneMap_version2", "SNPCaller0.05")
-data1$GenoCall <- as.character(data1$GenoCall)
-data1$GenoCall[data1$GenoCall == "default"] <- "OneMap_version2"
-data1$GenoCall[data1$GenoCall == "default0.05"] <- "SNPCaller0.05"
-data1$GenoCall <- factor(data1$GenoCall, labels = temp, levels = temp)
-
-####
-data2 <- data2[,-3]
-colnames(data2) <- c("seed", "depth", "mk.name", "pos" , "rf" , "type", "real.type", "est.phases", "real.phases", "real.mks", "SNPCall", "GenoCall", "CountsFrom",
-                     "poscM", "poscM.norm", "diff")
-
-data2$fake[which(data2$real.mks ==99)] <- "without-false"
-data2$fake[which(data2$real.mks < 2)] <- "with-false"
-
-data2$real.mks[which(data2$real.mks == 99 | data2$real.mks == 1)] <- "true markers"
-data2$real.mks[which(data2$real.mks == 0)] <- "false positives"
-
-temp <- levels(data2$GenoCall)
-temp[1:2] <- c("OneMap_version2", "SNPCaller0.05")
-data2$GenoCall <- as.character(data2$GenoCall)
-data2$GenoCall[data2$GenoCall == "default"] <- "OneMap_version2"
-data2$GenoCall[data2$GenoCall == "default0.05"] <- "SNPCaller0.05"
-data2$GenoCall <- factor(data2$GenoCall, labels = temp, levels = temp)
-
-
-###
-data4 <- as.data.frame(data4)
-data4$fake <- as.character(data4$fake)
-data4$fake[which(data4$fake =="FALSE")] <- "without-false"
-data4$fake[which(data4$fake =="TRUE")] <- "with-false"
-data4$fake <- as.factor(data4$fake)
-
-#####
-data5 <- data5[,-7] ## Ajustar
-names(data5) <- c("depth", "seed", "SNPCall", "(1)", "(2)", "(3)", "(4)", "(5)") ## Ajustars
-data5 <- gather(data5, key,value,-SNPCall, -depth)
-
-colnames(data3) <- c("seed", "depth", "n_markers", "distorted_markers", "redundant_markers", "SNPCall", "GenoCall", "CountsFrom")
-
-data3$GenoCall <- factor(data3$GenoCall)
-data3 <- gather(data3,key,value, -CountsFrom, -seed, -depth, -SNPCall, -GenoCall)
-data3$key <- factor(data3$key)
-
-# Defining the options
-cout <- table(data1$seed, data1$depth)
-depthNames <- colnames(cout)
-depths <- seeds <- seedsNames <- vector()
-for(i in 1:length(depthNames)){
-  for(j in 1:nrow(cout)){
-    if(cout[j,i] > 0){
-    temp <- rownames(cout)[j]
-    seedsNames <- c(seedsNames, paste0("Depth ", depthNames[i], " seed ", temp))
-    depths <- c(depths, depthNames[i])
-    seeds <- c(seeds, temp)
-    }
-  }
-}
-
-seeds_choice <- as.list(1:length(seedsNames))
-names(seeds_choice) <- as.character(seedsNames)
-ErrorProb_choice <- as.list(sort(levels(data1$GenoCall)))
-names(ErrorProb_choice) <- as.character(sort(levels(data1$GenoCall)))
-ErrorProb_choice <- ErrorProb_choice[-grep("0.05", ErrorProb_choice)]
-global0.05_choices <- list("Global error of 0.05" = T, "Variable error" = FALSE)
-maps_choice <- as.list(sort(levels(data2$GenoCall)))
-names(maps_choice) <- as.character(sort(levels(data2$GenoCall)))
-maps_choice <- maps_choice[-grep("0.05", maps_choice)]
-SNPCall_choice <- as.list(sort(levels(data1$SNPCall)))
-names(SNPCall_choice) <- as.character(sort(levels(data1$SNPCall)))
-CountsFrom_choice <- as.list(as.character(sort(levels(data1$CountsFrom))))
-names(CountsFrom_choice) <- as.character(sort(levels(data1$CountsFrom)))
-depth_choice <- as.list(unique(data1$depth))
-names(depth_choice) <- as.character(unique(data1$depth))
 stats_choice <- list("mean", "median", "var", "total")
 names(stats_choice) <- c("mean", "median", "var", "total")
 avalSNPs_choice <- list("(1)", "(2)", "(3)", "(4)", "(5)")
@@ -147,19 +45,6 @@ names(avalSNPs_choice) <- c("number of simulated SNPs (1)",
 fake_choices <- list("with-false", "without-false")
 names(fake_choices) <- c("yes", "no")
 
-####################################################################
-# Empirical
-####################################################################
-
-data_map <- readRDS("data/data_map.rds")
-data_map$GenoCall <- factor(data_map$GenoCall, levels = sort(levels(data_map$GenoCall)))
-data_depths <- readRDS("data/data_depths.rds")
-data_depths$GenoCall <- factor(data_depths$GenoCall, levels = sort(levels(data_depths$GenoCall)))
-data_times <- readRDS("data/data_times.rds")
-data_times$GenoCall <- factor(data_times$GenoCall, levels= sort(levels(data_times$GenoCall)))
-data_filters <- readRDS("data/data_filters.rds")
-data_filters$GenoCall <- factor(data_filters$GenoCall, levels= sort(levels(data_filters$GenoCall)))
-load("data/data_RDatas.RData")
 
 ########
 #  UI  #
@@ -175,7 +60,7 @@ sidebar <- dashboardSidebar(
     id = "tabs",
     menuItem("About", tabName = "about", icon = icon("lightbulb")),
     #menuItem("Parallel map", icon = icon("dot-circle"), tabName = "parallel"), 
-    
+    menuItem("Upload data", icon = icon("upload"), tabName= "upload"),
     menuItem("Simulation results", icon = icon("dot-circle"), tabName= "simulations",
              menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth"),
              menuSubItem("Map size each family", icon = icon("circle"), tabName = "ind_size"),
@@ -213,6 +98,61 @@ body <- dashboardBody(
     #         #includeMarkdown("parallel.Rmd")
     # ),
     ##########################################################
+    # Upload data
+    ##########################################################
+    tabItem(tabName = "upload",
+            "This shiny app build several graphics as results from OneMap workflows. 
+            If you run the", tags$b("SimulatedReads.wdl"),"and/or EmpiricalReads.wdl workflows you 
+            can upload the outputted data in", tags$b("Upload SimulatedReads outputs"), "and/or",
+            tags$b("Upload EmpiricalReads outputs"), "sections. If you don't have your own results yet,
+            you can explore the generate to populus dataset (Bioproject X), eucalyptus and acca
+            all these results is better explained in the paper. Select the available 
+            example results in", tags$b("SimulatedReads.wdl example results"),"and/or", 
+            tags$b("EmpiricalReads.wdl example results"),".",
+            hr(),
+            column(width = 6,
+                   box(width = 12,
+                       fluidPage(
+                         
+                         tags$h4(tags$b("Upload SimulatesReads results:")),
+                         "If you have more than one depth value, submit all files in the same window.",
+                         # Copy the line below to make a file upload manager
+                         fileInput("simulatedreads", label = h6("SimulatedReads_<depth>.tar.gz"), multiple = T),
+                         
+                       ),
+                       
+                       fluidPage(
+                         # Copy the line below to make a select box 
+                         selectInput("example_simu", label = h4(tags$b("SimulatedReads.wdl example results")), 
+                                     choices = list("Populus chromosome 10" = "data/toy_sample/SimulatedReads_20.tar.gz",#c("data/populus/SimulatedReads_10.tar.gz", "data/populus/SimulatedReads_20.tar.gz", "data/populus/SimulatedReads_100.tar.gz" ), 
+                                                    "Eucalyptus chromosome 10" = c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" ), 
+                                                    "Acca chromosome 10" = c("data/acca/SimulatedReads_10.tar.gz", "data/acca/SimulatedReads_20.tar.gz", "data/acca/SimulatedReads_100.tar.gz" )), 
+                                     selected = "Populus chromosome 10"),
+                       ),
+                       verbatimTextOutput("simulatedreads_out")
+                   )
+            ),
+            column(width = 6,
+                   box(width = 12,
+                       fluidPage(
+                         
+                         tags$h4(tags$b("Upload EmpiricalReads results:")),
+                         "If you have more than one depth value, submit all files in the same window.",
+                         # Copy the line below to make a file upload manager
+                         fileInput("empiricalreads", label = h6("EmpiricalReads_<depth>.tar.gz"), multiple = T),
+                       ),
+                       fluidPage(
+                         # Copy the line below to make a select box 
+                         selectInput("example_emp", label = h4(tags$b("EmpiricalReads.wdl example results")), 
+                                     choices = list("Populus chromosome 10" = 1, 
+                                                    "Eucalyptus chromosome 10" = 2, 
+                                                    "Acca chromosome 10" = 3), 
+                                     selected = 1),
+                       )
+                   )
+            )
+    ),
+    ##########################################################
     # Simulations
     ##########################################################
     tabItem(tabName = "disper_depth",
@@ -237,8 +177,8 @@ body <- dashboardBody(
                        ),
                        fluidPage(
                          radioButtons("Global0.05.1", label = p("Global error of 0.05"),
-                                            choices = global0.05_choices,
-                                            selected = "FALSE"),
+                                      choices = global0.05_choices,
+                                      selected = "FALSE"),
                          hr()
                        ),
                        
@@ -263,8 +203,8 @@ body <- dashboardBody(
                        fluidPage(
                          
                          selectInput("seed1", label = p("Seed"),
-                                     choices = seeds_choice,
-                                     selected = names(seeds_choice)[1]),
+                                     choices = "It will be updated",
+                                     selected ="It will be updated"),
                          hr()
                        ),
                        
@@ -303,8 +243,8 @@ body <- dashboardBody(
                        fluidPage(
                          radioButtons("real2", label = p("Genotypes"),
                                       choices = list("Simulated genotypes" = "simulated_genotypes", 
-                                                    "Estimated genotypes"="estimated_genotypes",
-                                                    "Errors rate" = "estimated_errors"),
+                                                     "Estimated genotypes"="estimated_genotypes",
+                                                     "Errors rate" = "estimated_errors"),
                                       selected = "estimated_genotypes"),
                          hr()
                        ),
@@ -321,8 +261,8 @@ body <- dashboardBody(
                        fluidPage(
                          
                          selectInput("seed2", label = p("Seed"),
-                                     choices = seeds_choice,
-                                     selected = names(seeds_choice)[1]),
+                                     choices = "It will be updated",
+                                     selected = "It will be updated"),
                          hr()
                        ),
                        
@@ -379,8 +319,8 @@ body <- dashboardBody(
                          #helpText("Select the family seed"),
                          fluidPage(
                            selectInput("seed3", label = p("Seed"),
-                                       choices = seeds_choice,
-                                       selected = names(seeds_choice)[1]),
+                                       choices = "It will be updated",
+                                       selected = "It will be updated"),
                            hr()
                          ),
                          
@@ -450,8 +390,8 @@ body <- dashboardBody(
                      box(width = NULL, solidHeader = TRUE,
                          fluidPage(
                            checkboxGroupInput("depth4", label = p("Depth"),
-                                              choices = depth_choice,
-                                              selected = unlist(depth_choice)),
+                                              choices = "This will be updated",
+                                              selected = "This will be updated"),
                            hr()
                          ),
                          fluidPage(
@@ -505,8 +445,8 @@ body <- dashboardBody(
                      box(width=NULL, solidHeader = T,
                          fluidPage(
                            radioButtons("depth10", label = p("Depth"),
-                                        choices = depth_choice,
-                                        selected = depth_choice[[1]]),
+                                        choices = "This will be updated",
+                                        selected = "This will be updated"),
                            hr()
                          ),
                          fluidPage(
@@ -567,8 +507,8 @@ body <- dashboardBody(
                        width=NULL, solidHeader = T,
                        fluidPage(
                          checkboxGroupInput("depth8", label = p("Depth"),
-                                            choices = depth_choice,
-                                            selected = unlist(depth_choice)),
+                                            choices = "This will be updated",
+                                            selected = "This will be updated"),
                          hr()
                        ),
                        fluidPage(
@@ -629,8 +569,8 @@ body <- dashboardBody(
                      box(width=NULL, solidHeader = T,
                          fluidPage(
                            checkboxGroupInput("depth9", label = p("Depth"),
-                                              choices = depth_choice,
-                                              selected = unlist(depth_choice)),
+                                              choices = "This will be updated",
+                                              selected = "This will be updated"),
                            hr()
                          ),
                          fluidPage(
@@ -688,8 +628,8 @@ body <- dashboardBody(
                        ),
                        fluidPage(
                          checkboxGroupInput("depth5", label = p("Depth"),
-                                            choices = depth_choice,
-                                            selected = unlist(depth_choice)),
+                                            choices = "This will be updated",
+                                            selected = "This will be updated"),
                          hr()
                        )
                      )
@@ -753,8 +693,8 @@ body <- dashboardBody(
                          ),
                          fluidPage(
                            checkboxGroupInput("depth6", label = p("Depth"),
-                                              choices = depth_choice,
-                                              selected = unlist(depth_choice)),
+                                              choices = "This will be updated",
+                                              selected = "This will be updated"),
                            hr(),
                            div(downloadButton("snpcall_out_down"),style="float:right")
                          )
@@ -808,8 +748,8 @@ body <- dashboardBody(
                          ),
                          fluidPage(
                            selectInput("depth7", label = p("Depth"),
-                                       choices = depth_choice,
-                                       selected = depth_choice[[1]]),
+                                       choices = "This will be updated",
+                                       selected = "This will be updated"),
                            hr(),
                            div(downloadButton("filters_out_down"),style="float:right")
                          )
@@ -820,7 +760,7 @@ body <- dashboardBody(
     
     ################################################################################3
     tabItem(tabName = "map",
-            "Here, at left, it is plotted the heatmap graphic with recombination fraction varying in color according with the 
+            "On the left, it is plotted the heatmap graphic with recombination fraction varying in color according with the 
             intensity of the linkage. Higher is the recombination fraction hottest is the color. Markers are represented in x 
             and y axis. On the right, the linkage group is plotted with distances between markers proportional to the genetic distances.",
             hr(),
@@ -829,6 +769,7 @@ body <- dashboardBody(
                      box(
                        width = NULL,
                        plotOutput("map_out"),
+                       hr(),
                        box(solidHeader = T,
                            radioButtons("ErrorProb11", label = p("Genotype method"),
                                         choices = maps_choice,
@@ -848,8 +789,8 @@ body <- dashboardBody(
                        ),
                        box(solidHeader = T,
                            selectInput("seed11", label = p("Seed"),
-                                       choices = seeds_choice,
-                                       selected = names(seeds_choice)[1]),
+                                       choices = "It will be updated",
+                                       selected = "It will be updated"),
                        ),
                        box(solidHeader = T,
                            radioButtons("fake11", label = p("Allow false positives"),
@@ -1244,7 +1185,228 @@ body <- dashboardBody(
 ui <- dashboardPage(header, sidebar, body, skin = "purple")
 
 ## Define server logic required to draw a histogram ----
-server <- function(input, output) {
+server <- function(input, output,session) {
+  ##################################################
+  # Simulations - rearranging data
+  ##################################################
+  
+  prepare_datas_simu <- function(x){
+    # This function makes adjustments in the input tar.gz file to be processed inside the app
+    # It returns six data objects and the app options in a list format
+    if(!is.null(x)){
+      data.gz <- x[,4]
+      path = "data/"
+    } else {
+      data.gz <- input$example_simu
+      path <- unlist(strsplit(input$example_simu, "/"))
+      path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
+    }
+    list_files <- list()
+    for(i in 1:length(data.gz)){
+      untar(data.gz[i], exdir = path)
+      list_files[[i]] <- untar(data.gz[i], list = T)
+    }
+
+    list_files <- lapply(list_files, function(x) paste0(path, x))
+    
+    # Data
+    datas <- list()
+    for(i in 1:6){
+      datas[[i]] <- sapply(list_files, "[", i)
+    }
+    
+    # Joint all depths
+    data1 <- data2 <- data3 <- data4 <- data5 <- rdata_n <- vector()
+    data6 <- list()
+    
+    for(i in 1:length(datas)){
+      for(j in 1:length(datas[[i]])){
+        if(i == 6){
+          temp <- load(datas[[i]][[j]])
+          temp <- get(temp)
+          temp_n <- names(Rdatas)[1]
+          temp_n <- paste0(lapply(strsplit(temp_n, "_"), "[", 2)[[1]], collapse = "_")
+          rdata_n <- c(rdata_n, temp_n)
+          data6[[j]] <- Rdatas
+        } else {
+          temp <-  readRDS(datas[[i]][[j]])
+          assign(paste0("data",i), rbind(get(paste0("data",i)), temp))
+        }
+      }
+    }
+    names(data6) <- rdata_n
+    
+    # For errors
+    data1$errors <- apply(data1[,10:13], 1, function(x) if(all(x==1)) NA else 1 - x[which.max(x)])
+    data1$ref[which(data1$ref == ".")] <- NA
+    data1$ref <- as.numeric(data1$ref)
+    # The onemap genotype codification do not diferenciate the homozyotes for each parent
+    data1$gabGT[data1$gabGT == 3 | data1$gabGT == 1] <- "homozygous"
+    data1$gabGT[data1$gabGT == 2] <- "heterozygote"
+    data1$methGT[data1$methGT == "3" | data1$methGT == "1"] <- "homozygous"
+    data1$methGT[data1$methGT == "2"] <- "heterozygote"
+    data1$methGT[data1$methGT == "0"] <- "missing"
+    
+    data1$methGT <- factor(data1$methGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
+    data1$gabGT <- factor(data1$gabGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
+    
+    temp <- levels(data1$GenoCall)
+    temp[1:2] <- c("OneMap_version2", "SNPCaller0.05")
+    data1$GenoCall <- as.character(data1$GenoCall)
+    data1$GenoCall[data1$GenoCall == "default"] <- "OneMap_version2"
+    data1$GenoCall[data1$GenoCall == "default0.05"] <- "SNPCaller0.05"
+    data1$GenoCall <- factor(data1$GenoCall, labels = temp, levels = temp)
+    
+    ####
+    data2 <- data2[,-3]
+    colnames(data2) <- c("seed", "depth", "mk.name", "pos" , "rf" , "type", "real.type", "est.phases", "real.phases", "real.mks", "SNPCall", "GenoCall", "CountsFrom",
+                         "poscM", "poscM.norm", "diff")
+    
+    data2$fake[which(data2$real.mks ==99)] <- "without-false"
+    data2$fake[which(data2$real.mks < 2)] <- "with-false"
+    
+    data2$real.mks[which(data2$real.mks == 99 | data2$real.mks == 1)] <- "true markers"
+    data2$real.mks[which(data2$real.mks == 0)] <- "false positives"
+    
+    temp <- levels(data2$GenoCall)
+    temp[1:2] <- c("OneMap_version2", "SNPCaller0.05")
+    data2$GenoCall <- as.character(data2$GenoCall)
+    data2$GenoCall[data2$GenoCall == "default"] <- "OneMap_version2"
+    data2$GenoCall[data2$GenoCall == "default0.05"] <- "SNPCaller0.05"
+    data2$GenoCall <- factor(data2$GenoCall, labels = temp, levels = temp)
+    
+    ###
+    data4 <- as.data.frame(data4)
+    data4$fake <- as.character(data4$fake)
+    data4$fake[which(data4$fake =="FALSE")] <- "without-false"
+    data4$fake[which(data4$fake =="TRUE")] <- "with-false"
+    data4$fake <- as.factor(data4$fake)
+    
+    temp <- levels(data4$GenoCall)
+    data4$GenoCall <- as.character(data4$GenoCall)
+    data4$GenoCall[data4$GenoCall == "default"] <- "OneMap_version2"
+    data4$GenoCall[data4$GenoCall == "default0.05"] <- "SNPCaller0.05"
+    data4$GenoCall <- factor(data4$GenoCall, labels = temp, levels = temp)
+    
+    #####
+    data5 <- data5[,-7] ## Ajustar
+    names(data5) <- c("depth", "seed", "SNPCall", "(1)", "(2)", "(3)", "(4)", "(5)") ## Ajustars
+    data5 <- gather(data5, key,value,-SNPCall, -depth)
+    
+    colnames(data3) <- c("seed", "depth", "n_markers", "distorted_markers", "redundant_markers", "SNPCall", "GenoCall", "CountsFrom")
+    
+    data3$GenoCall <- factor(data3$GenoCall)
+    data3 <- gather(data3,key,value, -CountsFrom, -seed, -depth, -SNPCall, -GenoCall)
+    data3$key <- factor(data3$key)
+    
+    # Defining the options
+    cout <- table(data1$seed, data1$depth)
+    depthNames <- colnames(cout)
+    depths <- seeds <- seedsNames <- vector()
+    for(i in 1:length(depthNames)){
+      for(j in 1:nrow(cout)){
+        if(cout[j,i] > 0){
+          temp <- rownames(cout)[j]
+          seedsNames <- c(seedsNames, paste0("Depth ", depthNames[i], " seed ", temp))
+          depths <- c(depths, depthNames[i])
+          seeds <- c(seeds, temp)
+        }
+      }
+    }
+    
+    depth_choice <- as.list(unique(data1$depth))
+    names(depth_choice) <- as.character(unique(data1$depth))
+    seeds_choice <- as.list(1:length(seedsNames))
+    names(seeds_choice) <- as.character(seedsNames)
+    
+    result_list <- list("data1" = data1, "data2"= data2, 
+                        "data3"=data3, "data4"=data4, "data5"=data5, "data6"=data6, 
+                        "choices" = list(depths, seeds, seeds_choice, depth_choice))
+    return(result_list)
+  }
+  
+  datas_simu <- reactive({prepare_datas_simu(input$simulatedreads)})
+  
+  # Update choices of seed and depth according with the dateset choosed
+  observe({
+    seeds_choice <- datas_simu()[[7]][[3]] 
+    depth_choice <- datas_simu()[[7]][[4]]
+    
+    updateSelectInput(session, "seed1",
+                      label="Seed",
+                      choices = seeds_choice,
+                      selected=unlist(seeds_choice)[1])
+    
+    
+    updateSelectInput(session, "seed2",
+                      label="Seed",
+                      choices = seeds_choice,
+                      selected=unlist(seeds_choice)[1])
+    
+    
+    updateSelectInput(session, "seed3",
+                      label="Seed",
+                      choices = seeds_choice,
+                      selected=unlist(seeds_choice)[1])
+    
+    
+    updateSelectInput(session, "seed11",
+                      label="Seed",
+                      choices = seeds_choice,
+                      selected=unlist(seeds_choice)[1])
+    
+    updateCheckboxGroupInput(session, "depth4",
+                             label="Depth",
+                             choices = depth_choice,
+                             selected=unlist(depth_choice))
+    
+    updateRadioButtons(session, "depth10",
+                       label="Depth",
+                       choices = depth_choice,
+                       selected=names(depth_choice)[1])
+    
+    updateCheckboxGroupInput(session, "depth8",
+                             label="Depth",
+                             choices = depth_choice,
+                             selected=unlist(depth_choice))
+    
+    updateCheckboxGroupInput(session, "depth9",
+                             label="Depth",
+                             choices = depth_choice,
+                             selected=unlist(depth_choice))
+    
+    updateCheckboxGroupInput(session, "depth5",
+                             label="Depth",
+                             choices = depth_choice,
+                             selected=unlist(depth_choice))
+    
+    
+    updateCheckboxGroupInput(session, "depth6",
+                             label="Depth",
+                             choices = depth_choice,
+                             selected=unlist(depth_choice))
+    
+    
+    updateSelectInput(session, "depth7",
+                      label="Depth",
+                      choices = depth_choice,
+                      selected=unlist(depth_choice)[1])
+  })
+  
+  ####################################################################
+  # Empirical - - rearranging data
+  ####################################################################
+  
+  data_map <- readRDS("data/data_map.rds")
+  data_map$GenoCall <- factor(data_map$GenoCall, levels = sort(levels(data_map$GenoCall)))
+  data_depths <- readRDS("data/data_depths.rds")
+  data_depths$GenoCall <- factor(data_depths$GenoCall, levels = sort(levels(data_depths$GenoCall)))
+  data_times <- readRDS("data/data_times.rds")
+  data_times$GenoCall <- factor(data_times$GenoCall, levels= sort(levels(data_times$GenoCall)))
+  data_filters <- readRDS("data/data_filters.rds")
+  data_filters$GenoCall <- factor(data_filters$GenoCall, levels= sort(levels(data_filters$GenoCall)))
+  load("data/data_RDatas.RData")
+  
   ##################################################################
   # Simulations
   ##################################################################
@@ -1265,11 +1427,11 @@ server <- function(input, output) {
       stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
     }
     
-    data <- data1 %>% filter(GenoCall == geno) %>%
+    data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
       filter(SNPCall == input$SNPCall1) %>%
-      filter(seed == seeds[as.numeric(input$seed1)]) %>%
+      filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
       filter(CountsFrom == input$CountsFrom1) %>%
-      filter(depth == depths[as.numeric(input$seed1)])
+      filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
     errorProb_graph(data, input$real1)
   })
   
@@ -1289,11 +1451,11 @@ server <- function(input, output) {
       } else {
         geno <- input$ErrorProb1
       }
-      data <- data1 %>% filter(GenoCall == geno) %>%
+      data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
         filter(SNPCall == input$SNPCall1) %>%
-        filter(seed == seeds[as.numeric(input$seed1)]) %>%
+        filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
         filter(CountsFrom == input$CountsFrom1) %>%
-        filter(depth == depths[as.numeric(input$seed1)])
+        filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
       p <- errorProb_graph(data, input$real1)
       ggsave(file, p)
     } 
@@ -1310,20 +1472,21 @@ server <- function(input, output) {
     } else {
       geno <- input$ErrorProb2
     }
-    data <- data1 %>% filter(GenoCall == geno) %>%
+    data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
       filter(SNPCall == input$SNPCall2) %>%
-      filter(seed == seeds[as.numeric(input$seed2)]) %>%
+      filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed2)]) %>%
       filter(CountsFrom == input$CountsFrom2) %>%
-      filter(depth == depths[as.numeric(input$seed2)])
+      filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed2)])
     errorProb_graph(data, input$real2)
   })
   
   ##################################################################
   output$ind_size_out <- renderPlot({
     if(input$Global0.05.3){
-      if( input$ErrorProb3 == "OneMap_version2"){
-        geno <- paste0("SNPCaller", 0.05)
-      } else if (input$ErrorProb3 == "gusmap"){
+      if(any(input$ErrorProb3 %in% "OneMap_version2")){
+        geno <- input$ErrorProb3
+        geno[which(input$ErrorProb3 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+      } else if (any(input$ErrorProb3 %in% "gusmap")){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
       } else {
         geno <- paste0(input$ErrorProb3, 0.05)
@@ -1331,11 +1494,11 @@ server <- function(input, output) {
     } else {
       geno <- input$ErrorProb3
     }
-    data <- data2 %>% filter(GenoCall %in% geno) %>%
+    data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall3) %>%
-      filter(seed == seeds[as.numeric(input$seed3)]) %>%
+      filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed3)]) %>%
       filter(CountsFrom == input$CountsFrom3) %>%
-      filter(depth == depths[as.numeric(input$seed3)]) %>%
+      filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
       filter(fake == input$fake1)
     ind_size_graph(data)
   })
@@ -1348,9 +1511,10 @@ server <- function(input, output) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.3){
-        if( input$ErrorProb3 == "OneMap_version2"){
-          geno <- paste0("SNPCaller", 0.05)
-        } else if (input$ErrorProb3 == "gusmap"){
+        if(any(input$ErrorProb3 %in% "OneMap_version2")){
+          geno <- input$ErrorProb3
+          geno[which(input$ErrorProb3 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+        } else if (any(input$ErrorProb3 %in% "gusmap")){
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
         } else {
           geno <- paste0(input$ErrorProb3, 0.05)
@@ -1358,11 +1522,11 @@ server <- function(input, output) {
       } else {
         geno <- input$ErrorProb3
       }
-      data <- data2 %>% filter(ErrorProb %in% geno) %>%
+      data <- datas_simu()[[2]] %>% filter(ErrorProb %in% geno) %>%
         filter(SNPCall %in% input$SNPCall3) %>%
-        filter(seed == seeds[as.numeric(input$seed3)]) %>%
+        filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed3)]) %>%
         filter(CountsFrom == input$CountsFrom3) %>%
-        filter(depth == depths[as.numeric(input$seed3)]) %>%
+        filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
         filter(fake == input$fake1)
       p <- ind_size_graph(data)
       ggsave(file, p)
@@ -1371,9 +1535,10 @@ server <- function(input, output) {
   ##################################################################
   output$all_size_out <- renderPlot({
     if(input$Global0.05.4){
-      if( input$ErrorProb4 == "OneMap_version2"){
-        geno <- paste0("SNPCaller", 0.05)
-      } else if (input$ErrorProb4 == "gusmap"){
+      if(any(input$ErrorProb4 %in% "OneMap_version2")){
+        geno <- input$ErrorProb4
+        geno[which(input$ErrorProb4 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+      } else if (any(input$ErrorProb4 %in% "gusmap")){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
       } else {
         geno <- paste0(input$ErrorProb4, 0.05)
@@ -1381,7 +1546,7 @@ server <- function(input, output) {
     } else {
       geno <- input$ErrorProb4
     }
-    data <- data2 %>% filter(GenoCall %in% geno) %>%
+    data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall4) %>%
       filter(CountsFrom == input$CountsFrom4) %>%
       filter(depth == input$depth4) %>%
@@ -1405,9 +1570,10 @@ server <- function(input, output) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.4){
-        if( input$ErrorProb4 == "OneMap_version2"){
-          geno <- paste0("SNPCaller", 0.05)
-        } else if (input$ErrorProb4 == "gusmap"){
+        if(any(input$ErrorProb4 %in% "OneMap_version2")){
+          geno <- input$ErrorProb4
+          geno[which(input$ErrorProb4 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+        } else if (any(input$ErrorProb4 %in% "gusmap")){
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
         } else {
           geno <- paste0(input$ErrorProb4, 0.05)
@@ -1415,7 +1581,7 @@ server <- function(input, output) {
       } else {
         geno <- input$ErrorProb4
       }
-      data <- data2 %>% filter(GenoCall %in% geno) %>%
+      data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall4) %>%
         filter(CountsFrom == input$CountsFrom4) %>%
         filter(depth==input$depth4) %>%
@@ -1434,7 +1600,7 @@ server <- function(input, output) {
   )
   #######################################################################
   output$marker_type_out <- renderPlot({
-    data <- data2 %>% filter(GenoCall %in% input$ErrorProb10) %>%
+    data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
       filter(SNPCall %in% input$SNPCall10) %>%
       filter(CountsFrom == input$CountsFrom10) %>%
       filter(depth == input$depth10) %>%
@@ -1453,7 +1619,7 @@ server <- function(input, output) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data2 %>% filter(GenoCall %in% input$ErrorProb10) %>%
+      data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
         filter(SNPCall %in% input$SNPCall10) %>%
         filter(CountsFrom == input$CountsFrom10) %>%
         filter(depth == input$depth10) %>%
@@ -1469,9 +1635,10 @@ server <- function(input, output) {
   #######################################################################
   output$phases_out <- renderPlot({
     if(input$Global0.05.8){
-      if( input$ErrorProb8 == "OneMap_version2"){
-        geno <- paste0("SNPCaller", 0.05)
-      } else if (input$ErrorProb8 == "gusmap"){
+      if(any(input$ErrorProb8 %in% "OneMap_version2")){
+        geno <- input$ErrorProb8
+        geno[which(input$ErrorProb8 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+      } else if (any(input$ErrorProb8 %in% "gusmap")){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
       } else {
         geno <- paste0(input$ErrorProb8, 0.05)
@@ -1479,7 +1646,7 @@ server <- function(input, output) {
     } else {
       geno <- input$ErrorProb8
     }
-    data <- data2 %>% filter(GenoCall %in% geno) %>%
+    data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall8) %>%
       filter(CountsFrom == input$CountsFrom8) %>%
       filter(depth == input$depth8) %>%
@@ -1498,9 +1665,10 @@ server <- function(input, output) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.8){
-        if( input$ErrorProb8 == "OneMap_version2"){
-          geno <- paste0("SNPCaller", 0.05)
-        } else if (input$ErrorProb8 == "gusmap"){
+        if(any(input$ErrorProb8 %in% "OneMap_version2")){
+          geno <- input$ErrorProb8
+          geno[which(input$ErrorProb8 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+        } else if (any(input$ErrorProb8 %in% "gusmap")){
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
         } else {
           geno <- paste0(input$ErrorProb8, 0.05)
@@ -1508,7 +1676,7 @@ server <- function(input, output) {
       } else {
         geno <- input$ErrorProb8
       }
-      data <- data2 %>% filter(GenoCall %in% input$ErrorProb8) %>%
+      data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb8) %>%
         filter(SNPCall %in% input$SNPCall8) %>%
         filter(depth == input$depth8) %>%
         filter(fake == input$fake4) %>%
@@ -1522,9 +1690,10 @@ server <- function(input, output) {
   #######################################################################
   output$times_out <- renderPlot({
     if(input$Global0.05.9){
-      if( input$ErrorProb9 == "OneMap_version2"){
-        geno <- paste0("SNPCaller", 0.05)
-      } else if (input$ErrorProb8 == "gusmap"){
+      if(any(input$ErrorProb9 %in% "OneMap_version2")){
+        geno <- input$ErrorProb9
+        geno[which(input$ErrorProb9 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+      } else if (any(input$ErrorProb9 %in% "gusmap")){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
       } else {
         geno <- paste0(input$ErrorProb9, 0.05)
@@ -1533,14 +1702,14 @@ server <- function(input, output) {
       geno <- input$ErrorProb9
     }
     
-    data_n <- data2 %>% filter(GenoCall %in% geno) %>%
+    data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall9) %>%
       filter(CountsFrom == input$CountsFrom9) %>%
       filter(fake == input$fake5) %>%
       group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
       summarise(n = n()) 
     
-    data <- data4 %>% filter(GenoCall %in% geno) %>%
+    data <- datas_simu()[[4]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall9) %>%
       filter(fake == input$fake5) %>%
       filter(CountsFrom == input$CountsFrom9)
@@ -1562,9 +1731,10 @@ server <- function(input, output) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.9){
-        if( input$ErrorProb9 == "OneMap_version2"){
-          geno <- paste0("SNPCaller", 0.05)
-        } else if (input$ErrorProb8 == "gusmap"){
+        if(any(input$ErrorProb9 %in% "OneMap_version2")){
+          geno <- input$ErrorProb9
+          geno[which(input$ErrorProb9 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+        } else if (any(input$ErrorProb9 %in% "gusmap")){
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
         } else {
           geno <- paste0(input$ErrorProb9, 0.05)
@@ -1573,14 +1743,14 @@ server <- function(input, output) {
         geno <- input$ErrorProb9
       }
       
-      data_n <- data2 %>% filter(GenoCall %in% geno) %>%
+      data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall9) %>%
         filter(CountsFrom == input$CountsFrom9) %>%
         filter(fake == input$fake5) %>%
         group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
         summarise(n = n()) 
       
-      data <- data4 %>% filter(GenoCall %in% geno) %>%
+      data <- datas_simu()[[4]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall9) %>%
         filter(fake == input$fake5) %>%
         filter(CountsFrom == input$CountsFrom9)
@@ -1598,9 +1768,10 @@ server <- function(input, output) {
   #######################################################################
   output$coverage_out <- renderPlot({
     if(input$Global0.05.9){
-      if( input$ErrorProb5 == "OneMap_version2"){
-        geno <- paste0("SNPCaller", 0.05)
-      } else if (input$ErrorProb5 == "gusmap"){
+      if(any(input$ErrorProb9 %in% "OneMap_version2")){
+        geno <- input$ErrorProb9
+        geno[which(input$ErrorProb9 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+      } else if (any(input$ErrorProb9 %in% "gusmap")){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
       } else {
         geno <- paste0(input$ErrorProb5, 0.05)
@@ -1609,7 +1780,7 @@ server <- function(input, output) {
       geno <- input$ErrorProb5
     }
     
-    data <- data2 %>% filter(GenoCall %in% geno) %>%
+    data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall5) %>%
       filter(fake == input$fake6) %>%
       filter(depth == input$depth5) %>%
@@ -1630,9 +1801,10 @@ server <- function(input, output) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.9){
-        if( input$ErrorProb5 == "OneMap_version2"){
-          geno <- paste0("SNPCaller", 0.05)
-        } else if (input$ErrorProb5 == "gusmap"){
+        if(any(input$ErrorProb9 %in% "OneMap_version2")){
+          geno <- input$ErrorProb9
+          geno[which(input$ErrorProb9 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+        } else if (any(input$ErrorProb9 %in% "gusmap")){
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
         } else {
           geno <- paste0(input$ErrorProb5, 0.05)
@@ -1640,7 +1812,7 @@ server <- function(input, output) {
       } else {
         geno <- input$ErrorProb5
       }
-      data <- data2 %>% filter(GenoCall %in% geno) %>%
+      data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall5) %>%
         filter(fake == input$fake6) %>%
         filter(depth == input$depth5) %>%
@@ -1656,7 +1828,7 @@ server <- function(input, output) {
   )
   ##########################################################################
   output$snpcall_out <- renderPlot({
-    data <- data5 %>% filter(key %in% input$avalSNPs1) %>%
+    data <- datas_simu()[[5]] %>% filter(key %in% input$avalSNPs1) %>%
       filter(SNPCall %in% input$SNPCall6) %>%
       filter(depth == input$depth6)
     
@@ -1670,7 +1842,7 @@ server <- function(input, output) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data5 %>% filter(key %in% input$avalSNPs1) %>%
+      data <- datas_simu()[[5]] %>% filter(key %in% input$avalSNPs1) %>%
         filter(SNPCall %in% input$SNPCall6) %>%
         filter(depth == input$depth6)
       
@@ -1681,9 +1853,10 @@ server <- function(input, output) {
   ##################################################################
   output$filters_out <- renderPlot({
     if(input$Global0.05.7){
-      if( input$ErrorProb7 == "OneMap_version2"){
-        geno <- paste0("SNPCaller", 0.05)
-      } else if (input$ErrorProb7 == "gusmap"){
+      if(any(input$ErrorProb7 %in% "OneMap_version2")){
+        geno <- input$ErrorProb7
+        geno[which(input$ErrorProb7 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+      } else if (any(input$ErrorProb7 %in% "gusmap")){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
       } else {
         geno <- paste0(input$ErrorProb7, 0.05)
@@ -1691,7 +1864,7 @@ server <- function(input, output) {
     } else {
       geno <- input$ErrorProb7
     }
-    data <- data3 %>% filter(GenoCall %in% geno) %>%
+    data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall7) %>%
       filter(depth == input$depth7) %>%
       filter(CountsFrom == input$CountsFrom7)
@@ -1708,9 +1881,10 @@ server <- function(input, output) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.7){
-        if( input$ErrorProb7 == "OneMap_version2"){
-          geno <- paste0("SNPCaller", 0.05)
-        } else if (input$ErrorProb7 == "gusmap"){
+        if(any(input$ErrorProb7 %in% "OneMap_version2")){
+          geno <- input$ErrorProb7
+          geno[which(input$ErrorProb7 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+        } else if (any(input$ErrorProb7 %in% "gusmap")){
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
         } else {
           geno <- paste0(input$ErrorProb7, 0.05)
@@ -1718,7 +1892,7 @@ server <- function(input, output) {
       } else {
         geno <- input$ErrorProb7
       }
-      data <- data3 %>% filter(GenoCall %in% geno) %>%
+      data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall7) %>%
         filter(depth == input$depth7) %>%
         filter(CountsFrom == input$CountsFrom7)
@@ -1731,9 +1905,10 @@ server <- function(input, output) {
   #################################
   output$map1_out <- renderImage({
     if(input$Global0.05.11){
-      if( input$ErrorProb11 == "OneMap_version2"){
-        geno <- paste0("SNPCaller", 0.05)
-      } else if (input$ErrorProb11 == "gusmap"){
+      if(any(input$ErrorProb11 %in% "OneMap_version2")){
+        geno <- input$ErrorProb11
+        geno[which(input$ErrorProb11 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+      } else if (any(input$ErrorProb11 %in% "gusmap")){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
       } else {
         geno <- paste0(input$ErrorProb11, 0.05)
@@ -1741,11 +1916,11 @@ server <- function(input, output) {
     } else {
       geno <- input$ErrorProb11
     }
-    data <- data2 %>% filter(GenoCall %in% geno) %>%
+    data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall11) %>%
-      filter(seed == seeds[as.numeric(input$seed11)]) %>%
+      filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed11)]) %>%
       filter(CountsFrom == input$CountsFrom11) %>%
-      filter(depth == depths[as.numeric(input$seed11)]) %>%
+      filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed11)]) %>%
       filter(fake == input$fake11)
     
     if(input$fake11 == "with-false"){
@@ -1776,10 +1951,11 @@ server <- function(input, output) {
     } else {
       geno <- input$ErrorProb11
     }
-    temp_n <- paste0(seeds[as.numeric(input$seed11)], "_",depths[as.numeric(input$seed11)])
-    data <- data6[[temp_n]]
+    temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
+    data <- datas_simu()[[6]][[temp_n]]
     if(input$fake11 == "with-false") fake <- T else fake <- F
-    temp_n <- paste0(temp_n, "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
+    temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
+                     "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
     data <- data[[temp_n]]
     
     if(geno == "gusmap"){
@@ -1808,10 +1984,11 @@ server <- function(input, output) {
       } else {
         geno <- input$ErrorProb11
       }
-      temp_n <- paste0(seeds[as.numeric(input$seed11)], "_",depths[as.numeric(input$seed11)])
-      data <- data6[[temp_n]]
+      temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
+      data <- datas_simu()[[6]][[temp_n]]
       if(input$fake11 == "with-false") fake <- T else fake <- F
-      temp_n <- paste0(temp_n, "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
+      temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
+                       "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
       data <- data[[temp_n]]
       
       outfile <- paste0(temp_n, ".RData")
@@ -1895,7 +2072,7 @@ server <- function(input, output) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data2 %>% filter(ErrorProb %in% input$ErrorProb10) %>%
+      data <- datas_simu()[[2]] %>% filter(ErrorProb %in% input$ErrorProb10) %>%
         filter(SNPCall %in% input$SNPCall10) %>%
         filter(CountsFrom == input$CountsFrom10) %>%
         filter(depth == input$depth10) %>%
