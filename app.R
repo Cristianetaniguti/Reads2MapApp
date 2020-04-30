@@ -6,6 +6,7 @@ library(shinydashboard)
 library(tidyverse)
 library(onemap)
 library(GUSMap)
+library(largeList)
 
 # Functions
 ## Simulations
@@ -1198,7 +1199,7 @@ server <- function(input, output,session) {
       path = "data/"
     } else { ######## Available examples
       if(input$example_simu == "populus"){
-        data.gz <- c("data/toy_sample/SimulatedReads_20.tar.gz", "data/toy_sample/SimulatedReads_10.tar.gz")
+        data.gz <- c("data/toy_sample/SimulatedReads_results_depth20.tar.gz")
       } else if(input$example_simu == "eucalyptus"){
         data.gz <- c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" )
       } else if(input$example_simu == "acca"){
@@ -1212,122 +1213,55 @@ server <- function(input, output,session) {
       untar(data.gz[i], exdir = path)
       list_files[[i]] <- untar(data.gz[i], list = T)
     }
-
+    
     list_files <- lapply(list_files, function(x) paste0(path, x))
     
     # Data
     datas <- list()
-    for(i in 1:6){
+    for(i in 1:9){
       datas[[i]] <- sapply(list_files, "[", i)
     }
     
     # Joint all depths
-    data1 <- data2 <- data3 <- data4 <- data5 <- rdata_n <- vector()
-    data6 <- list()
-    
+    ## Tables
+    data1 <- data2 <- data3 <- data4 <- data5 <- vector()
+    data6 <- names_rdatas <- list()
+    seeds <- depths <- seeds_choices <- depths_choices <- vector()
     for(i in 1:length(datas)){
       for(j in 1:length(datas[[i]])){
-        if(i == 6){
+        if(i == 1){
           temp <- load(datas[[i]][[j]])
           temp <- get(temp)
-          temp_n <- names(Rdatas)[1]
-          temp_n <- paste0(lapply(strsplit(temp_n, "_"), "[", 2)[[1]], collapse = "_")
-          rdata_n <- c(rdata_n, temp_n)
-          data6[[j]] <- Rdatas
+          data6 <- c(data6, temp)
+        } else if(i == 2){
+          temp <- readList(datas[[i]][[j]])
+          if(j == 1){
+            saveList(temp, file = "data/temp_file/sequences.llo", append = F, compress = T)
+          } else {
+            saveList(temp, file = "data/temp_file/sequences.llo", append = T, compress = T)
+          }
+        } else if(i == 8){
+          temp <- load(datas[[i]][[j]])
+          temp <- get(temp)
+          depths <- c(depths, temp[[1]])
+          seeds <- c(seeds, temp[[2]])
+          seeds_choices <- c(seeds_choices, temp[[3]])
+          depths_choices <- c(depths_choices, temp[[4]])
+        } else if(i == 9){
+          temp <-  readRDS(datas[[i]][[j]])
+          names_rdatas <- c(names_rdatas, temp)
         } else {
           temp <-  readRDS(datas[[i]][[j]])
-          assign(paste0("data",i), rbind(get(paste0("data",i)), temp))
+          assign(paste0("data",i-2), rbind(get(paste0("data",i-2)), temp))
         }
       }
     }
-    names(data6) <- rdata_n
-    
-    # For errors
-    data1$errors <- apply(data1[,10:13], 1, function(x) if(all(x==1)) NA else 1 - x[which.max(x)])
-    data1$ref[which(data1$ref == ".")] <- NA
-    data1$ref <- as.numeric(data1$ref)
-    # The onemap genotype codification do not diferenciate the homozyotes for each parent
-    data1$gabGT[data1$gabGT == 3 | data1$gabGT == 1] <- "homozygous"
-    data1$gabGT[data1$gabGT == 2] <- "heterozygote"
-    data1$methGT[data1$methGT == "3" | data1$methGT == "1"] <- "homozygous"
-    data1$methGT[data1$methGT == "2"] <- "heterozygote"
-    data1$methGT[data1$methGT == "0"] <- "missing"
-    
-    data1$methGT <- factor(data1$methGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
-    data1$gabGT <- factor(data1$gabGT, labels = c("missing", "homozygous", "heterozygote"), levels = c("missing", "homozygous", "heterozygote"))
-    
-    temp <- levels(data1$GenoCall)
-    temp[1:2] <- c("OneMap_version2", "SNPCaller0.05")
-    data1$GenoCall <- as.character(data1$GenoCall)
-    data1$GenoCall[data1$GenoCall == "default"] <- "OneMap_version2"
-    data1$GenoCall[data1$GenoCall == "default0.05"] <- "SNPCaller0.05"
-    data1$GenoCall <- factor(data1$GenoCall, labels = temp, levels = temp)
-    
-    ####
-    data2 <- data2[,-3]
-    colnames(data2) <- c("seed", "depth", "mk.name", "pos" , "rf" , "type", "real.type", "est.phases", "real.phases", "real.mks", "SNPCall", "GenoCall", "CountsFrom",
-                         "poscM", "poscM.norm", "diff")
-    
-    data2$fake[which(data2$real.mks ==99)] <- "without-false"
-    data2$fake[which(data2$real.mks < 2)] <- "with-false"
-    
-    data2$real.mks[which(data2$real.mks == 99 | data2$real.mks == 1)] <- "true markers"
-    data2$real.mks[which(data2$real.mks == 0)] <- "false positives"
-    
-    temp <- levels(data2$GenoCall)
-    temp[1:2] <- c("OneMap_version2", "SNPCaller0.05")
-    data2$GenoCall <- as.character(data2$GenoCall)
-    data2$GenoCall[data2$GenoCall == "default"] <- "OneMap_version2"
-    data2$GenoCall[data2$GenoCall == "default0.05"] <- "SNPCaller0.05"
-    data2$GenoCall <- factor(data2$GenoCall, labels = temp, levels = temp)
-    
-    ###
-    data4 <- as.data.frame(data4)
-    data4$fake <- as.character(data4$fake)
-    data4$fake[which(data4$fake =="FALSE")] <- "without-false"
-    data4$fake[which(data4$fake =="TRUE")] <- "with-false"
-    data4$fake <- as.factor(data4$fake)
-    
-    temp <- levels(data4$GenoCall)
-    data4$GenoCall <- as.character(data4$GenoCall)
-    data4$GenoCall[data4$GenoCall == "default"] <- "OneMap_version2"
-    data4$GenoCall[data4$GenoCall == "default0.05"] <- "SNPCaller0.05"
-    data4$GenoCall <- factor(data4$GenoCall, labels = temp, levels = temp)
-    
-    #####
-    data5 <- data5[,-7] ## Ajustar
-    names(data5) <- c("depth", "seed", "SNPCall", "(1)", "(2)", "(3)", "(4)", "(5)") ## Ajustars
-    data5 <- gather(data5, key,value,-SNPCall, -depth)
-    
-    colnames(data3) <- c("seed", "depth", "n_markers", "distorted_markers", "redundant_markers", "SNPCall", "GenoCall", "CountsFrom")
-    
-    data3$GenoCall <- factor(data3$GenoCall)
-    data3 <- gather(data3,key,value, -CountsFrom, -seed, -depth, -SNPCall, -GenoCall)
-    data3$key <- factor(data3$key)
-    
-    # Defining the options
-    cout <- table(data1$seed, data1$depth)
-    depthNames <- colnames(cout)
-    depths <- seeds <- seedsNames <- vector()
-    for(i in 1:length(depthNames)){
-      for(j in 1:nrow(cout)){
-        if(cout[j,i] > 0){
-          temp <- rownames(cout)[j]
-          seedsNames <- c(seedsNames, paste0("Depth ", depthNames[i], " seed ", temp))
-          depths <- c(depths, depthNames[i])
-          seeds <- c(seeds, temp)
-        }
-      }
-    }
-    
-    depth_choice <- as.list(unique(data1$depth))
-    names(depth_choice) <- as.character(unique(data1$depth))
-    seeds_choice <- as.list(1:length(seedsNames))
-    names(seeds_choice) <- as.character(seedsNames)
-    
+    names_rdatas <- unlist(names_rdatas)
+    names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
     result_list <- list("data1" = data1, "data2"= data2, 
                         "data3"=data3, "data4"=data4, "data5"=data5, "data6"=data6, 
-                        "choices" = list(depths, seeds, seeds_choice, depth_choice))
+                        "choices" = list(depths, seeds, seeds_choices, depths_choices),
+                        "names" = names_rdatas)
     return(result_list)
   }
   
@@ -1753,7 +1687,7 @@ server <- function(input, output,session) {
         filter(SNPCall %in% input$SNPCall9) %>%
         filter(CountsFrom == input$CountsFrom9) %>%
         filter(fake == input$fake5) %>%
-        group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
+        group_by(GenoCall, SNPCall, CountsFrom, fake, depth) %>%
         summarise(n = n()) 
       
       data <- datas_simu()[[4]] %>% filter(GenoCall %in% geno) %>%
@@ -1762,7 +1696,7 @@ server <- function(input, output,session) {
         filter(CountsFrom == input$CountsFrom9)
       
       data<- merge(data, data_n) %>%
-        gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
+        gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -depth)
       
       data$key <- gsub("n", "number of markers", data$key)
       data$key <- gsub("times", "time (seconds)", data$key)
@@ -1791,7 +1725,7 @@ server <- function(input, output,session) {
       filter(fake == input$fake6) %>%
       filter(depth == input$depth5) %>%
       filter(CountsFrom == input$CountsFrom5) %>%
-      group_by(GenoCall, SNPCall, CountsFrom, fake, depth) %>%
+      group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
       summarise(max = max(pos), min = min(pos))
     
     data$coverage <- ((data$max - data$min)/input$chr_size1)*100
@@ -1858,24 +1792,25 @@ server <- function(input, output,session) {
   )
   ##################################################################
   output$filters_out <- renderPlot({
+    choosed <- input$ErrorProb7
     if(input$Global0.05.7){
-      if(any(input$ErrorProb7 %in% "OneMap_version2")){
-        geno <- input$ErrorProb7
-        geno[which(input$ErrorProb7 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-      } else if (any(input$ErrorProb7 %in% "gusmap")){
+      geno <- paste0(choosed, 0.05)
+      if(any(choosed %in% "OneMap_version2") & !any(choosed %in% "SNPCaller") ){
+        geno[which(choosed %in% "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+      } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
+        geno <- geno[-which(choosed %in% "OneMap_version2")]
+      } else if (any(choosed %in% "gusmap")){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
-      } else {
-        geno <- paste0(input$ErrorProb7, 0.05)
-      }
+      } 
     } else {
-      geno <- input$ErrorProb7
+      geno <- choosed
     }
     data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall7) %>%
       filter(depth == input$depth7) %>%
       filter(CountsFrom == input$CountsFrom7)
-    levels(data$key)
-    data$key <- factor(data$key, levels = c("n_markers", "distorted_markers", "redundant_markers"))
+    
+    data$key <- factor(data$key, levels = c("n_markers", "mis_markers", "distorted_markers", "redundant_markers"))
     filters_graph(data)
   })
   
@@ -1886,23 +1821,25 @@ server <- function(input, output,session) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
+      choosed <- input$ErrorProb7
       if(input$Global0.05.7){
-        if(any(input$ErrorProb7 %in% "OneMap_version2")){
-          geno <- input$ErrorProb7
-          geno[which(input$ErrorProb7 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-        } else if (any(input$ErrorProb7 %in% "gusmap")){
+        geno <- paste0(choosed, 0.05)
+        if(any(choosed %in% "OneMap_version2") & !any(choosed %in% "SNPCaller") ){
+          geno[which(choosed %in% "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+        } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
+          geno <- geno[-which(choosed %in% "OneMap_version2")]
+        } else if (any(choosed %in% "gusmap")){
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- paste0(input$ErrorProb7, 0.05)
-        }
+        } 
       } else {
-        geno <- input$ErrorProb7
+        geno <- choosed
       }
       data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall7) %>%
         filter(depth == input$depth7) %>%
         filter(CountsFrom == input$CountsFrom7)
-      
+    
+      data$key <- factor(data$key, levels = c("n_markers", "mis_markers", "distorted_markers", "redundant_markers"))
       p <- filters_graph(data)
       ggsave(file, p)
     } 
@@ -1911,10 +1848,9 @@ server <- function(input, output,session) {
   #################################
   output$map1_out <- renderImage({
     if(input$Global0.05.11){
-      if(any(input$ErrorProb11 %in% "OneMap_version2")){
-        geno <- input$ErrorProb11
-        geno[which(input$ErrorProb11 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-      } else if (any(input$ErrorProb11 %in% "gusmap")){
+      if(input$ErrorProb11 == "OneMap_version2"){
+        geno <- paste0("SNPCaller", 0.05)
+      } else if (input$ErrorProb11 == "gusmap"){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
       } else {
         geno <- paste0(input$ErrorProb11, 0.05)
@@ -1948,27 +1884,34 @@ server <- function(input, output,session) {
   output$map_out <- renderPlot({
     if(input$Global0.05.11){
       if( input$ErrorProb11 == "OneMap_version2"){
-        geno <- paste0("SNPCaller", 0.05)
+        geno <- paste0("default", 0.05)
       } else if (input$ErrorProb11 == "gusmap"){
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
       } else {
         geno <- paste0(input$ErrorProb11, 0.05)
       }
     } else {
+      if( input$ErrorProb11 == "OneMap_version2"){
+        geno <- "default"
+      } else {
       geno <- input$ErrorProb11
+      }
     }
     temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
-    data <- datas_simu()[[6]][[temp_n]]
     if(input$fake11 == "with-false") fake <- T else fake <- F
     temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
                      "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
-    data <- data[[temp_n]]
     
     if(geno == "gusmap"){
+      data <- datas_simu()[[6]][[temp_n]]
       data$rf_2pt()
       data$plotChr(mat="rf", parent = "both")
     } else {
-      rf_graph_table(data, inter = F)
+      idx <- which(datas_simu()[[8]] == temp_n)
+      data <- readList("data/temp_file/sequences.llo", index = idx)
+      data <- data[[1]]
+      class(data) <- "sequence"
+      rf_graph_table(data, inter = F, mrk.axis = "none")
     }
   })
   
@@ -1991,11 +1934,17 @@ server <- function(input, output,session) {
         geno <- input$ErrorProb11
       }
       temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
-      data <- datas_simu()[[6]][[temp_n]]
       if(input$fake11 == "with-false") fake <- T else fake <- F
       temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
                        "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
-      data <- data[[temp_n]]
+      
+      if(geno == "gusmap"){
+        data <- datas_simu()[[6]][[temp_n]]
+      } else {
+        idx <- which(datas_simu()[[8]] == temp_n)
+        data <- readList("data/temp_file/sequences.llo", index = idx)
+        class(data) <- "sequence"
+      }
       
       outfile <- paste0(temp_n, ".RData")
       save(data, file = outfile)

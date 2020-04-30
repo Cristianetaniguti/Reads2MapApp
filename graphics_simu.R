@@ -96,7 +96,7 @@ coverage_graph <- function(data){
   names(colors) <- levels(data$SNPCall)
   
   data %>% ggplot(aes(x=GenoCall, y=coverage, fill=SNPCall)) +
-    geom_bar(stat="identity", position=position_dodge())  +
+    geom_boxplot(position=position_dodge())  +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = "percent covered") +
     facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
