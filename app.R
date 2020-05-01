@@ -1199,7 +1199,7 @@ server <- function(input, output,session) {
       path = "data/"
     } else { ######## Available examples
       if(input$example_simu == "populus"){
-        data.gz <- c("data/toy_sample/SimulatedReads_results_depth20.tar.gz")
+        data.gz <- c("data/ig_toy_sample/SimulatedReads_results_depth20.tar.gz", "data/ig_toy_sample/SimulatedReads_results_depth10.tar.gz")
       } else if(input$example_simu == "eucalyptus"){
         data.gz <- c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" )
       } else if(input$example_simu == "acca"){
@@ -1215,6 +1215,8 @@ server <- function(input, output,session) {
     }
     
     list_files <- lapply(list_files, function(x) paste0(path, x))
+    for_rm <- sapply(list_files, "[", 1)
+    list_files <- lapply(list_files, "[", -1)
     
     # Data
     datas <- list()
@@ -1229,39 +1231,48 @@ server <- function(input, output,session) {
     seeds <- depths <- seeds_choices <- depths_choices <- vector()
     for(i in 1:length(datas)){
       for(j in 1:length(datas[[i]])){
-        if(i == 1){
+        if(all(grepl("gusmap_RDatas.RData", datas[[i]]))){
           temp <- load(datas[[i]][[j]])
           temp <- get(temp)
           data6 <- c(data6, temp)
-        } else if(i == 2){
+        } else if(all(grepl("sequences.llo", datas[[i]]))){
           temp <- readList(datas[[i]][[j]])
           if(j == 1){
             saveList(temp, file = "data/temp_file/sequences.llo", append = F, compress = T)
           } else {
             saveList(temp, file = "data/temp_file/sequences.llo", append = T, compress = T)
           }
-        } else if(i == 8){
+        } else if(all(grepl("choices.RData", datas[[i]]))){
           temp <- load(datas[[i]][[j]])
           temp <- get(temp)
           depths <- c(depths, temp[[1]])
           seeds <- c(seeds, temp[[2]])
           seeds_choices <- c(seeds_choices, temp[[3]])
           depths_choices <- c(depths_choices, temp[[4]])
-        } else if(i == 9){
+        } else if(all(grepl("names.rds", datas[[i]]))){
           temp <-  readRDS(datas[[i]][[j]])
           names_rdatas <- c(names_rdatas, temp)
         } else {
           temp <-  readRDS(datas[[i]][[j]])
-          assign(paste0("data",i-2), rbind(get(paste0("data",i-2)), temp))
+          name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
+          name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
+          assign(name_temp, rbind(get(name_temp), temp))
         }
       }
     }
+    
+    temp_names <- names(seeds_choices)
+    seeds_choices <- as.list(1:length(seeds_choices))
+    names(seeds_choices) <- temp_names
+    
     names_rdatas <- unlist(names_rdatas)
     names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
     result_list <- list("data1" = data1, "data2"= data2, 
                         "data3"=data3, "data4"=data4, "data5"=data5, "data6"=data6, 
                         "choices" = list(depths, seeds, seeds_choices, depths_choices),
                         "names" = names_rdatas)
+    
+    system(paste("rm -r", paste(for_rm, collapse = " ")))
     return(result_list)
   }
   
@@ -1337,15 +1348,15 @@ server <- function(input, output,session) {
   # Empirical - - rearranging data
   ####################################################################
   
-  data_map <- readRDS("data/data_map.rds")
-  data_map$GenoCall <- factor(data_map$GenoCall, levels = sort(levels(data_map$GenoCall)))
-  data_depths <- readRDS("data/data_depths.rds")
-  data_depths$GenoCall <- factor(data_depths$GenoCall, levels = sort(levels(data_depths$GenoCall)))
-  data_times <- readRDS("data/data_times.rds")
-  data_times$GenoCall <- factor(data_times$GenoCall, levels= sort(levels(data_times$GenoCall)))
-  data_filters <- readRDS("data/data_filters.rds")
-  data_filters$GenoCall <- factor(data_filters$GenoCall, levels= sort(levels(data_filters$GenoCall)))
-  load("data/data_RDatas.RData")
+  # data_map <- readRDS("data/ig_test_new/data2_maps.rds")
+  # data_map$GenoCall <- factor(data_map$GenoCall, levels = sort(levels(data_map$GenoCall)))
+  # data_depths <- readRDS("data/ig_test_new/data1_depths_geno_prob.rds")
+  # data_depths$GenoCall <- factor(data_depths$GenoCall, levels = sort(levels(data_depths$GenoCall)))
+  # data_times <- readRDS("data/ig_test_new/data4_times.rds")
+  # data_times$GenoCall <- factor(data_times$GenoCall, levels= sort(levels(data_times$GenoCall)))
+  # data_filters <- readRDS("data/ig_test_new/data3_filters.rds")
+  # data_filters$GenoCall <- factor(data_filters$GenoCall, levels= sort(levels(data_filters$GenoCall)))
+  # load("data/ig_test_new/data6_RDatas.RData")
   
   ##################################################################
   # Simulations
@@ -2191,7 +2202,7 @@ server <- function(input, output,session) {
       data <- data_RDatas[[paste0(input$SNPCall9_emp, "_", input$CountsFrom9_emp, "_", input$ErrorProb9_emp)]]
       outfile <- paste0("temp.", sample(10000,1),".png")
       draw_map2(data, output = outfile)
-    } 
+    }
   )
   
 }
