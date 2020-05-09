@@ -1199,7 +1199,7 @@ server <- function(input, output,session) {
       path = "data/"
     } else { ######## Available examples
       if(input$example_simu == "populus"){
-        data.gz <- c("data/ig_toy_sample/SimulatedReads_results_depth20.tar.gz", "data/ig_toy_sample/SimulatedReads_results_depth10.tar.gz")
+        data.gz <- c("data/ig_populus_simu/SimulatedReads_results_depth20.tar.gz", "data/ig_populus_simu/SimulatedReads_results_depth5.tar.gz")
       } else if(input$example_simu == "eucalyptus"){
         data.gz <- c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" )
       } else if(input$example_simu == "acca"){
@@ -1224,7 +1224,6 @@ server <- function(input, output,session) {
       datas[[i]] <- sapply(list_files, "[", i)
     }
     
-    # Joint all depths
     ## Tables
     data1 <- data2 <- data3 <- data4 <- data5 <- vector()
     data6 <- names_rdatas <- list()
@@ -1331,12 +1330,10 @@ server <- function(input, output,session) {
                              choices = depth_choice,
                              selected=unlist(depth_choice))
     
-    
     updateCheckboxGroupInput(session, "depth6",
                              label="Depth",
                              choices = depth_choice,
                              selected=unlist(depth_choice))
-    
     
     updateSelectInput(session, "depth7",
                       label="Depth",
@@ -1347,6 +1344,57 @@ server <- function(input, output,session) {
   ####################################################################
   # Empirical - - rearranging data
   ####################################################################
+
+  prepare_datas_emp <- function(x){
+    # This function makes adjustments in the input tar.gz file to be processed inside the app
+    # It returns six data objects and the app options in a list format
+    if(!is.null(x)){
+      data.gz <- x[,4]
+      path = "data/"
+    } else { ######## Available examples
+      if(input$example_simu == "populus"){
+        data.gz <- c("data/ig_populus_emp/EmpiricalReads_results.tar.gz")
+      } else if(input$example_simu == "eucalyptus"){
+        data.gz <- c("data/ig_eucalyptus_emp/EmpiricalReads_results.tar.gz")
+      } else if(input$example_simu == "acca"){
+        data.gz <- c("data/ig_acca_emp/EmpiricalReads_results.tar.gz")
+      }
+      path <- unlist(strsplit(data.gz[1], "/"))
+      path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
+    }
+    list_files <- list()
+    for(i in 1:length(data.gz)){
+      untar(data.gz[i], exdir = path)
+      list_files[[i]] <- untar(data.gz[i], list = T)
+    }
+    
+    list_files <- lapply(list_files, function(x) paste0(path, x))
+    for_rm <- sapply(list_files, "[", 1)
+    list_files <- lapply(list_files, "[", -1)
+    
+    # Data
+    datas <- list()
+    for(i in 1:7){
+      datas[[i]] <- sapply(list_files, "[", i)
+    }
+    
+    system(paste("mv", datas[[grep("sequences",datas)]], "data/temp_file/"))
+    
+    ## Tables
+    names_rdatas <- readRDS(datas[[grep("names.rds", datas)]])
+    names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+    result_list <- list("data1" = readRDS(datas[[grep("data1_depths_geno_prob.rds", datas)]]), 
+                        "data2" = readRDS(datas[[grep("data2_maps.rds", datas)]]), 
+                        "data3" = readRDS(datas[[grep("data3_filters.rds", datas)]]), 
+                        "data4" = readRDS(datas[[grep("data4_times.rd", datas)]]), 
+                        "data5" = load(datas[[grep("gusmap_RDatas.RData", datas)]]), 
+                        "names" = names_rdatas)
+    
+    system(paste("rm -r", paste(for_rm, collapse = " ")))
+    return(result_list)
+  }
+  
+  datas_emp <- reactive({prepare_datas_emp(input$empiricalreads)})
   
   # data_map <- readRDS("data/ig_test_new/data2_maps.rds")
   # data_map$GenoCall <- factor(data_map$GenoCall, levels = sort(levels(data_map$GenoCall)))
@@ -1434,14 +1482,11 @@ server <- function(input, output,session) {
   ##################################################################
   output$ind_size_out <- renderPlot({
     if(input$Global0.05.3){
-      if(any(input$ErrorProb3 %in% "OneMap_version2")){
-        geno <- input$ErrorProb3
-        geno[which(input$ErrorProb3 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-      } else if (any(input$ErrorProb3 %in% "gusmap")){
+      geno <- paste0(input$ErrorProb3, 0.05)
+      if(any(input$ErrorProb3 %in% "OneMap_version2"))
+        geno[which(input$ErrorProb3 == "OneMap_version2")] <- "SNPCaller0.05"
+      if(any(input$ErrorProb3 %in% "gusmap"))
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
-      } else {
-        geno <- paste0(input$ErrorProb3, 0.05)
-      }
     } else {
       geno <- input$ErrorProb3
     }
@@ -1462,14 +1507,11 @@ server <- function(input, output,session) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.3){
-        if(any(input$ErrorProb3 %in% "OneMap_version2")){
-          geno <- input$ErrorProb3
-          geno[which(input$ErrorProb3 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-        } else if (any(input$ErrorProb3 %in% "gusmap")){
+        geno <- paste0(input$ErrorProb3, 0.05)
+        if(any(input$ErrorProb3 %in% "OneMap_version2"))
+          geno[which(input$ErrorProb3 == "OneMap_version2")] <- "SNPCaller0.05"
+        if(any(input$ErrorProb3 %in% "gusmap"))
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- paste0(input$ErrorProb3, 0.05)
-        }
       } else {
         geno <- input$ErrorProb3
       }
@@ -1486,14 +1528,11 @@ server <- function(input, output,session) {
   ##################################################################
   output$all_size_out <- renderPlot({
     if(input$Global0.05.4){
-      if(any(input$ErrorProb4 %in% "OneMap_version2")){
-        geno <- input$ErrorProb4
-        geno[which(input$ErrorProb4 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-      } else if (any(input$ErrorProb4 %in% "gusmap")){
+      geno <- paste0(input$ErrorProb4, 0.05)
+      if(any(input$ErrorProb4 %in% "OneMap_version2"))
+        geno[which(input$ErrorProb4 == "OneMap_version2")] <- "SNPCaller0.05"
+      if(any(input$ErrorProb4 %in% "gusmap"))
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
-      } else {
-        geno <- paste0(input$ErrorProb4, 0.05)
-      }
     } else {
       geno <- input$ErrorProb4
     }
@@ -1521,14 +1560,11 @@ server <- function(input, output,session) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.4){
-        if(any(input$ErrorProb4 %in% "OneMap_version2")){
-          geno <- input$ErrorProb4
-          geno[which(input$ErrorProb4 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-        } else if (any(input$ErrorProb4 %in% "gusmap")){
+        geno <- paste0(input$ErrorProb4, 0.05)
+        if(any(input$ErrorProb4 %in% "OneMap_version2"))
+          geno[which(input$ErrorProb4 == "OneMap_version2")] <- "SNPCaller0.05"
+        if(any(input$ErrorProb4 %in% "gusmap"))
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- paste0(input$ErrorProb4, 0.05)
-        }
       } else {
         geno <- input$ErrorProb4
       }
@@ -1586,14 +1622,11 @@ server <- function(input, output,session) {
   #######################################################################
   output$phases_out <- renderPlot({
     if(input$Global0.05.8){
-      if(any(input$ErrorProb8 %in% "OneMap_version2")){
-        geno <- input$ErrorProb8
-        geno[which(input$ErrorProb8 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-      } else if (any(input$ErrorProb8 %in% "gusmap")){
+      geno <- paste0(input$ErrorProb8, 0.05)
+      if(any(input$ErrorProb8 %in% "OneMap_version2"))
+        geno[which(input$ErrorProb8 == "OneMap_version2")] <- "SNPCaller0.05"
+      if(any(input$ErrorProb8 %in% "gusmap"))
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
-      } else {
-        geno <- paste0(input$ErrorProb8, 0.05)
-      }
     } else {
       geno <- input$ErrorProb8
     }
@@ -1616,14 +1649,11 @@ server <- function(input, output,session) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.8){
-        if(any(input$ErrorProb8 %in% "OneMap_version2")){
-          geno <- input$ErrorProb8
-          geno[which(input$ErrorProb8 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-        } else if (any(input$ErrorProb8 %in% "gusmap")){
+        geno <- paste0(input$ErrorProb8, 0.05)
+        if(any(input$ErrorProb8 %in% "OneMap_version2"))
+          geno[which(input$ErrorProb8 == "OneMap_version2")] <- "SNPCaller0.05"
+        if(any(input$ErrorProb8 %in% "gusmap"))
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- paste0(input$ErrorProb8, 0.05)
-        }
       } else {
         geno <- input$ErrorProb8
       }
@@ -1641,26 +1671,23 @@ server <- function(input, output,session) {
   #######################################################################
   output$times_out <- renderPlot({
     if(input$Global0.05.9){
-      if(any(input$ErrorProb9 %in% "OneMap_version2")){
-        geno <- input$ErrorProb9
-        geno[which(input$ErrorProb9 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-      } else if (any(input$ErrorProb9 %in% "gusmap")){
+      geno <- paste0(input$ErrorProb9, 0.05)
+      if(any(input$ErrorProb9 %in% "OneMap_version2"))
+        geno[which(input$ErrorProb9 == "OneMap_version2")] <- "SNPCaller0.05"
+      if(any(input$ErrorProb9 %in% "gusmap"))
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
-      } else {
-        geno <- paste0(input$ErrorProb9, 0.05)
-      }
     } else {
       geno <- input$ErrorProb9
     }
     
-    data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+    data_n <- result_list[[2]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall9) %>%
       filter(CountsFrom == input$CountsFrom9) %>%
       filter(fake == input$fake5) %>%
       group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
       summarise(n = n()) 
     
-    data <- datas_simu()[[4]] %>% filter(GenoCall %in% geno) %>%
+    data <- result_list[[4]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall9) %>%
       filter(fake == input$fake5) %>%
       filter(CountsFrom == input$CountsFrom9)
@@ -1682,14 +1709,11 @@ server <- function(input, output,session) {
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       if(input$Global0.05.9){
-        if(any(input$ErrorProb9 %in% "OneMap_version2")){
-          geno <- input$ErrorProb9
-          geno[which(input$ErrorProb9 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-        } else if (any(input$ErrorProb9 %in% "gusmap")){
+        geno <- paste0(input$ErrorProb9, 0.05)
+        if(any(input$ErrorProb9 %in% "OneMap_version2"))
+          geno[which(input$ErrorProb9 == "OneMap_version2")] <- "SNPCaller0.05"
+        if(any(input$ErrorProb9 %in% "gusmap"))
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- paste0(input$ErrorProb9, 0.05)
-        }
       } else {
         geno <- input$ErrorProb9
       }
@@ -1718,19 +1742,15 @@ server <- function(input, output,session) {
   )
   #######################################################################
   output$coverage_out <- renderPlot({
-    if(input$Global0.05.9){
-      if(any(input$ErrorProb9 %in% "OneMap_version2")){
-        geno <- input$ErrorProb9
-        geno[which(input$ErrorProb9 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-      } else if (any(input$ErrorProb9 %in% "gusmap")){
+    if(input$Global0.05.5){
+      geno <- paste0(input$ErrorProb5, 0.05)
+      if(any(input$ErrorProb5 %in% "OneMap_version2"))
+        geno[which(input$ErrorProb5 == "OneMap_version2")] <- "SNPCaller0.05"
+      if(any(input$ErrorProb5 %in% "gusmap"))
         stop("Gusmap do not allow to change the error rate. Please, select other option.")
-      } else {
-        geno <- paste0(input$ErrorProb5, 0.05)
-      }
     } else {
       geno <- input$ErrorProb5
     }
-    
     data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
       filter(SNPCall %in% input$SNPCall5) %>%
       filter(fake == input$fake6) %>%
@@ -1751,15 +1771,12 @@ server <- function(input, output,session) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      if(input$Global0.05.9){
-        if(any(input$ErrorProb9 %in% "OneMap_version2")){
-          geno <- input$ErrorProb9
-          geno[which(input$ErrorProb9 == "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-        } else if (any(input$ErrorProb9 %in% "gusmap")){
+      if(input$Global0.05.5){
+        geno <- paste0(input$ErrorProb5, 0.05)
+        if(any(input$ErrorProb5 %in% "OneMap_version2"))
+          geno[which(input$ErrorProb5 == "OneMap_version2")] <- "SNPCaller0.05"
+        if(any(input$ErrorProb5 %in% "gusmap"))
           stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- paste0(input$ErrorProb5, 0.05)
-        }
       } else {
         geno <- input$ErrorProb5
       }
@@ -1849,7 +1866,7 @@ server <- function(input, output,session) {
         filter(SNPCall %in% input$SNPCall7) %>%
         filter(depth == input$depth7) %>%
         filter(CountsFrom == input$CountsFrom7)
-    
+      
       data$key <- factor(data$key, levels = c("n_markers", "mis_markers", "distorted_markers", "redundant_markers"))
       p <- filters_graph(data)
       ggsave(file, p)
@@ -1905,7 +1922,7 @@ server <- function(input, output,session) {
       if( input$ErrorProb11 == "OneMap_version2"){
         geno <- "default"
       } else {
-      geno <- input$ErrorProb11
+        geno <- input$ErrorProb11
       }
     }
     temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
@@ -1969,7 +1986,7 @@ server <- function(input, output,session) {
   
   output$disper_depth_emp_out <- renderPlot({
     
-    data <- data_depths %>% filter(GenoCall == input$ErrorProb1_emp) %>%
+    data <- datas_emp()[[1]] %>% filter(GenoCall == input$ErrorProb1_emp) %>%
       filter(SNPCall == input$SNPCall1_emp) %>%
       filter(CountsFrom == input$CountsFrom1_emp)
     errorProb_graph_emp(data, input$real1_emp, input$geno_from1_emp)
@@ -1982,7 +1999,7 @@ server <- function(input, output,session) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data_depths %>% filter(GenoCall == input$ErrorProb1_emp) %>%
+      data <- datas_emp()[[1]] %>% filter(GenoCall == input$ErrorProb1_emp) %>%
         filter(SNPCall == input$SNPCall1_emp) %>%
         filter(CountsFrom == input$CountsFrom1_emp)
       p <- errorProb_graph_emp(data, input$real1_emp, input$geno_from1_emp)
@@ -1991,7 +2008,7 @@ server <- function(input, output,session) {
   )
   
   output$disper_depth2_emp_out <- renderPlot({
-    data <- data_depths %>% filter(GenoCall == input$ErrorProb2_emp) %>%
+    data <- datas_emp()[[1]] %>% filter(GenoCall == input$ErrorProb2_emp) %>%
       filter(SNPCall == input$SNPCall2_emp) %>%
       filter(CountsFrom == input$CountsFrom2_emp)
     errorProb_graph_emp(data, input$real2_emp, input$geno_from2_emp)
@@ -1999,7 +2016,7 @@ server <- function(input, output,session) {
   
   ##################################################################
   output$ind_size_emp_out <- renderPlot({
-    data <- data_map %>% filter(GenoCall %in% input$ErrorProb3_emp) %>%
+    data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb3_emp) %>%
       filter(SNPCall %in% input$SNPCall3_emp) %>%
       filter(CountsFrom == input$CountsFrom3_emp) 
     ind_size_graph_emp(data)
@@ -2012,7 +2029,7 @@ server <- function(input, output,session) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data_map %>% filter(GenoCall %in% input$ErrorProb3_emp) %>%
+      data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb3_emp) %>%
         filter(SNPCall %in% input$SNPCall3_emp) %>%
         filter(CountsFrom == input$CountsFrom3_emp) 
       p <- ind_size_graph_emp(data)
@@ -2021,7 +2038,7 @@ server <- function(input, output,session) {
   )
   #######################################################################
   output$marker_type_emp_out <- renderPlot({
-    data <- data_map %>% filter(GenoCall %in% input$ErrorProb10_emp) %>%
+    data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb10_emp) %>%
       filter(SNPCall %in% input$SNPCall10_emp) %>%
       filter(CountsFrom == input$CountsFrom10_emp) %>%
       group_by(type, GenoCall, SNPCall, CountsFrom) %>%
@@ -2054,13 +2071,13 @@ server <- function(input, output,session) {
   #######################################################################
   output$times_emp_out <- renderPlot({
     
-    data_n <- data_map %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
+    data_n <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
       filter(SNPCall %in% input$SNPCall9_emp) %>%
       filter(CountsFrom == input$CountsFrom9_emp) %>%
       group_by(GenoCall, SNPCall, CountsFrom) %>%
       summarise(n = n()) 
     
-    data <- data_times %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
+    data <- datas_emp()[[4]] %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
       filter(SNPCall %in% input$SNPCall9_emp) %>%
       filter(CountsFrom == input$CountsFrom9_emp)
     
@@ -2080,7 +2097,7 @@ server <- function(input, output,session) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data_times %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
+      data <- datas_emp()[[4]] %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
         filter(SNPCall %in% input$SNPCall9_emp) %>%
         filter(CountsFrom == input$CountsFrom9_emp)
       
@@ -2091,7 +2108,7 @@ server <- function(input, output,session) {
   )
   ####################################################################### 
   output$coverage_emp_out <- renderPlot({
-    data <- data_map %>% filter(GenoCall %in% input$ErrorProb5_emp) %>%
+    data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb5_emp) %>%
       filter(SNPCall %in% input$SNPCall5_emp) %>%
       filter(CountsFrom %in% input$CountsFrom5_emp) %>%
       group_by(GenoCall, SNPCall, CountsFrom) %>%
@@ -2108,7 +2125,7 @@ server <- function(input, output,session) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data_map %>% filter(GenoCall %in% input$ErrorProb5_emp) %>%
+      data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb5_emp) %>%
         filter(SNPCall %in% input$SNPCall5_emp) %>%
         filter(CountsFrom %in% input$CountsFrom5_emp) %>%
         group_by(GenoCall, SNPCall, CountsFrom) %>%
@@ -2121,7 +2138,7 @@ server <- function(input, output,session) {
   )
   ##################################################################
   output$filters_emp_out <- renderPlot({
-    data <- data_filters %>% filter(GenoCall %in% input$ErrorProb7_emp) %>%
+    data <- datas_emp()[[3]] %>% filter(GenoCall %in% input$ErrorProb7_emp) %>%
       filter(SNPCall %in% input$SNPCall7_emp) %>%
       filter(CountsFrom == input$CountsFrom7_emp) %>%
       gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
@@ -2136,7 +2153,7 @@ server <- function(input, output,session) {
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
-      data <- data_filters %>% filter(GenoCall %in% input$ErrorProb7_emp) %>%
+      data <- datas_emp()[[3]] %>% filter(GenoCall %in% input$ErrorProb7_emp) %>%
         filter(SNPCall %in% input$SNPCall7_emp) %>%
         filter(CountsFrom == input$CountsFrom7_emp) %>%
         gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
@@ -2147,8 +2164,31 @@ server <- function(input, output,session) {
   )
   ##################################################################
   output$heatmaps_emp_out <- renderPlotly({
-    data <- data_RDatas[[paste0(input$SNPCall8_emp, "_", input$CountsFrom8_emp, "_", input$ErrorProb8_emp)]]
-    rf_graph_table(data, inter = T, html.file = "temp.html",display = F) 
+    if(input$Global0.05.11){
+      if(input$CountsFrom8_emp == "OneMap_version2"){
+        geno <- paste0("SNPCaller", 0.05)
+      } else if (input$CountsFrom8_emp == "gusmap"){
+        stop("Gusmap do not allow to change the error rate. Please, select other option.")
+      } else {
+        geno <- paste0(input$CountsFrom8_emp, 0.05)
+      }
+    } else {
+      geno <- input$CountsFrom8_emp
+    }
+    
+    temp_n <- paste0("map_",input$SNPCall8_emp, "_", input$CountsFrom8_emp, "_", geno, ".RData")
+    
+    if(input$ErrorProb8_emp == "gusmap"){
+      data <- datas_emp()[[5]][[temp_n]]
+      data$rf_2pt()
+      data$plotChr(mat="rf", parent = "both")
+    } else {
+      idx <- which(datas_simu()[[7]] == temp_n)
+      data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+      data <- data[[1]]
+      class(data) <- "sequence"
+      rf_graph_table(data, inter = T, html.file = "data/temp_file/temp.html",display = F) 
+    }
   })
   
   ## download
@@ -2167,7 +2207,7 @@ server <- function(input, output,session) {
   
   ################################################################# 
   output$map_emp_out <- renderImage({
-    data <- data_map %>% filter(GenoCall %in% input$ErrorProb11_emp) %>%
+    data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb11_emp) %>%
       filter(SNPCall %in% input$SNPCall11_emp) %>%
       filter(CountsFrom == input$CountsFrom11_emp) 
     

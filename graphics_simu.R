@@ -5,7 +5,7 @@ errorProb_graph <- function(data, genotypes){
   colors <- c("#58355e", "#4D9DE0", "#ADE25D")
   names(colors) <-  c("missing", "homozygous", "heterozygote")
   
-  if(genotypes == "real_genotypes"){
+  if(genotypes == "simulated_genotypes"){
     data %>% ggplot(aes(x=ref, y=alt, color=gabGT)) + 
       geom_point(alpha = 0.2) +
       labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
