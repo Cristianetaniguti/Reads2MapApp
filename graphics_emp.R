@@ -38,7 +38,7 @@ ind_size_graph_emp <- function(data){
   # colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
   # names(colors) <- levels(data$ErrorProb)
   
-  colors <- rainbow(length(levels(data$SNPCall)))
+  colors <- rainbow(2)
   names(colors) <- levels(data$SNPCall)
   
   data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
@@ -73,7 +73,7 @@ marker_type_graph_emp <- function(data){
 
 times_graph_emp <- function(data){
   
-  colors <- rainbow(length(levels(data$SNPCall)))
+  colors <- rainbow(2)
   names(colors) <- levels(data$SNPCall)
   
   data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
@@ -87,7 +87,7 @@ times_graph_emp <- function(data){
 
 coverage_graph_emp <- function(data){
   
-  colors <- rainbow(length(levels(data$SNPCall)))
+  colors <- rainbow(2)
   names(colors) <- levels(data$SNPCall)
   
   data %>% ggplot(aes(x=GenoCall, y=coverage, fill=SNPCall)) +

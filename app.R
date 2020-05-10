@@ -127,8 +127,9 @@ body <- dashboardBody(
                          selectInput("example_simu", label = h4(tags$b("SimulatedReads.wdl example results")), 
                                      choices = list("Populus chromosome 10" = "populus",
                                                     "Eucalyptus chromosome 10" = "eucalyptus", 
-                                                    "Acca chromosome 10" = "acca"), 
-                                     selected = "Populus chromosome 10"),
+                                                    "Acca chromosome 10" = "acca",
+                                                    "Toy sample" = "toy_sample"), 
+                                     selected = "toy_sample"),
                        ),
                        verbatimTextOutput("simulatedreads_out")
                    )
@@ -145,10 +146,11 @@ body <- dashboardBody(
                        fluidPage(
                          # Copy the line below to make a select box 
                          selectInput("example_emp", label = h4(tags$b("EmpiricalReads.wdl example results")), 
-                                     choices = list("Populus chromosome 10" = 1, 
-                                                    "Eucalyptus chromosome 10" = 2, 
-                                                    "Acca chromosome 10" = 3), 
-                                     selected = 1),
+                                     choices = list("Populus chromosome 10" = "populus", 
+                                                    "Eucalyptus chromosome 10" = "eucalyptus", 
+                                                    "Acca chromosome 10" = "acca",
+                                                    "Toy sample" = "toy_sample"), 
+                                     selected = "toy_sample"),
                        )
                    )
             )
@@ -1227,11 +1229,13 @@ server <- function(input, output,session) {
         path = "data/"
       } else { ######## Available examples
         if(input$example_simu == "populus"){
-          data.gz <- c("data/ig_toy_sample/SimulatedReads_results_depth10.tar.gz","data/ig_toy_sample/SimulatedReads_results_depth20.tar.gz")
+          data.gz <- c("data/populus/SimulatedReads_results_depth10.tar.gz","data/ig_toy_sample/SimulatedReads_results_depth20.tar.gz")
         } else if(input$example_simu == "eucalyptus"){
           data.gz <- c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" )
         } else if(input$example_simu == "acca"){
           data.gz <- c("data/acca/SimulatedReads_10.tar.gz", "data/acca/SimulatedReads_20.tar.gz", "data/acca/SimulatedReads_100.tar.gz" )
+        } else if(input$example_simu == "toy_sample"){
+          data.gz <- c("data/toy_sample_simu/SimulatedReads_results_depth10.tar.gz","data/toy_sample_simu/SimulatedReads_results_depth20.tar.gz")
         }
         path <- unlist(strsplit(data.gz[1], "/"))
         path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
@@ -1388,12 +1392,14 @@ server <- function(input, output,session) {
         data.gz <- x[,4]
         path = "data/"
       } else { ######## Available examples
-        if(input$example_simu == "populus"){
+        if(input$example_emp == "populus"){
           data.gz <- c("data/ig_populus_emp/EmpiricalReads_results.tar.gz")
         } else if(input$example_simu == "eucalyptus"){
           data.gz <- c("data/ig_eucalyptus_emp/EmpiricalReads_results.tar.gz")
         } else if(input$example_simu == "acca"){
           data.gz <- c("data/ig_acca_emp/EmpiricalReads_results.tar.gz")
+        } else if(input$example_simu == "toy_sample"){
+          data.gz <- c("data/toy_sample_emp/EmpiricalReads_results.tar.gz")
         }
         path <- unlist(strsplit(data.gz[1], "/"))
         path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
