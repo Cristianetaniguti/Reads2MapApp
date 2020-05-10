@@ -2,7 +2,7 @@
 
 errorProb_graph <- function(data, genotypes){
   
-  colors <- c("#58355e", "#4D9DE0", "#ADE25D")
+  colors <- rainbow(3)
   names(colors) <-  c("missing", "homozygous", "heterozygote")
   
   if(genotypes == "simulated_genotypes"){
@@ -34,28 +34,29 @@ ind_size_graph <- function(data){
   colors_dots <- c("blue", "red")
   names(colors_dots) <- c( "true markers", "false positives")
   
-  data %>% ggplot(aes(x=GenoCall, y=diff)) +
+  data %>% ggplot(aes(x=GenoCall, y=value)) +
     geom_boxplot(alpha = 0.6) + 
     geom_point(position=position_jitterdodge(jitter.width=0.5, dodge.width = 0.5),aes(color = factor(real.mks))) +
-    facet_grid(SNPCall~.) +
-    scale_color_manual("Markers", values = colors_dots)
+    facet_wrap( SNPCall~key, ncol=1, scales = "free", strip.position = "right") +
+    scale_color_manual("Markers", values = colors_dots) +    
+    labs(x = "Genotyping method", y = "") 
 }
 
 all_size_graph <- function(data, stat){
   
-  colors <- c("#58355e", "#4D9DE0")
+  colors <- rainbow(length(levels(data$SNPCall)))
   names(colors) <- levels(data$SNPCall)
   
   data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
-    geom_boxplot() + geom_hline(yintercept=0, color="red") +
+    geom_boxplot() + 
     scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = paste(stat, "cM (haldane)")) + 
-    facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
+    labs(x = "Genotyping method", y = " ") + 
+    facet_wrap(depth~key, ncol=1, scales = "free", strip.position = "right")
 }
 
 marker_type_graph <- function(data){
   
-  colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
+  colors <- rainbow(4)
   names(colors) <- levels(data$type)
   
   data %>% ggplot(aes(x=GenoCall, y = n, fill=value)) +
@@ -68,21 +69,21 @@ marker_type_graph <- function(data){
 
 phases_graph <- function(data){
   
-  colors <- c("#58355e", "#4D9DE0")
+  colors <- rainbow(length(levels(data$SNPCall)))
   names(colors) <- levels(data$SNPCall)
   
   data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
     geom_boxplot()  +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = "percent of corrected phases") +
-    facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
+    facet_wrap(depth~key, ncol=1, scales = "free", strip.position = "right")
 }
 
 times_graph <- function(data){
   
-  colors <- c("#58355e", "#4D9DE0")
+  colors <- rainbow(length(levels(data$SNPCall)))
   names(colors) <- levels(data$SNPCall)
-  
+  data$value <- as.numeric(data$value)
   data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
     geom_boxplot(position=position_dodge())  +
     scale_fill_manual(name="SNP call", values = colors) + 
@@ -92,7 +93,7 @@ times_graph <- function(data){
 
 coverage_graph <- function(data){
   
-  colors <- c("#58355e", "#4D9DE0")
+  colors <- rainbow(length(levels(data$SNPCall)))
   names(colors) <- levels(data$SNPCall)
   
   data %>% ggplot(aes(x=GenoCall, y=coverage, fill=SNPCall)) +
@@ -104,11 +105,11 @@ coverage_graph <- function(data){
 
 avalSNPs_graph <- function(data){
   
-  colors <- c("#58355e", "#4D9DE0")
+  colors <- rainbow(length(levels(data$SNPCall)))
   names(colors) <- levels(data$SNPCall)
   
   data %>% ggplot(aes(x=key, y=value, fill= SNPCall)) +
-    geom_boxplot()  +
+    geom_boxplot(position=position_dodge())  +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = "percent covered") + 
     facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
