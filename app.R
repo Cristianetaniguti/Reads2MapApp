@@ -63,24 +63,24 @@ sidebar <- dashboardSidebar(
     #menuItem("Parallel map", icon = icon("dot-circle"), tabName = "parallel"), 
     menuItem("Upload data", icon = icon("upload"), tabName= "upload"),
     menuItem("Simulation results", icon = icon("dot-circle"), tabName= "simulations",
+             menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall"),
+             menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage"),
+             menuSubItem("Filters", icon = icon("circle"), tabName = "filters"),
+             menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type"),
+             menuSubItem("Times", icon = icon("circle"), tabName = "times"),
              menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth"),
              menuSubItem("Map size each family", icon = icon("circle"), tabName = "ind_size"),
              menuSubItem("Overview map size", icon = icon("circle"), tabName = "all_size"),
-             menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type"),
              menuSubItem("Phases", icon = icon("circle"), tabName = "phases"),
-             menuSubItem("Times", icon = icon("circle"), tabName = "times"),
-             menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage"),
-             menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall"),
-             menuSubItem("Filters", icon = icon("circle"), tabName = "filters"),
              menuSubItem("Maps", icon = icon("circle"), tabName = "map")),
     
     menuItem("Empirical data results", icon = icon("dot-circle" ), tabName = "empirical",
-             menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth_emp"),
-             menuSubItem("Map size", icon = icon("circle"), tabName = "ind_size_emp"),
-             menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type_emp"),
-             menuSubItem("Times", icon = icon("circle"), tabName = "times_emp"),
              menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
              menuSubItem("Filters", icon = icon("circle"), tabName = "filters_emp"),
+             menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type_emp"),
+             menuSubItem("Times", icon = icon("circle"), tabName = "times_emp"),
+             menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth_emp"),
+             menuSubItem("Map size", icon = icon("circle"), tabName = "ind_size_emp"),
              menuSubItem("Plotly heatmaps", icon = icon("circle"), tabName = "heatmaps_emp"),
              menuSubItem("Maps", icon = icon("circle"), tabName = "map_emp"),
              menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp"))
@@ -102,11 +102,11 @@ body <- dashboardBody(
     # Upload data
     ##########################################################
     tabItem(tabName = "upload",
-            "This shiny app build several graphics as results from OneMap workflows. 
+            "This shiny app build several graphics using results from OneMap workflows. 
             If you run the", tags$b("SimulatedReads.wdl"),"and/or EmpiricalReads.wdl workflows you 
             can upload the outputted data in", tags$b("Upload SimulatedReads outputs"), "and/or",
             tags$b("Upload EmpiricalReads outputs"), "sections. If you don't have your own results yet,
-            you can explore the generate to populus dataset (Bioproject X), eucalyptus and acca
+            you can explore the generate to populus dataset (Bioproject PRJNA395), eucalyptus and acca
             all these results is better explained in the paper. Select the available 
             example results in", tags$b("SimulatedReads.wdl example results"),"and/or", 
             tags$b("EmpiricalReads.wdl example results"),".",
@@ -114,7 +114,6 @@ body <- dashboardBody(
             column(width = 6,
                    box(width = 12,
                        fluidPage(
-                         
                          tags$h4(tags$b("Upload SimulatesReads results:")),
                          "If you have more than one depth value, submit all files in the same window.",
                          # Copy the line below to make a file upload manager
@@ -161,7 +160,7 @@ body <- dashboardBody(
     tabItem(tabName = "disper_depth",
             "The same graphic is plotted in left and right to user be able to compare different methods choosing the options below.
             The x and y axis shows the read counts for reference and alternative alleles, respectively. 
-            The colors of dots varies according with `Genotypes` section. User can choose to see colors from simulated genotypes, the estimated or a gradient with the error rate used. 
+            The colors of dots varies according with `Genotypes from` section. User can choose to see colors from simulated genotypes, the estimated or a gradient with the error rate used. 
             Users can download the left graphic pushing `Download` button.",
             hr(),
             fluidRow(
@@ -528,8 +527,7 @@ body <- dashboardBody(
     ),
     ###################################################################################
     tabItem(tabName = "times",
-            "The boxplots show the distribuition of times and number of markers of all families by depth. We decide to show 
-            both together because increase of number of markers also increase time needed to build the map.",
+            "The boxplots show the distribuition of times and number of markers of all families by depth.",
             hr(),
             fluidRow(
               column(width = 12,
@@ -701,7 +699,7 @@ body <- dashboardBody(
     ################################################################################3
     tabItem(tabName = "filters",
             "The boxplots here show the total number of markers (n_markers) available for analysis, 
-            the number of markers filtered by OneMap because of segregation distortion and redundancy.",
+            the number of markers filtered by OneMap because of missing data, segregation distortion and redundancy.",
             hr(),
             fluidRow(
               column(width = 12,
@@ -757,7 +755,7 @@ body <- dashboardBody(
     ################################################################################3
     tabItem(tabName = "map",
             "On the left, it is plotted the heatmap graphic with recombination fraction varying in color according with the 
-            intensity of the linkage. Higher is the recombination fraction hottest is the color. Markers are represented in x 
+            intensity of the linkage. Higher is the recombination fraction hottest is the color. Markers ordered by genome positions are represented in x 
             and y axis. On the right, the linkage group is plotted with distances between markers proportional to the genetic distances.",
             hr(),
             fluidRow(
@@ -811,6 +809,11 @@ body <- dashboardBody(
     # Empirical
     ##########################################################
     tabItem(tabName = "disper_depth_emp",
+            "The same graphic is plotted in left and right to user be able to compare different methods choosing the options below.
+            The x and y axis shows the read counts for reference and alternative alleles, respectively. 
+            The colors of dots varies according with `Genotypes from` section. User can choose to see colors from simulated genotypes, the estimated or a gradient with the error rate used. 
+            Users can download the left graphic pushing `Download` button.",
+            hr(),
             fluidRow(
               column(width = 6,
                      box(
@@ -925,6 +928,8 @@ body <- dashboardBody(
     ),
     ##########################################################
     tabItem(tabName = "ind_size_emp",
+            "The boxplots show the distribuition of the difference between estimated and simulated distances between each pair markers of the generated maps.",
+            hr(),
             fluidRow(
               column(width = 12,
                      box(
@@ -973,6 +978,8 @@ body <- dashboardBody(
     ),
     ###################################################################################
     tabItem(tabName = "marker_type_emp",
+            "These bar plots describes the number of markers of each type according with Wu et. al 2002a that remained in the built maps of each method.",
+            hr(),
             fluidRow(
               column(width = 12,
                      box(
@@ -1006,6 +1013,8 @@ body <- dashboardBody(
     ),
     ###################################################################################
     tabItem(tabName = "times_emp",
+            "The boxplots show the distribuition of times and number of markers of all families by depth.",
+            hr(),
             fluidRow(
               column(width = 12,
                      box(
@@ -1045,6 +1054,9 @@ body <- dashboardBody(
     ),
     ###################################################################################
     tabItem(tabName = "coverage_emp",
+            "This barplots show the percentage of the chromosome covered by the map built. It depends of the 
+            chromosome size information in base pair (bp). The chromosome we used in our example has 1019956 bp (toy sample) or 22862796 bp in chromosome 10 of populus.",
+            hr(),
             fluidRow(
               column(width = 12,
                      box(
@@ -1084,6 +1096,9 @@ body <- dashboardBody(
     ),
     ################################################################################3
     tabItem(tabName = "filters_emp",
+            "The boxplots here show the total number of markers (n_markers) available for analysis, 
+            the number of markers filtered by OneMap because of missing data, segregation distortion and redundancy.",
+            hr(),
             fluidRow(
               column(width = 12,
                      box(
@@ -1174,6 +1189,9 @@ body <- dashboardBody(
     ),
     ################################################################################3
     tabItem(tabName = "map_emp",
+            "On the left, it is plotted the heatmap graphic with recombination fraction varying in color according with the 
+            intensity of the linkage. Higher is the recombination fraction hottest is the color. Markers ordered by genome positions are represented in x 
+            and y axis. On the right, the linkage group is plotted with distances between markers proportional to the genetic distances.",
             fluidRow(
               column(width = 8,
                      box(
@@ -1229,7 +1247,7 @@ server <- function(input, output,session) {
         path = "data/"
       } else { ######## Available examples
         if(input$example_simu == "populus"){
-          data.gz <- c("data/populus/SimulatedReads_results_depth10.tar.gz","data/ig_toy_sample/SimulatedReads_results_depth20.tar.gz")
+          data.gz <- c("data/ig_populus_simu/SimulatedReads_results_depth5.tar.gz","data/ig_populus_simu/SimulatedReads_results_depth20.tar.gz")
         } else if(input$example_simu == "eucalyptus"){
           data.gz <- c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" )
         } else if(input$example_simu == "acca"){
@@ -1394,11 +1412,11 @@ server <- function(input, output,session) {
       } else { ######## Available examples
         if(input$example_emp == "populus"){
           data.gz <- c("data/ig_populus_emp/EmpiricalReads_results.tar.gz")
-        } else if(input$example_simu == "eucalyptus"){
+        } else if(input$example_emp == "eucalyptus"){
           data.gz <- c("data/ig_eucalyptus_emp/EmpiricalReads_results.tar.gz")
-        } else if(input$example_simu == "acca"){
+        } else if(input$example_emp == "acca"){
           data.gz <- c("data/ig_acca_emp/EmpiricalReads_results.tar.gz")
-        } else if(input$example_simu == "toy_sample"){
+        } else if(input$example_emp == "toy_sample"){
           data.gz <- c("data/toy_sample_emp/EmpiricalReads_results.tar.gz")
         }
         path <- unlist(strsplit(data.gz[1], "/"))
@@ -1476,7 +1494,7 @@ server <- function(input, output,session) {
   ## download
   output$disper_depth_out_down <- downloadHandler(
     filename =  function() {
-      paste("snp_genoype_call.pdf")
+      paste("snp_genoype_call.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -1503,7 +1521,13 @@ server <- function(input, output,session) {
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
         incProgress(0.5, detail = paste("Doing part", 2))
         p <- errorProb_graph(data, input$real1)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -1546,20 +1570,21 @@ server <- function(input, output,session) {
       data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall3) %>%
         filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed3)]) %>%
-        filter(CountsFrom == input$CountsFrom3) %>%
+        filter(CountsFrom == input$CountsFrom3 | 
+                 (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
         filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
-        filter(fake == input$fake1)
+        filter(fake == input$fake1) %>%
+        mutate(interv.diff = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
+                                                (rf[-1] - rf[-length(rf)]))^2))
       
       data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
         summarise(n = n()) 
       
-      data <- data[,c(11,12, 10, 17)]
-      
       data<- merge(data, data_n) %>%
-        gather(key, value, -GenoCall, -SNPCall, -real.mks,)
+        gather(key, value, interv.diff, n)
       
+      data$key <- gsub("interv.diff", "diff (cM)", data$key)
       data$key <- gsub("n", "n markers", data$key)
-      data$key <- gsub("diff", "diff (cM)", data$key)
       incProgress(0.5, detail = paste("Doing part", 2))
       ind_size_graph(data)
     })
@@ -1568,7 +1593,7 @@ server <- function(input, output,session) {
   ## download
   output$ind_size_out_down <- downloadHandler(
     filename =  function() {
-      paste("ind_size.pdf")
+      paste("ind_size.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -1586,22 +1611,30 @@ server <- function(input, output,session) {
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall3) %>%
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed3)]) %>%
-          filter(CountsFrom == input$CountsFrom3) %>%
+          filter(CountsFrom == input$CountsFrom3 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
-          filter(fake == input$fake1)
+          filter(fake == input$fake1) %>%
+          mutate(interv.diff = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
+                                        (rf[-1] - rf[-length(rf)]))^2))
+        
         data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
           summarise(n = n()) 
         
-        data <- data[,c(11,12, 10, 17)]
-        
         data<- merge(data, data_n) %>%
-          gather(key, value, -GenoCall, -SNPCall, -real.mks,)
+          gather(key, value, interv.diff, n)
         
+        data$key <- gsub("interv.diff", "diff (cM)", data$key)
         data$key <- gsub("n", "n markers", data$key)
-        data$key <- gsub("diff", "diff (cM)", data$key)
+
         incProgress(0.5, detail = paste("Doing part", 2))
         p <- ind_size_graph(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -1620,25 +1653,28 @@ server <- function(input, output,session) {
       }
       data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall4) %>%
-        filter(CountsFrom == input$CountsFrom4) %>%
+        filter(CountsFrom == input$CountsFrom4 | 
+                 (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
         filter(depth %in% input$depth4) %>%
         filter(fake == input$fake2) %>%
-        group_by(seed,GenoCall, SNPCall, CountsFrom, depth)
+        group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
+        mutate(interv.diff = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
+                                      (rf[-1] - rf[-length(rf)]))^2))
       
-      data_n <- data %>%  group_by(GenoCall, SNPCall, seed, depth) %>%
-        summarise(n = n()) 
+      data_n <- data %>%  summarise(n = n()) 
       
       data <- switch(input$stats1,
-                     "mean" = summarise(data, value = mean(diff, na.rm=T)),
-                     "median" = summarise(data, value = median(diff, na.rm=T)),
-                     "var" = summarise(data, value = var(diff, na.rm=T)),
-                     "total" = summarise(data, value = sum(diff, na.rm=T)))
+                     "mean" = summarise(data, value = mean(interv.diff, na.rm=T)),
+                     "median" = summarise(data, value = median(interv.diff, na.rm=T)),
+                     "var" = summarise(data, value = var(interv.diff, na.rm=T)),
+                     "total" = summarise(data, value = sum(interv.diff, na.rm=T)))
       
       data<- merge(data, data_n) %>%
         gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -seed, -depth)
       
       data$key <- gsub("n", "n markers", data$key)
       data$key <- gsub("value", "diff (cM)", data$key)
+      data$depth <- paste0("depth ", as.character(data$depth))
       incProgress(0.5, detail = paste("Doing part", 2))
       all_size_graph(data, input$stats1)
     })
@@ -1647,7 +1683,7 @@ server <- function(input, output,session) {
   ## download
   output$all_size_out_down <- downloadHandler(
     filename =  function() {
-      paste("all_size.pdf")
+      paste("all_size.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -1664,7 +1700,8 @@ server <- function(input, output,session) {
         }
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall4) %>%
-          filter(CountsFrom == input$CountsFrom4) %>%
+          filter(CountsFrom == input$CountsFrom4 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
           filter(depth %in% input$depth4) %>%
           filter(fake == input$fake2) %>%
           group_by(seed,GenoCall, SNPCall, CountsFrom, depth)
@@ -1683,10 +1720,16 @@ server <- function(input, output,session) {
         
         data$key <- gsub("n", "n markers", data$key)
         data$key <- gsub("value", "diff (cM)", data$key)
+        data$depth <- paste0("depth ", as.character(data$depth))
         incProgress(0.5, detail = paste("Doing part", 2))
         
         p <- all_size_graph(data, input$stat1)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -1710,7 +1753,7 @@ server <- function(input, output,session) {
   ## download
   output$marker_type_out_down <- downloadHandler(
     filename =  function() {
-      paste("marker_type.pdf")
+      paste("marker_type.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -1727,7 +1770,12 @@ server <- function(input, output,session) {
         incProgress(0.5, detail = paste("Doing part", 2))
         
         p <- marker_type_graph(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -1746,7 +1794,8 @@ server <- function(input, output,session) {
       }
       data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall8) %>%
-        filter(CountsFrom == input$CountsFrom8) %>%
+        filter(CountsFrom == input$CountsFrom8 | 
+                 (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
         filter(depth == input$depth8) %>%
         filter(fake == "without-false") 
       
@@ -1761,7 +1810,7 @@ server <- function(input, output,session) {
       
       data$key <- gsub("n", "n markers", data$key)
       data$key <- gsub("value", "% correct", data$key)
-      
+      data$depth <- paste0("depth ", as.character(data$depth))
       incProgress(0.5, detail = paste("Doing part", 2))
       phases_graph(data)
     })
@@ -1769,7 +1818,7 @@ server <- function(input, output,session) {
   ## download
   output$phases_out_down <- downloadHandler(
     filename =  function() {
-      paste("phases.pdf")
+      paste("phases.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -1786,7 +1835,8 @@ server <- function(input, output,session) {
         }
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall8) %>%
-          filter(CountsFrom == input$CountsFrom8) %>%
+          filter(CountsFrom == input$CountsFrom8 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
           filter(depth == input$depth8) %>%
           filter(fake == "without-false") 
         
@@ -1801,11 +1851,16 @@ server <- function(input, output,session) {
         
         data$key <- gsub("n", "n markers", data$key)
         data$key <- gsub("value", "% correct", data$key)
-        
+        data$depth <- paste0("depth ", as.character(data$depth))
         incProgress(0.5, detail = paste("Doing part", 2))
         
         p <- phases_graph(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -1825,7 +1880,8 @@ server <- function(input, output,session) {
       
       data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall9) %>%
-        filter(CountsFrom == input$CountsFrom9) %>%
+        filter(CountsFrom == input$CountsFrom9 | 
+                 (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
         filter(fake == input$fake5) %>%
         group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
         summarise(n = n()) 
@@ -1833,7 +1889,8 @@ server <- function(input, output,session) {
       data <- datas_simu()[[4]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall9) %>%
         filter(fake == input$fake5) %>%
-        filter(CountsFrom == input$CountsFrom9)
+        filter(CountsFrom == input$CountsFrom9 | 
+                 (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
       
       data<- merge(data, data_n) %>%
         gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
@@ -1850,7 +1907,7 @@ server <- function(input, output,session) {
   ## download
   output$times_out_down <- downloadHandler(
     filename =  function() {
-      paste("times.pdf")
+      paste("times.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -1867,7 +1924,8 @@ server <- function(input, output,session) {
       
       data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall9) %>%
-        filter(CountsFrom == input$CountsFrom9) %>%
+        filter(CountsFrom == input$CountsFrom9 | 
+                 (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
         filter(fake == input$fake5) %>%
         group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
         summarise(n = n()) 
@@ -1875,7 +1933,8 @@ server <- function(input, output,session) {
       data <- datas_simu()[[4]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall9) %>%
         filter(fake == input$fake5) %>%
-        filter(CountsFrom == input$CountsFrom9)
+        filter(CountsFrom == input$CountsFrom9 | 
+                 (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
       
       data<- merge(data, data_n) %>%
         gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
@@ -1887,7 +1946,12 @@ server <- function(input, output,session) {
       incProgress(0.5, detail = paste("Doing part", 2))
       
       p <- times_graph(data)      
-      ggsave(file, p)
+      p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                     legend.text = element_text(size=17),
+                     axis.title=element_text(size=17),
+                     axis.text = element_text(size=17), 
+                     strip.text = element_text(size=17))
+      ggsave(file, p, width = 400, height = 200, units="mm")
     } 
   )
   #######################################################################
@@ -1907,11 +1971,13 @@ server <- function(input, output,session) {
         filter(SNPCall %in% input$SNPCall5) %>%
         filter(fake == input$fake6) %>%
         filter(depth == input$depth5) %>%
-        filter(CountsFrom == input$CountsFrom5) %>%
+        filter(CountsFrom == input$CountsFrom5 | 
+                 (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
         group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
         summarise(max = max(pos), min = min(pos))
       
       data$coverage <- ((data$max - data$min)/input$chr_size1)*100
+      data$depth <- paste0("depth ", as.character(data$depth))
       incProgress(0, detail = paste("Doing part", 1))
       coverage_graph(data)
     })
@@ -1920,7 +1986,7 @@ server <- function(input, output,session) {
   ## download
   output$coverage_out_down <- downloadHandler(
     filename =  function() {
-      paste("coverage_size.pdf")
+      paste("coverage_size.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -1939,15 +2005,22 @@ server <- function(input, output,session) {
           filter(SNPCall %in% input$SNPCall5) %>%
           filter(fake == input$fake6) %>%
           filter(depth == input$depth5) %>%
-          filter(CountsFrom == input$CountsFrom5) %>%
+          filter(CountsFrom == input$CountsFrom5 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
           group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
           summarise(max = max(pos), min = min(pos))
         
         data$coverage <- ((data$max - data$min)/input$chr_size1)*100
         incProgress(0, detail = paste("Doing part", 1))
-        
+        data$depth <- paste0("depth ", as.character(data$depth))
         p <- coverage_graph(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        
+        ggsave(file, p, width = 400, height = 200, units="mm")
         
       })
     } 
@@ -1960,6 +2033,7 @@ server <- function(input, output,session) {
         filter(SNPCall %in% input$SNPCall6) %>%
         filter(depth %in% input$depth6)
       
+      data$depth <- paste0("depth ", as.character(data$depth))
       incProgress(0.5, detail = paste("Doing part", 2))
       avalSNPs_graph(data)
     })
@@ -1968,16 +2042,21 @@ server <- function(input, output,session) {
   ## download
   output$snpcall_out_down <- downloadHandler(
     filename =  function() {
-      paste("snpcall.pdf")
+      paste("snpcall.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
       data <- datas_simu()[[5]] %>% filter(key %in% input$avalSNPs1) %>%
         filter(SNPCall %in% input$SNPCall6) %>%
         filter(depth %in% input$depth6)
-      
+      data$depth <- paste0("depth ", as.character(data$depth))
       p <- avalSNPs_graph(data)
-      ggsave(file, p)
+      p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                     legend.text = element_text(size=17),
+                     axis.title=element_text(size=17),
+                     axis.text = element_text(size=17), 
+                     strip.text = element_text(size=17))
+      ggsave(file, p, width = 400, height = 200, units="mm")
     } 
   )
   ##################################################################
@@ -2000,7 +2079,8 @@ server <- function(input, output,session) {
       data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall7) %>%
         filter(depth == input$depth7) %>%
-        filter(CountsFrom == input$CountsFrom7)
+        filter(CountsFrom == input$CountsFrom7 | 
+                 (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
       
       data$key <- factor(data$key, levels = c("n_markers", "mis_markers", "distorted_markers", "redundant_markers"))
       incProgress(0.5, detail = paste("Doing part", 2))
@@ -2011,7 +2091,7 @@ server <- function(input, output,session) {
   ## download
   output$filters_out_down <- downloadHandler(
     filename =  function() {
-      paste("filters.pdf")
+      paste("filters.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -2033,12 +2113,18 @@ server <- function(input, output,session) {
         data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall7) %>%
           filter(depth == input$depth7) %>%
-          filter(CountsFrom == input$CountsFrom7)
+          filter(CountsFrom == input$CountsFrom7 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
         
         data$key <- factor(data$key, levels = c("n_markers", "mis_markers", "distorted_markers", "redundant_markers"))
         incProgress(0.5, detail = paste("Doing part", 2))     
         p <- filters_graph(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -2201,7 +2287,7 @@ server <- function(input, output,session) {
   ## download
   output$disper_depth_emp_out_down <- downloadHandler(
     filename =  function() {
-      paste("depths.pdf")
+      paste("depths.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -2225,7 +2311,12 @@ server <- function(input, output,session) {
           filter(CountsFrom == input$CountsFrom1_emp)
         incProgress(0.5, detail = paste("Doing part", 2))
         p <- errorProb_graph_emp(data, input$real1_emp, input$geno_from1_emp)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -2271,16 +2362,17 @@ server <- function(input, output,session) {
       
       data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall3_emp) %>%
-        filter(CountsFrom == input$CountsFrom3_emp) 
+        filter(CountsFrom == input$CountsFrom3_emp) %>%
+        mutate(interv.diff = sqrt(c(0,cm[-1] - cm[-length(cm)])^2))
       
       data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
         summarise(n = n()) 
       
       data<- merge(data, data_n) %>%
-        gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom)
+        gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom, -cm)
       
+      data$key <- gsub("interv.diff", "diff (cM)", data$key)
       data$key <- gsub("n", "n markers", data$key)
-      data$key <- gsub("cm", "centimorgan", data$key)
       incProgress(0.5, detail = paste("Doing part", 2))
       ind_size_graph_emp(data)
     })
@@ -2289,7 +2381,7 @@ server <- function(input, output,session) {
   ## download
   output$ind_size_emp_out_down <- downloadHandler(
     filename =  function() {
-      paste("ind_size.pdf")
+      paste("ind_size.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -2307,19 +2399,25 @@ server <- function(input, output,session) {
         
         data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall3_emp) %>%
-          filter(CountsFrom == input$CountsFrom3_emp) 
+          filter(CountsFrom == input$CountsFrom3_emp) %>%
+          mutate(interv.diff = sqrt(c(0,cm[-1] - cm[-length(cm)])^2))
         
         data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
           summarise(n = n()) 
         
         data<- merge(data, data_n) %>%
-          gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom)
+          gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom, -cm)
         
+        data$key <- gsub("interv.diff", "diff (cM)", data$key)
         data$key <- gsub("n", "n markers", data$key)
-        data$key <- gsub("cm", "centimorgan", data$key)
         incProgress(0.5, detail = paste("Doing part", 2))
         p <- ind_size_graph_emp(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -2341,7 +2439,7 @@ server <- function(input, output,session) {
   ## download
   output$marker_type_emp_out_down <- downloadHandler(
     filename =  function() {
-      paste("marker_type_emp.pdf")
+      paste("marker_type_emp.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -2355,7 +2453,12 @@ server <- function(input, output,session) {
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
         incProgress(0.5, detail = paste("Doing part", 2))
         p <- marker_type_graph(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -2397,7 +2500,7 @@ server <- function(input, output,session) {
   ## download
   output$times_emp_out_down <- downloadHandler(
     filename =  function() {
-      paste("times.pdf")
+      paste("times.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -2431,7 +2534,12 @@ server <- function(input, output,session) {
         incProgress(0.5, detail = paste("Doing part", 2))
         
         p <- times_graph_emp(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -2456,7 +2564,7 @@ server <- function(input, output,session) {
   ## download
   output$coverage_emp_out_down <- downloadHandler(
     filename =  function() {
-      paste("coverage_size.pdf")
+      paste("coverage_size.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -2472,7 +2580,12 @@ server <- function(input, output,session) {
         data$coverage <- ((data$max - data$min)/input$chr_size)*100
         incProgress(0.5, detail = paste("Doing part", 2))
         p <- coverage_graph_emp(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )
@@ -2494,7 +2607,7 @@ server <- function(input, output,session) {
       } else {
         geno <- choosed
       }
-      data <- result_list[[3]] %>% filter(GenoCall %in% geno) %>%
+      data <- datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall7_emp) %>%
         filter(CountsFrom == input$CountsFrom7_emp) %>%
         gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
@@ -2506,7 +2619,7 @@ server <- function(input, output,session) {
   ## download
   output$filters_emp_out_down <- downloadHandler(
     filename =  function() {
-      paste("filters.pdf")
+      paste("filters.eps")
     },
     # content is a function with argument file. content writes the plot to the device
     content = function(file) {
@@ -2526,14 +2639,19 @@ server <- function(input, output,session) {
         } else {
           geno <- choosed
         }
-        data <- result_list[[3]] %>% filter(GenoCall %in% geno) %>%
+        data <- datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall7_emp) %>%
           filter(CountsFrom == input$CountsFrom7_emp) %>%
           gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
         incProgress(0.5, detail = paste("Doing part", 2))
         
         p <- filters_graph_emp(data)
-        ggsave(file, p)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
       })
     } 
   )

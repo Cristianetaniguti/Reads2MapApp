@@ -6,15 +6,15 @@ output: html_document
 
 ## OneMap software
 
-The OneMap software was first developed by Gabriel Margarido, Marcelo Mollinari and Antonio Augusto Fraco Garcia and published in 2007(ref). It was one of the first softwares able to build genetic maps for outcrossing species. For this it makes use of two-points estimations for each combinations of markers and a HMM approach which combine informations from every marker in the linkage group to estimate the genetic distances. But, the software was first developted to deal with few and informative genetic markers, as microssatelites, with the modern high-throughput markers OneMap now have to deal with thousands of markers, with low-informativeness and a lot of genotype errors. Without a adaptation of the software it produces inflated maps and takes a lot of time to run.
+The OneMap software was first developed by Gabriel Margarido, Marcelo Mollinari and Antonio Augusto Fraco Garcia and [published in 2007](http://taurus.unicamp.br/bitstream/REPOSIP/81752/1/WOS000248257800002.pdf). It was one of the first softwares able to build genetic maps for outcrossing species. For this it makes use of two-points estimations for each combinations of markers and a HMM approach which combine informations from every marker in the linkage group to estimate the genetic distances. But, the software was first developted to deal with few and informative genetic markers, as microssatelites. With the modern high-throughput markers, OneMap now have to deal with thousands of markers, with low-informativeness and a lot of genotyping errors. Without an adaptation of the software it produces inflated maps and takes a lot of time to run.
 
 ## OneMap workflows
 
-OneMap workflow uses [WDL]() language and [cromwell]() from [Broad Institute]() to offer user friendly and optimazed memory, CPU and time workflows to build linkage maps with OneMap. There are two main workflows called SimulatedReads and EmpiricalReads. The first performs population and RADseq fastq files simulations for a chromosome, SNP and genoytpe calling with five different software and genetic map building with OneMap and Gusmap. EmpiricalReads receives fastq files from empirical data and also performs the SNP and genotype calling and map building.
+OneMap workflow uses [WDL language and cromwell](https://gatkforums.broadinstitute.org/wdl/) from [Broad Institute](https://www.broadinstitute.org/) to offer user friendly and optimazed memory, CPU and time workflows to build linkage maps with OneMap. There are two main workflows called SimulatedReads and EmpiricalReads. The first performs population and RADseq fastq files simulations for a chromosome, SNP and genoytpe calling with five different software and genetic map building with OneMap and Gusmap. EmpiricalReads receives fastq files from empirical data and also performs the SNP and genotype calling and map building.
 
 The main workflows are composed by sub-workflows that can also be useful for users, they are located at `tasks` folder. The sub-workflows are composed by tasks that can be find at the end of each `.wdl` file and at `utils.wdl` and `utilsR.wdl`.
 
-[Docker]() images were built to each one of the tasks, then users need only to download the most recent version of cromwell, install its requirements and docker. If running without sudo permission users can use [singularity]() instead of directly docker. See `.configurations` directory and its [instructions]() to use singulatiry.
+[Docker](https://www.docker.com/) images were built to each one of the tasks, then users need only to download the most recent version of cromwell, install its requirements and docker. If running without sudo permission users can use [singularity](https://singularity.lbl.gov/docs-docker) instead of directly docker. See `.configurations` directory and its [instructions]() to use singulatiry.
 
 The WDL and cromwell system is also made to be easily expansible. Users can change arguments or implement other software into the analysis.
 
@@ -41,9 +41,7 @@ Here are some tutorials that better explain how to use the workflows:
 
 You can also have more details about the workflows and how they can be applied:
 
-* [Technical note]()
-* [Paper errors]()
-* [Paper MNPs]()
+* [Paper]()
 
 ## Authors
 

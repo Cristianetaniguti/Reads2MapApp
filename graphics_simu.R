@@ -88,7 +88,7 @@ times_graph <- function(data){
     geom_boxplot(position=position_dodge())  +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = "") +
-    facet_wrap( depth~key, ncol=1, scales = "free", strip.position = "right")
+    facet_wrap(key~depth, ncol=1, scales = "free", strip.position = "right")
 }
 
 coverage_graph <- function(data){
