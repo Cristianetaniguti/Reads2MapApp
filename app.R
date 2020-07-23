@@ -10,9 +10,12 @@ library(largeList)
 
 # Functions
 ## Simulations
-source("graphics_simu.R")
+source("scripts/graphics_simu.R")
 ## Empirical
-source("graphics_emp.R")
+source("scripts/graphics_emp.R")
+## Workflow times
+source("scripts/measure_time.R")
+
 
 ## Permanently choices - If add more softwares in workflow comparision this part requires update
 ErrorProb_choice <- list("OneMap_version2" = "OneMap_version2",
@@ -72,7 +75,8 @@ sidebar <- dashboardSidebar(
              menuSubItem("Map size each family", icon = icon("circle"), tabName = "ind_size"),
              menuSubItem("Overview map size", icon = icon("circle"), tabName = "all_size"),
              menuSubItem("Phases", icon = icon("circle"), tabName = "phases"),
-             menuSubItem("Maps", icon = icon("circle"), tabName = "map")),
+             menuSubItem("Maps", icon = icon("circle"), tabName = "map"),
+             menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo")),
     
     menuItem("Empirical data results", icon = icon("dot-circle" ), tabName = "empirical",
              menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
@@ -83,7 +87,8 @@ sidebar <- dashboardSidebar(
              menuSubItem("Map size", icon = icon("circle"), tabName = "ind_size_emp"),
              menuSubItem("Plotly heatmaps", icon = icon("circle"), tabName = "heatmaps_emp"),
              menuSubItem("Maps", icon = icon("circle"), tabName = "map_emp"),
-             menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp"))
+             menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp")),
+    menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times")
   )
 )
 
@@ -91,12 +96,12 @@ body <- dashboardBody(
   tabItems(
     ##########################################################
     tabItem(tabName = "about",
-            includeMarkdown("about.Rmd")
+            includeMarkdown("docs/about.Rmd")
     ),
     ####################################################################################
     # tabItem(tabName = "parallel", # Se eu deixo isso funcional o menu deixa de ser dinamico
-    #         includeHTML("parallel.html")
-    #         #includeMarkdown("parallel.Rmd")
+    #         includeHTML("docs/parallel.html")
+    #         #includeMarkdown("docs/parallel.Rmd")
     # ),
     ##########################################################
     # Upload data
@@ -129,8 +134,7 @@ body <- dashboardBody(
                                                     "Acca chromosome 10" = "acca",
                                                     "Toy sample" = "toy_sample"), 
                                      selected = "toy_sample"),
-                       ),
-                       verbatimTextOutput("simulatedreads_out")
+                       )
                    )
             ),
             column(width = 6,
@@ -769,11 +773,10 @@ body <- dashboardBody(
                                         choices = maps_choice,
                                         selected = "updog"),
                        ),
-                       fluidPage(
-                         radioButtons("Global0.05.11", label = p("Error rate"),
-                                      choices = global0.05_choices,
-                                      selected = "FALSE"),
-                         hr()
+                       box(solidHeader = T,
+                           radioButtons("Global0.05.11", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
                        ), 
                        
                        box(solidHeader = T,
@@ -795,12 +798,74 @@ body <- dashboardBody(
                            radioButtons("CountsFrom11", label = p("Counts from"),
                                         choices = CountsFrom_choice,
                                         selected = "vcf"),
-                           div(downloadButton("map1_out_down"),style="float:right")
-                       )
+                       ),
+                       div(downloadButton("map1_out_down"),style="float:right")
                      )
               ),
               column(width = 4,
                      imageOutput("map1_out")
+              )
+            )
+    ),
+    
+    ################################################################################3
+    tabItem(tabName = "haplo",
+            "Based on the built map, progeny haplotypes can be draw by onemap function progeny_haplotypes. Choose pipeline and the individuals you want to check the haplotypes.",
+            hr(),
+            fluidRow(
+              box(
+                width = NULL,
+                plotOutput("haplot_out"),
+                hr(),
+                plotOutput("haplot_simu_out"),
+                hr(),
+                box(width = 12,solidHeader = T,
+                    tags$h4(tags$b("Upload seed phased VCF:")),
+                    fileInput("simu_vcf", label = h6("<seed>_simu.vcf")),
+                ),
+                box(solidHeader = T,
+                    radioButtons("ErrorProb12", label = p("Genotyping method"),
+                                 choices = maps_choice,
+                                 selected = "updog"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("Global0.05.12", label = p("Error rate"),
+                                 choices = global0.05_choices,
+                                 selected = "FALSE"),
+                ), 
+                
+                box(solidHeader = T,
+                    radioButtons("SNPCall12", label = p("SNP calling method"),
+                                 choices = SNPCall_choice,
+                                 selected = "gatk"),
+                ),
+                box(solidHeader = T,
+                    selectInput("seed12", label = p("Seed"),
+                                choices = "It will be updated",
+                                selected = "It will be updated"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("fake12", label = p("Allow false positives"),
+                                 choices = fake_choices,
+                                 selected = "without-false"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("Most_likely12", label = p("Choose how to show genotypes probabilities"),
+                                 choices = list("The most likely genotypes receiveis maximum probabilities" = TRUE,
+                                                "Genotypes probabilities are how they were outputted by HMM"= FALSE),
+                                 selected = "TRUE"),
+                ), 
+                box(solidHeader = T,
+                    radioButtons("CountsFrom12", label = p("Counts from"),
+                                 choices = CountsFrom_choice,
+                                 selected = "vcf"),
+                ),
+                box(solidHeader = T, collapsible = T,
+                    checkboxGroupInput("inds12", label = p("Individuals from progeny"),
+                                       choices = "It will be updated",
+                                       selected = "It will be updated"),
+                ),
+                div(downloadButton("haplot_out_down"),style="float:right")
               )
             )
     ),
@@ -1225,8 +1290,83 @@ body <- dashboardBody(
                      imageOutput("map_emp_out")
               )
             )
+    ),
+    ################################################################################
+    tabItem(tabName = "haplo_emp",
+            "Based on the built map, progeny haplotypes can be draw by onemap function progeny_haplotypes. Choose pipeline and the individuals you want to check the haplotypes.",
+            hr(),
+            fluidRow(
+              box(
+                width = NULL,
+                plotOutput("haplot_emp_out"),
+                hr(),
+                box(solidHeader = T,
+                    radioButtons("ErrorProb12_emp", label = p("Genotyping method"),
+                                 choices = maps_choice,
+                                 selected = "updog"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("Global0.05.12_emp", label = p("Error rate"),
+                                 choices = global0.05_choices,
+                                 selected = "FALSE"),
+                ), 
+                box(solidHeader = T,
+                    radioButtons("Most_likely12_emp", label = p("Choose how to show genotypes probabilities"),
+                                 choices = list("The most likely genotypes receiveis maximum probabilities" = TRUE,
+                                                "Genotypes probabilities are how they were outputted by HMM"= FALSE),
+                                 selected = "TRUE"),
+                ), 
+                
+                box(solidHeader = T,
+                    radioButtons("SNPCall12_emp", label = p("SNP calling method"),
+                                 choices = SNPCall_choice,
+                                 selected = "gatk"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("CountsFrom12_emp", label = p("Counts from"),
+                                 choices = CountsFrom_choice,
+                                 selected = "vcf"),
+                ),
+                box(solidHeader = T, collapsible = T,
+                    checkboxGroupInput("inds12_emp", label = p("Individuals from progeny"),
+                                       choices = "It will be updated",
+                                       selected = "It will be updated"),
+                ),
+                div(downloadButton("haplot_emp_out_down"),style="float:right")
+              )
+            )
+    ),
+    ##############################################################################
+    # Workflow times
+    ##############################################################################
+    tabItem(tabName = "wf_times",
+            "Upload the log file generated by the cromwell + WDL workflow. It can be from simulations or empirical. We can upload multiple files.",
+            hr(),
+            box(width = NULL,
+                box(solidHeader = T,
+                    tags$h4(tags$b("Upload workflow log file")),
+                    # Copy the line below to make a file upload manager
+                    fileInput("wflog", label = h6("slurm_<depth>.out"), multiple = T),
+                ),
+                box(solidHeader = T,
+                    # Copy the line below to make a select box 
+                    selectInput("example_wf", label = h4(tags$b("Example")), 
+                                choices = list("Populus simulation chromosome 10" = "populus_simu",
+                                               "Eucalyptus simulation chromosome 10" = "eucalyptus_simu", 
+                                               "Acca simulation chromosome 10" = "acca_simu",
+                                               "Toy sample simulation" = "toy_sample_simu",
+                                               "Populus empirical chromosome 10" = "populus_emp",
+                                               "Eucalyptus empirical chromosome 10" = "eucalyptus_emp", 
+                                               "Acca empirical chromosome 10" = "acca_emp",
+                                               "Toy sample empirical" = "toy_sample_emp"), 
+                                selected = "populus_emp"),
+                )
+            ),
+            box(solidHeader = T,
+                width = NULL,
+                plotlyOutput("wf_times_out")
+            )
     )
-    ############################################################################
   )
 )
 
@@ -1292,6 +1432,7 @@ server <- function(input, output,session) {
             temp <- readList(datas[[i]][[j]])
             if(j == 1){
               saveList(temp, file = "data/temp_file/sequences.llo", append = F, compress = T)
+              inds <- rownames(temp[[1]]$data.name$geno)
             } else {
               saveList(temp, file = "data/temp_file/sequences.llo", append = T, compress = T)
             }
@@ -1318,12 +1459,14 @@ server <- function(input, output,session) {
       temp_names <- names(seeds_choices)
       seeds_choices <- as.list(1:length(seeds_choices))
       names(seeds_choices) <- temp_names
+      inds_choices <- 1:length(inds)
+      names(inds_choices) <- paste0(inds)
       
       names_rdatas <- unlist(names_rdatas)
       names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
       result_list <- list("data1" = data1, "data2"= data2, 
                           "data3"=data3, "data4"=data4, "data5"=data5, "data6"=data6, 
-                          "choices" = list(depths, seeds, seeds_choices, depths_choices),
+                          "choices" = list(depths, seeds, seeds_choices, depths_choices, inds_choices),
                           "names" = names_rdatas)
       
       system(paste("rm -r", paste(for_rm, collapse = " ")))
@@ -1337,6 +1480,8 @@ server <- function(input, output,session) {
   observe({
     seeds_choice <- datas_simu()[[7]][[3]] 
     depth_choice <- datas_simu()[[7]][[4]]
+    inds_choice <- datas_simu()[[7]][[5]]
+    names(inds_choice) <- paste0(names(inds_choice), " (",inds_choice, ")")
     
     updateSelectInput(session, "seed1",
                       label="Seed",
@@ -1360,6 +1505,16 @@ server <- function(input, output,session) {
                       label="Seed",
                       choices = seeds_choice,
                       selected=unlist(seeds_choice)[1])
+    
+    updateSelectInput(session, "seed12",
+                      label="Seed",
+                      choices = seeds_choice,
+                      selected=unlist(seeds_choice)[1])
+    
+    updateCheckboxGroupInput(session, "inds12",
+                             label="Individuals from progeny",
+                             choices = inds_choice,
+                             selected=unlist(inds_choice)[1])
     
     updateCheckboxGroupInput(session, "depth4",
                              label="Depth",
@@ -1440,6 +1595,10 @@ server <- function(input, output,session) {
       }
       
       system(paste("mv", datas[[grep("sequences",datas)]], "data/temp_file/"))
+      temp_dat <- readList("data/temp_file/sequences_emp.llo", index = 1)
+      inds <- rownames(temp_dat[[1]]$data.name$geno)
+      inds_list <- as.list(1:length(inds))
+      names(inds_list) <- paste0(inds, " (", inds, ")")
       
       data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
       data5 <- get(data5)
@@ -1452,7 +1611,7 @@ server <- function(input, output,session) {
                           "data3" = readRDS(datas[[grep("data3_filters.rds", datas)]]), 
                           "data4" = readRDS(datas[[grep("data4_times.rd", datas)]]), 
                           "data5" = data5, 
-                          "names" = names_rdatas)
+                          "names" = names_rdatas, inds_list)
       
       system(paste("rm -r", paste(for_rm, collapse = " ")))
     })
@@ -1461,6 +1620,14 @@ server <- function(input, output,session) {
   
   datas_emp <- reactive({prepare_datas_emp(input$empiricalreads)})
   
+  observe({
+    inds_choice <- datas_emp()[[7]]
+    
+    updateCheckboxGroupInput(session, "inds12_emp",
+                             label="Individuals from progeny",
+                             choices = inds_choice,
+                             selected=unlist(inds_choice)[1])
+  })
   ##################################################################
   # Simulations
   ##################################################################
@@ -1575,7 +1742,7 @@ server <- function(input, output,session) {
         filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
         filter(fake == input$fake1) %>%
         mutate(interv.diff = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
-                                                (rf[-1] - rf[-length(rf)]))^2))
+                                      (rf[-1] - rf[-length(rf)]))^2))
       
       data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
         summarise(n = n()) 
@@ -1626,7 +1793,7 @@ server <- function(input, output,session) {
         
         data$key <- gsub("interv.diff", "diff (cM)", data$key)
         data$key <- gsub("n", "n markers", data$key)
-
+        
         incProgress(0.5, detail = paste("Doing part", 2))
         p <- ind_size_graph(data)
         p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
@@ -2255,6 +2422,111 @@ server <- function(input, output,session) {
     } 
   )
   
+  #################################
+  output$haplot_out <- renderPlot({
+    withProgress(message = 'Building graphic', value = 0, {
+      incProgress(0, detail = paste("Doing part", 1))
+      if(input$Global0.05.12){
+        if( input$ErrorProb12 == "OneMap_version2"){
+          geno <- paste0("default", 0.05)
+        } else if (input$ErrorProb12 == "gusmap"){
+          stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- paste0(input$ErrorProb12, 0.05)
+        }
+      } else {
+        if( input$ErrorProb12 == "OneMap_version2"){
+          geno <- "default"
+        } else {
+          geno <- input$ErrorProb12
+        }
+      }
+      
+      if(input$CountsFrom12 == "bam" & (input$ErrorProb12 == "OneMap_version2" | input$ErrorProb12 == "SNPCaller")){
+        stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+      }
+      
+      temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
+      if(input$fake12 == "with-false") fake <- T else fake <- F
+      temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
+                       "_map_",input$SNPCall12, "_", input$CountsFrom12, "_", geno, "_", fake)
+      
+      incProgress(0.25, detail = paste("Doing part", 2))
+      if(geno == "gusmap"){
+        stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+      } else {
+        idx <- which(datas_simu()[[8]] == temp_n)
+        data <- readList("data/temp_file/sequences.llo", index = idx)
+        data <- data[[1]]
+        class(data) <- "sequence"
+        incProgress(0.5, detail = paste("Doing part", 3))
+        plot(progeny_haplotypes(data, ind = as.numeric(input$inds12), most_likely = input$Most_likely12), position = "split")
+      }
+    })
+  })
+  
+  output$haplot_simu_out <- renderPlot({
+    library(vcfR)
+    withProgress(message = 'Building graphic', value = 0, {
+      if(is.null(input$simu_vcf)) stop("Upload the phased vcf file for this seed and depth. The file is one of the outputs of the workflow.")
+      vcfR.object <- read.vcfR(input$simu_vcf[,4])
+      INDS <- dimnames(vcfR.object@gt)[[2]][-1]
+      parents <- INDS[which(!(INDS %in% names(datas_simu()[[7]][[5]])))]
+      inds.idx <- names(datas_simu()[[7]][[5]])[as.numeric(input$inds12)]
+      progeny_dat <- vcf2progeny_haplotypes(vcfR.object = vcfR.object, ind.id = inds.idx, parent1 = parents[1], parent2 = parents[2], crosstype = "outcross")
+      plot(progeny_dat)
+    })
+  })
+  
+  ## download
+  output$haplot_out_down <- downloadHandler(
+    filename =  function() {
+      paste("haplotypes.eps")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.12){
+          if( input$ErrorProb12 == "OneMap_version2"){
+            geno <- paste0("default", 0.05)
+          } else if (input$ErrorProb12 == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb12, 0.05)
+          }
+        } else {
+          if( input$ErrorProb12 == "OneMap_version2"){
+            geno <- "default"
+          } else {
+            geno <- input$ErrorProb12
+          }
+        }
+        
+        if(input$CountsFrom12 == "bam" & (input$ErrorProb12 == "OneMap_version2" | input$ErrorProb12 == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
+        if(input$fake12 == "with-false") fake <- T else fake <- F
+        temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
+                         "_map_",input$SNPCall12, "_", input$CountsFrom12, "_", geno, "_", fake)
+        
+        incProgress(0.25, detail = paste("Doing part", 2))
+        if(geno == "gusmap"){
+          stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+        } else {
+          idx <- which(datas_simu()[[8]] == temp_n)
+          data <- readList("data/temp_file/sequences.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          incProgress(0.5, detail = paste("Doing part", 3))
+          p <-  plot(progeny_haplotypes(data, ind = as.numeric(input$inds12), most_likely = input$Most_likely12), position = "split")
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        }
+      })
+    } 
+  )
   
   ##################################################################
   # Empirical 
@@ -2845,6 +3117,115 @@ server <- function(input, output,session) {
     }
   )
   
+  #################################
+  output$haplot_emp_out <- renderPlot({
+    withProgress(message = 'Building heatmap', value = 0, {
+      incProgress(0, detail = paste("Doing part", 1))
+      if(input$Global0.05.12_emp){
+        if( input$ErrorProb12_emp == "OneMap_version2"){
+          geno <- paste0("default", 0.05)
+        } else if (input$ErrorProb12_emp == "gusmap"){
+          stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- paste0(input$ErrorProb12_emp, 0.05)
+        }
+      } else {
+        if( input$ErrorProb12_emp == "OneMap_version2"){
+          geno <- "default"
+        } else {
+          geno <- input$ErrorProb12_emp
+        }
+      }
+      
+      if(input$CountsFrom12_emp == "bam" & (input$ErrorProb12_emp == "OneMap_version2" | input$ErrorProb12_emp == "SNPCaller")){
+        stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+      }
+      
+      temp_n <- paste0("map_",input$SNPCall12_emp, "_", input$CountsFrom12_emp, "_", geno, ".RData")
+      if(geno == "gusmap"){
+        stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
+      } else {
+        idx <- which(datas_emp()[[6]] == temp_n)
+        data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+        data <- data[[1]]
+        class(data) <- "sequence"
+        plot(progeny_haplotypes(data, ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp), position = "split")
+      }
+    })
+  })
+  
+  ## download
+  output$haplo_out_down <- downloadHandler(
+    filename =  function() {
+      paste("haplotypes.eps")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      withProgress(message = 'Building heatmap', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.12_emp){
+          if( input$ErrorProb12_emp == "OneMap_version2"){
+            geno <- paste0("default", 0.05)
+          } else if (input$ErrorProb12_emp == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb12_emp, 0.05)
+          }
+        } else {
+          if( input$ErrorProb12_emp == "OneMap_version2"){
+            geno <- "default"
+          } else {
+            geno <- input$ErrorProb12_emp
+          }
+        }
+        
+        if(input$CountsFrom12_emp == "bam" & (input$ErrorProb12_emp == "OneMap_version2" | input$ErrorProb12_emp == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        temp_n <- paste0("map_",input$SNPCall12_emp, "_", input$CountsFrom12_emp, "_", geno, ".RData")
+        if(geno == "gusmap"){
+          stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
+        } else {
+          idx <- which(datas_emp()[[6]] == temp_n)
+          data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          p <- plot(progeny_haplotypes(data, ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp), position = "split")
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        }
+      })
+    } 
+  )
+  
+  #################################
+  output$wf_times_out <- renderPlotly({
+    withProgress(message = 'Building heatmap', value = 0, {
+      incProgress(0, detail = paste("Doing part", 1))
+      if(input$example_wf=="populus_emp"){
+        sele_file <- "data/populus/slurm-67440032.out"
+      }
+      workflow_times(sele_file, interactive=TRUE)
+    })
+  })
+  
+  ## download
+  output$wf_out_down <- downloadHandler(
+    filename =  function() {
+      paste("wf_times.eps")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$example_wf=="populus_emp"){
+          sele_file <- "data/populus/slurm-67440032.out"
+        }
+        p <-workflow_times(sele_file)
+        ggsave(file, p, width = 400, height = 200, units="mm")
+      })
+    } 
+  )
 }
 
 # Create Shiny app ----
