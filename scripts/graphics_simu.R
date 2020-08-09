@@ -111,7 +111,7 @@ avalSNPs_graph <- function(data){
   data %>% ggplot(aes(x=key, y=value, fill= SNPCall)) +
     geom_boxplot(position=position_dodge())  +
     scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = "percent covered") + 
+    labs(x = "Genotyping method", y = "number of markers") + 
     facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
 }
 

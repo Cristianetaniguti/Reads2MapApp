@@ -36,7 +36,7 @@ workflow_times <- function(log.file, interactive=FALSE){
   #  geom_text(data = means, aes(label =  paste0("mean: ",diff), y = diff + max.value/2))
   
   if(interactive){
-    p <- ggplotly(p)
+    p <- ggplotly(p, height = 1000)
   }
   
   return(p)
