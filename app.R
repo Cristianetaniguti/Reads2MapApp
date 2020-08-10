@@ -1483,7 +1483,7 @@ server <- function(input, output,session) {
         } else if(input$example_simu == "acca"){
           data.gz <- c("data/acca/SimulatedReads_10.tar.gz", "data/acca/SimulatedReads_20.tar.gz", "data/acca/SimulatedReads_100.tar.gz" )
         } else if(input$example_simu == "toy_sample"){
-          data.gz <- c("data/ig_toy_sample_simu/SimulatedReads_results_depth10.tar.gz")
+          data.gz <- c("data/ig_toy_sample_simu/SimulatedReads_results_depth10.tar.gz","data/ig_toy_sample_simu/SimulatedReads_results_depth20.tar.gz")
         }
         path <- unlist(strsplit(data.gz[1], "/"))
         path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
@@ -1667,7 +1667,7 @@ server <- function(input, output,session) {
         } else if(input$example_emp == "acca"){
           data.gz <- c("data/ig_acca_emp/EmpiricalReads_results.tar.gz")
         } else if(input$example_emp == "toy_sample"){
-          data.gz <- c("data/toy_sample_emp/EmpiricalReads_results.tar.gz")
+          data.gz <- c("data/ig_toy_sample_emp/EmpiricalReads_results.tar.gz")
         }
         path <- unlist(strsplit(data.gz[1], "/"))
         path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
@@ -2541,16 +2541,16 @@ server <- function(input, output,session) {
         stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
       }
       
-      temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
+      temp_n <- paste0(result_list[[7]][[1]][as.numeric(input$seed12)])
       if(input$fake12 == "with-false") fake <- T else fake <- F
-      temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
+      temp_n <- paste0(result_list[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
                        "_map_",input$SNPCall12, "_", input$CountsFrom12, "_", geno, "_", fake)
       
       incProgress(0.25, detail = paste("Doing part", 2))
       if(geno == "gusmap"){
         stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
       } else {
-        idx <- which(datas_simu()[[8]] == temp_n)
+        idx <- which(result_list[[8]] == temp_n)
         data <- readList("data/temp_file/sequences.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
@@ -2648,16 +2648,16 @@ server <- function(input, output,session) {
         stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
       }
       
-      temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
+      temp_n <- paste0(result_list[[7]][[1]][as.numeric(input$seed13)])
       if(input$fake13 == "with-false") fake <- T else fake <- F
-      temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
+      temp_n <- paste0(result_list[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
                        "_map_",input$SNPCall13, "_", input$CountsFrom13, "_", geno, "_", fake)
       
       incProgress(0.25, detail = paste("Doing part", 2))
       if(geno == "gusmap"){
         stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
       } else {
-        idx <- which(datas_simu()[[8]] == temp_n)
+        idx <- which(result_list[[8]] == temp_n)
         data <- readList("data/temp_file/sequences.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
@@ -3418,7 +3418,7 @@ server <- function(input, output,session) {
         data <- readList("data/temp_file/sequences_emp.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
-        plot(progeny_haplotypes(data, ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp), position = "split")
+        plot(progeny_haplotypes(data, ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp))
       }
     })
   })
@@ -3460,7 +3460,7 @@ server <- function(input, output,session) {
           data <- readList("data/temp_file/sequences_emp.llo", index = idx)
           data <- data[[1]]
           class(data) <- "sequence"
-          p <- plot(progeny_haplotypes(data, ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp), position = "split")
+          p <- plot(progeny_haplotypes(data, ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp))
           ggsave(file, p, width = 400, height = 200, units="mm")
         }
       })
@@ -3494,7 +3494,7 @@ server <- function(input, output,session) {
       if(geno == "gusmap"){
         stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
       } else {
-        idx <- which(result_list[[6]] == temp_n)
+        idx <- which(datas_emp()[[6]] == temp_n)
         data <- readList("data/temp_file/sequences_emp.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
@@ -3517,7 +3517,9 @@ server <- function(input, output,session) {
       } else if(input$example_wf=="populus_simu"){
         sele_file <- "data/ig_populus_simu/depth20_pop50/slurm-67454631.out"
       } else if(input$example_wf=="toy_sample_emp"){
-        sele_file <- "data/toy_sample_emp/toy_sample_emp.log"
+        sele_file <- "data/ig_toy_sample_emp/toy_sample_emp.log"
+      } else if(toy_sample_simu == "toy_sample_simu"){
+        sele_file <- "data/ig_toy_sample_emp/toy_sample_simu20.log"
       }
       incProgress(0.5, detail = paste("Doing part", 2))
       workflow_times(sele_file, interactive=TRUE)
