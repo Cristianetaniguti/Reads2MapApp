@@ -1,0 +1,7 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^app\.R$
+^OneMapWorkflowsApp\.Rproj$
+^\.gitignore$
+^\.Rhistory$
+^LICENSE\.md$

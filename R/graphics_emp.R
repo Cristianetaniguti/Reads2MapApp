@@ -1,5 +1,5 @@
-# Functions to build graphics for the empirical datas
-
+#' Functions to build graphics for the empirical datas
+#' 
 errorProb_graph_emp <- function(data, genotypes, from){
   
   if(from == "vcf"){

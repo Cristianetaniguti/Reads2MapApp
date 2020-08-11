@@ -1,5 +1,5 @@
-# Functions to build graphics for the data from simulations
-
+#' Functions to build graphics for the data from simulations
+#' 
 errorProb_graph <- function(data, genotypes){
   
   colors <- rainbow(3)

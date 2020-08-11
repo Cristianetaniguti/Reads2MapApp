@@ -1,0 +1,3728 @@
+##'
+##'@import shiny
+##'@import onemap
+##'@import shinydashboard
+##'@import largeList
+##'@import dplyr
+##'@import tidyr
+##'@import GUSMap
+##'@importFrom plotly plotlyOutput renderPlotly
+##'@import ggplot2
+##'
+##'@export
+OneMapWorkflowsApp <- function(...) {
+  ## Permanently choices - If add more softwares in workflow comparision this part requires update
+  ErrorProb_choice <- list("OneMap_version2" = "OneMap_version2",
+                           "polyrad"="polyrad",
+                           "SNPCaller"="SNPCaller",
+                           "supermassa"="supermassa",
+                           "updog"="updog")
+  
+  global0.05_choices <- list("global error of 0.05"=TRUE,
+                             "variable error" = FALSE)
+  
+  maps_choice <- list("gusmap" = "gusmap",
+                      "OneMap_version2" = "OneMap_version2",
+                      "polyrad"="polyrad",
+                      "SNPCaller"="SNPCaller",
+                      "supermassa"="supermassa",
+                      "updog"="updog")
+  SNPCall_choice <- list("freebayes"="freebayes",
+                         "gatk" = "gatk")
+  CountsFrom_choice <- list("bam"="bam",
+                            "vcf"="vcf")
+  
+  stats_choice <- list("mean", "median", "var", "total")
+  names(stats_choice) <- c("mean", "median", "var", "total")
+  avalSNPs_choice <- list("(1)", "(2)", "(3)", "(4)", "(5)")
+  names(avalSNPs_choice) <- c("number of simulated SNPs (1)", 
+                              "number of SNPs identified (2)", 
+                              "number of correctly identified SNPs (3)",
+                              "number of correctly identified reference allele (4)",
+                              "number of correctly identified alternative allele (5)")
+  fake_choices <- list("with-false", "without-false")
+  names(fake_choices) <- c("yes", "no")
+  
+  
+  ########
+  #  UI  #
+  ########
+  
+  ## Header
+  header <- dashboardHeader(
+    title = "Error workflow results",
+    titleWidth = 250)
+  
+  sidebar <- dashboardSidebar(
+    sidebarMenu(
+      id = "tabs",
+      menuItem("About", tabName = "about", icon = icon("lightbulb")),
+      #menuItem("Parallel map", icon = icon("dot-circle"), tabName = "parallel"), 
+      menuItem("Upload data", icon = icon("upload"), tabName= "upload"),
+      menuItem("Simulation results", icon = icon("dot-circle"), tabName= "simulations",
+               menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall"),
+               menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage"),
+               menuSubItem("Filters", icon = icon("circle"), tabName = "filters"),
+               menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type"),
+               menuSubItem("Times", icon = icon("circle"), tabName = "times"),
+               menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth"),
+               menuSubItem("Map size each family", icon = icon("circle"), tabName = "ind_size"),
+               menuSubItem("Overview map size", icon = icon("circle"), tabName = "all_size"),
+               menuSubItem("Phases", icon = icon("circle"), tabName = "phases"),
+               menuSubItem("Maps", icon = icon("circle"), tabName = "map"),
+               menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo"),
+               menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts")),
+      
+      menuItem("Empirical data results", icon = icon("dot-circle" ), tabName = "empirical",
+               menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
+               menuSubItem("Filters", icon = icon("circle"), tabName = "filters_emp"),
+               menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type_emp"),
+               menuSubItem("Times", icon = icon("circle"), tabName = "times_emp"),
+               menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth_emp"),
+               menuSubItem("Map size", icon = icon("circle"), tabName = "ind_size_emp"),
+               menuSubItem("Plotly heatmaps", icon = icon("circle"), tabName = "heatmaps_emp"),
+               menuSubItem("Maps", icon = icon("circle"), tabName = "map_emp"),
+               menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp"),
+               menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts_emp")),
+      menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times")
+    )
+  )
+  
+  body <- dashboardBody(
+    tabItems(
+      ##########################################################
+      tabItem(tabName = "about",
+              includeMarkdown("docs/about.Rmd")
+      ),
+      ####################################################################################
+      # tabItem(tabName = "parallel", # Se eu deixo isso funcional o menu deixa de ser dinamico
+      #         includeHTML("docs/parallel.html")
+      #         #includeMarkdown("docs/parallel.Rmd")
+      # ),
+      ##########################################################
+      # Upload data
+      ##########################################################
+      tabItem(tabName = "upload",
+              "This shiny app build several graphics using results from OneMap workflows. 
+            If you run the", tags$b("SimulatedReads.wdl"),"and/or EmpiricalReads.wdl workflows you 
+            can upload the outputted data in", tags$b("Upload SimulatedReads outputs"), "and/or",
+              tags$b("Upload EmpiricalReads outputs"), "sections. If you don't have your own results yet,
+            you can explore the generate to populus dataset (Bioproject PRJNA395), eucalyptus and acca
+            all these results is better explained in the paper. Select the available 
+            example results in", tags$b("SimulatedReads.wdl example results"),"and/or", 
+              tags$b("EmpiricalReads.wdl example results"),".",
+              hr(),
+              column(width = 6,
+                     box(width = 12,
+                         fluidPage(
+                           tags$h4(tags$b("Upload SimulatesReads results:")),
+                           "If you have more than one depth value, submit all files in the same window.",
+                           # Copy the line below to make a file upload manager
+                           fileInput("simulatedreads", label = h6("SimulatedReads_<depth>.tar.gz"), multiple = T),
+                           
+                         ),
+                         
+                         fluidPage(
+                           # Copy the line below to make a select box 
+                           selectInput("example_simu", label = h4(tags$b("SimulatedReads.wdl example results")), 
+                                       choices = list("Populus chromosome 10" = "populus",
+                                                      "Eucalyptus chromosome 10" = "eucalyptus", 
+                                                      "Acca chromosome 10" = "acca",
+                                                      "Toy sample" = "toy_sample"), 
+                                       selected = "toy_sample"),
+                         )
+                     )
+              ),
+              column(width = 6,
+                     box(width = 12,
+                         fluidPage(
+                           
+                           tags$h4(tags$b("Upload EmpiricalReads results:")),
+                           "If you have more than one depth value, submit all files in the same window.",
+                           # Copy the line below to make a file upload manager
+                           fileInput("empiricalreads", label = h6("EmpiricalReads_<depth>.tar.gz"), multiple = T),
+                         ),
+                         fluidPage(
+                           # Copy the line below to make a select box 
+                           selectInput("example_emp", label = h4(tags$b("EmpiricalReads.wdl example results")), 
+                                       choices = list("Populus chromosome 10" = "populus", 
+                                                      "Eucalyptus chromosome 10" = "eucalyptus", 
+                                                      "Acca chromosome 10" = "acca",
+                                                      "Toy sample" = "toy_sample"), 
+                                       selected = "toy_sample"),
+                         )
+                     )
+              )
+      ),
+      ##########################################################
+      # Simulations
+      ##########################################################
+      tabItem(tabName = "disper_depth",
+              "The same graphic is plotted in left and right to user be able to compare different methods choosing the options below.
+            The x and y axis shows the read counts for reference and alternative alleles, respectively. 
+            The colors of dots varies according with `Genotypes from` section. User can choose to see colors from simulated genotypes, the estimated or a gradient with the error rate used. 
+            Users can download the left graphic pushing `Download` button.",
+              hr(),
+              fluidRow(
+                column(width = 6,
+                       box(
+                         width = NULL,
+                         plotOutput("disper_depth_out"),
+                         actionButton("go1", "Update",icon("refresh")),
+                       ),
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           radioButtons("ErrorProb1", label = p("Genotyping method"),
+                                        choices = ErrorProb_choice,
+                                        selected = "polyrad"),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.1", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ),
+                         
+                         fluidPage(
+                           radioButtons("real1", label = p("Display the"),
+                                        choices = list("simulated genotypes" = "simulated_genotypes", 
+                                                       "estimated genotypes"="estimated_genotypes",
+                                                       "errors rate" = "estimated_errors"),
+                                        selected = "estimated_genotypes"),
+                           hr()
+                         ),
+                         
+                         #helpText("Select the SNP calling method"),
+                         fluidPage(
+                           radioButtons("SNPCall1", label = p("SNP calling method"),
+                                        choices = SNPCall_choice,
+                                        selected = "freebayes"),
+                           hr()
+                         ),
+                         
+                         #helpText("Select the family seed"),
+                         fluidPage(
+                           
+                           selectInput("seed1", label = p("Seed"),
+                                       choices = "It will be updated",
+                                       selected ="It will be updated"),
+                           hr()
+                         ),
+                         
+                         #helpText("Read counts from:"),
+                         fluidPage(
+                           
+                           radioButtons("CountsFrom1", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr(),
+                           div(downloadButton("disper_depth_out_down"),style="float:right")
+                           # ),
+                         )
+                       )
+                ),
+                
+                column(width = 6,
+                       box(
+                         width = NULL,
+                         plotOutput("disper_depth2_out"),   
+                         actionButton("go2", "Update",icon("refresh")),
+                       ),
+                       
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           radioButtons("ErrorProb2", label = p("Genotyping method"),
+                                        choices = ErrorProb_choice,
+                                        selected = "polyrad"),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.2", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("real2", label = p("Display the"),
+                                        choices = list("simulated genotypes" = "simulated_genotypes", 
+                                                       "estimated genotypes"="estimated_genotypes",
+                                                       "errors rate" = "estimated_errors"),
+                                        selected = "estimated_genotypes"),
+                           hr()
+                         ),
+                         
+                         #helpText("Select the SNP calling method"),
+                         fluidPage(
+                           radioButtons("SNPCall2", label = p("SNP calling method"),
+                                        choices = SNPCall_choice,
+                                        selected = "freebayes"),
+                           hr()
+                         ),
+                         
+                         #helpText("Select the family seed"),
+                         fluidPage(
+                           
+                           selectInput("seed2", label = p("Seed"),
+                                       choices = "It will be updated",
+                                       selected = "It will be updated"),
+                           hr()
+                         ),
+                         
+                         #helpText("Read counts from:"),
+                         fluidPage(
+                           
+                           radioButtons("CountsFrom2", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr()
+                           # ),
+                         )
+                       )
+                )
+              )
+      ),
+      ##########################################################
+      tabItem(tabName = "ind_size",
+              "The boxplots show the distribuition of the difference between estimated and simulated  distances for each marker of the generated maps.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("ind_size_out"),
+                         actionButton("go3", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width=6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb3", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.3", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ),
+                         #helpText("Select the SNP calling method"),
+                         fluidPage(
+                           checkboxGroupInput("SNPCall3", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = unlist(SNPCall_choice)),
+                           hr()
+                         )
+                       )
+                ),
+                column(width=6,
+                       box(width = NULL, solidHeader = TRUE,
+                           #helpText("Select the family seed"),
+                           fluidPage(
+                             selectInput("seed3", label = p("Seed"),
+                                         choices = "It will be updated",
+                                         selected = "It will be updated"),
+                             hr()
+                           ),
+                           
+                           #helpText("Read counts from:"),
+                           fluidPage(
+                             
+                             radioButtons("CountsFrom3", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr()
+                           ),
+                           
+                           fluidPage(
+                             
+                             radioButtons("fake1", label = p("Allow false positives?"),
+                                          choices = fake_choices,
+                                          selected = "without-false"),
+                             hr(),
+                             div(downloadButton("ind_size_out_down"),style="float:right")
+                             # ),
+                           )
+                       )
+                )
+              )
+      ),
+      ######################################################################
+      tabItem(tabName = "all_size",
+              "Here we show an overview of all simulated familes by depths. Users can choose the descriptive 
+            statistical to overview the differences between estimated and simulated distances.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("all_size_out"),
+                         actionButton("go4", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width=6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           radioButtons("stats1", label = p("Statistic"),
+                                        choices = stats_choice,
+                                        selected = "mean"),
+                           hr()
+                         ),
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb4", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.4", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ), 
+                         fluidPage(
+                           checkboxGroupInput("SNPCall4", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                           hr()
+                         )
+                       )),
+                column(width=6,
+                       box(width = NULL, solidHeader = TRUE,
+                           fluidPage(
+                             checkboxGroupInput("depth4", label = p("Depth"),
+                                                choices = "This will be updated",
+                                                selected = "This will be updated"),
+                             hr()
+                           ),
+                           fluidPage(
+                             radioButtons("CountsFrom4", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr()
+                           ),
+                           
+                           fluidPage(
+                             
+                             radioButtons("fake2", label = p("Allow false positives?"),
+                                          choices = fake_choices,
+                                          selected = "without-false"),
+                             hr(),
+                             div(downloadButton("all_size_out_down"),style="float:right")
+                           )
+                       )
+                )
+              )
+      ),
+      ###################################################################################
+      tabItem(tabName = "marker_type",
+              "These bar plots describes the number of markers of each type according with Wu et. al 2002a that remained in the built maps of each method.
+            The upper graphics show the simulated marker types (real.type) and below they show the estimated (type). ",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("marker_type_out"),
+                         actionButton("go5", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width=6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb10", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           checkboxGroupInput("SNPCall10", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                           hr()
+                         ))
+                ),
+                column(width=6,
+                       box(width=NULL, solidHeader = T,
+                           fluidPage(
+                             radioButtons("depth10", label = p("Depth"),
+                                          choices = "This will be updated",
+                                          selected = "This will be updated"),
+                             hr()
+                           ),
+                           fluidPage(
+                             radioButtons("CountsFrom10", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr()
+                           ),
+                           
+                           fluidPage(
+                             
+                             radioButtons("fake3", label = p("Allow false positives?"),
+                                          choices = fake_choices,
+                                          selected = "without-false"),
+                             hr(),
+                             div(downloadButton("marker_type_out_down"),style="float:right")
+                           )
+                       )
+                )
+              )
+      ),
+      ###################################################################################
+      tabItem(tabName = "phases",
+              "These boxplots show the percentage of right estimated phases for all estimated families by depths.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("phases_out"),
+                         actionButton("go6", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width=6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb8", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.8", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ), 
+                         fluidPage(
+                           checkboxGroupInput("SNPCall8", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                           hr()
+                         )
+                       )
+                ),
+                column(width=6,
+                       box(
+                         width=NULL, solidHeader = T,
+                         fluidPage(
+                           checkboxGroupInput("depth8", label = p("Depth"),
+                                              choices = "This will be updated",
+                                              selected = "This will be updated"),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("CountsFrom8", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr()
+                         ),
+                         div(downloadButton("phases_out_down"),style="float:right")
+                         
+                       )
+                )
+              )
+      ),
+      ###################################################################################
+      tabItem(tabName = "times",
+              "The boxplots show the distribuition of times and number of markers of all families by depth.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("times_out"),             
+                         actionButton("go7", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width=6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb9", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.9", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ), 
+                         fluidPage(
+                           checkboxGroupInput("SNPCall9", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                           hr()
+                         )
+                       )
+                ),
+                column(width=6,
+                       box(width=NULL, solidHeader = T,
+                           fluidPage(
+                             checkboxGroupInput("depth9", label = p("Depth"),
+                                                choices = "This will be updated",
+                                                selected = "This will be updated"),
+                             hr()
+                           ),
+                           fluidPage(
+                             radioButtons("CountsFrom9", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr()
+                           ),
+                           
+                           fluidPage(
+                             
+                             radioButtons("fake5", label = p("Allow false positives?"),
+                                          choices = fake_choices,
+                                          selected = "without-false"),
+                             hr(),
+                             
+                             div(downloadButton("times_out_down"),style="float:right")
+                           )
+                       )
+                )
+              )
+      ),
+      ###################################################################################
+      tabItem(tabName = "coverage",
+              "This barplots show the percentage of the chromosome covered by the map built. It depends of the 
+            chromosome size information in base pair (bp). The chromosome we used in our example has 1019956 bp (toy sample) or 22862796 bp in chromosome 10 of populus.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("coverage_out"),
+                         actionButton("go8", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width=6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb5", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.5", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ), 
+                         fluidPage(
+                           checkboxGroupInput("SNPCall5", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           checkboxGroupInput("depth5", label = p("Depth"),
+                                              choices = "This will be updated",
+                                              selected = "This will be updated"),
+                           hr()
+                         )
+                       )
+                ),
+                column(width=6,
+                       box(width = NULL, solidHeader = T,
+                           fluidPage(
+                             radioButtons("CountsFrom5", label = p("Counts from:"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr()
+                           ),
+                           fluidPage(
+                             
+                             radioButtons("fake6", label = p("Allow false positives?"),
+                                          choices = fake_choices,
+                                          selected = "without-false"),
+                             hr()
+                           ),
+                           
+                           fluidPage(
+                             numericInput("chr_size1", label = p("Chromosome size"), value = "complete here"),
+                             
+                             hr(),
+                             div(downloadButton("coverage_out_down"),style="float:right")
+                           )
+                       )
+                )
+              )
+      ),
+      ####################################################################################
+      tabItem(tabName = "snpcall",
+              "The boxplots here show some characteristics of SNP calling. The x axis contain the different 
+            characteristics indexed according with section `Options`, and y axis shows the number of markers.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("snpcall_out"),    
+                         actionButton("go9", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("avalSNPs1", label = p("Options"),
+                                              choices = avalSNPs_choice,
+                                              selected = unlist(avalSNPs_choice)),
+                           hr()
+                         )
+                       )
+                ),
+                column(width = 6,
+                       box(width = 6, solidHeader = T,
+                           fluidPage(
+                             checkboxGroupInput("SNPCall6", label = p("SNP calling method"),
+                                                choices = SNPCall_choice,
+                                                selected = names(SNPCall_choice)),
+                             hr()
+                           ),
+                           fluidPage(
+                             checkboxGroupInput("depth6", label = p("Depth"),
+                                                choices = "This will be updated",
+                                                selected = "This will be updated"),
+                             hr(),
+                             div(downloadButton("snpcall_out_down"),style="float:right")
+                           )
+                       )
+                )
+              )
+      ),
+      ################################################################################3
+      tabItem(tabName = "filters",
+              "The boxplots here show the total number of markers (n_markers) available for analysis, 
+            the number of markers filtered by OneMap because of missing data, segregation distortion and redundancy.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("filters_out"),  
+                         actionButton("go10", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb7", label = p("Genotyping method"),
+                                              choices = ErrorProb_choice,
+                                              selected = unlist(ErrorProb_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.7", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ), 
+                         
+                         fluidPage(
+                           checkboxGroupInput("SNPCall7", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                           hr()
+                         )
+                       )
+                ),
+                column(width = 6,
+                       box(width = NULL, solidHeader = T,
+                           fluidPage(
+                             radioButtons("CountsFrom7", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr()
+                           ),
+                           fluidPage(
+                             selectInput("depth7", label = p("Depth"),
+                                         choices = "This will be updated",
+                                         selected = "This will be updated"),
+                             hr(),
+                             div(downloadButton("filters_out_down"),style="float:right")
+                           )
+                       )
+                )
+              )
+      ),
+      
+      ################################################################################3
+      tabItem(tabName = "map",
+              "On the left, it is plotted the heatmap graphic with recombination fraction varying in color according with the 
+            intensity of the linkage. Higher is the recombination fraction hottest is the color. Markers ordered by genome positions are represented in x 
+            and y axis. On the right, the linkage group is plotted with distances between markers proportional to the genetic distances.",
+              hr(),
+              fluidRow(
+                column(width = 8,
+                       box(
+                         width = NULL,
+                         plotOutput("map_out"),
+                         hr(),
+                         actionButton("go11.1", "Update",icon("refresh")),
+                         hr(),
+                         box(solidHeader = T,
+                             radioButtons("ErrorProb11", label = p("Genotyping method"),
+                                          choices = maps_choice,
+                                          selected = "updog"),
+                         ),
+                         box(solidHeader = T,
+                             radioButtons("Global0.05.11", label = p("Error rate"),
+                                          choices = global0.05_choices,
+                                          selected = "FALSE"),
+                         ), 
+                         
+                         box(solidHeader = T,
+                             radioButtons("SNPCall11", label = p("SNP calling method"),
+                                          choices = SNPCall_choice,
+                                          selected = "gatk"),
+                         ),
+                         box(solidHeader = T,
+                             selectInput("seed11", label = p("Seed"),
+                                         choices = "It will be updated",
+                                         selected = "It will be updated"),
+                         ),
+                         box(solidHeader = T,
+                             radioButtons("fake11", label = p("Allow false positives"),
+                                          choices = fake_choices,
+                                          selected = "without-false"),
+                         ),
+                         box(solidHeader = T,
+                             radioButtons("CountsFrom11", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                         ),
+                         div(downloadButton("map1_out_down"),style="float:right")
+                       )
+                ),
+                
+                column(width = 4,
+                       actionButton("go11", "Update",icon("refresh")),
+                       hr(),
+                       imageOutput("map1_out")
+                )
+              )
+      ),
+      
+      ################################################################################3
+      tabItem(tabName = "haplo",
+              "Based on the built map, progeny haplotypes can be draw by onemap function progeny_haplotypes. Choose pipeline and the individuals you want to check the haplotypes.",
+              hr(),
+              fluidRow(
+                box(
+                  width = NULL,
+                  "Estimated progeny haplotypes",
+                  actionButton("go12", "Update",icon("refresh")),
+                  hr(),
+                  plotOutput("haplot_out"),
+                  hr(),
+                  "Simulated progeny haplotypes",
+                  actionButton("go12.1", "Update",icon("refresh")),
+                  hr(),
+                  plotOutput("haplot_simu_out"),
+                  hr(),
+                  box(solidHeader = T,
+                      radioButtons("ErrorProb12", label = p("Genotyping method"),
+                                   choices = maps_choice,
+                                   selected = "updog"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("Global0.05.12", label = p("Error rate"),
+                                   choices = global0.05_choices,
+                                   selected = "FALSE"),
+                  ), 
+                  
+                  box(solidHeader = T,
+                      radioButtons("SNPCall12", label = p("SNP calling method"),
+                                   choices = SNPCall_choice,
+                                   selected = "gatk"),
+                  ),
+                  box(solidHeader = T,
+                      selectInput("seed12", label = p("Seed"),
+                                  choices = "It will be updated",
+                                  selected = "It will be updated"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("fake12", label = p("Allow false positives"),
+                                   choices = fake_choices,
+                                   selected = "without-false"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("Most_likely12", label = p("Choose how to show genotypes probabilities"),
+                                   choices = list("The most likely genotypes receiveis maximum probabilities" = TRUE,
+                                                  "Genotypes probabilities are how they were outputted by HMM"= FALSE),
+                                   selected = "TRUE"),
+                  ), 
+                  box(solidHeader = T,
+                      radioButtons("CountsFrom12", label = p("Counts from"),
+                                   choices = CountsFrom_choice,
+                                   selected = "vcf"),
+                  ),
+                  box(solidHeader = T, collapsible = T,
+                      checkboxGroupInput("inds12", label = p("Individuals from progeny"),
+                                         choices = "It will be updated",
+                                         selected = "It will be updated"),
+                  ),
+                  div(downloadButton("haplot_out_down"),style="float:right")
+                )
+              )
+      ),
+      ################################################################################3
+      tabItem(tabName = "counts",
+              "Based on the built map, we can count the number of recombination breakpoints in each individual of progeny using function progeny_haplotypes_counts. 
+            Choose pipeline and the individuals you want to check the haplotypes.",
+              hr(),
+              fluidRow(
+                box(
+                  width = NULL,
+                  "Estimated number of recombination breakpoints for each individual",br(),
+                  actionButton("go13", "Update",icon("refresh")),
+                  hr(),
+                  plotOutput("counts_out"),
+                  hr(),
+                  "Simulated number of recombination breakpoints for each individual", br(),
+                  actionButton("go14", "Update",icon("refresh")),
+                  hr(),
+                  plotOutput("counts_simu_out"),
+                  hr(),
+                  "Perentage of wrong haplotypes", br(),
+                  actionButton("go15", "Update",icon("refresh")),
+                  hr(),
+                  textOutput("wrong_haplotypes"),
+                  hr(),
+                  box(solidHeader = T,
+                      radioButtons("ErrorProb13", label = p("Genotyping method"),
+                                   choices = maps_choice,
+                                   selected = "updog"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("Global0.05.13", label = p("Error rate"),
+                                   choices = global0.05_choices,
+                                   selected = "FALSE"),
+                  ), 
+                  
+                  box(solidHeader = T,
+                      radioButtons("SNPCall13", label = p("SNP calling method"),
+                                   choices = SNPCall_choice,
+                                   selected = "gatk"),
+                  ),
+                  box(solidHeader = T,
+                      selectInput("seed13", label = p("Seed"),
+                                  choices = "It will be updated",
+                                  selected = "It will be updated"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("fake13", label = p("Allow false positives"),
+                                   choices = fake_choices,
+                                   selected = "without-false"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("CountsFrom13", label = p("Counts from"),
+                                   choices = CountsFrom_choice,
+                                   selected = "vcf"),
+                  ),
+                  div(downloadButton("counts_out_down"),style="float:right")
+                )
+              )
+      ),
+      ##########################################################
+      # Empirical
+      ##########################################################
+      tabItem(tabName = "disper_depth_emp",
+              "The same graphic is plotted in left and right to user be able to compare different methods choosing the options below.
+            The x and y axis shows the read counts for reference and alternative alleles, respectively. 
+            The colors of dots varies according with `Genotypes from` section. User can choose to see colors from simulated genotypes, the estimated or a gradient with the error rate used. 
+            Users can download the left graphic pushing `Download` button.",
+              hr(),
+              fluidRow(
+                column(width = 6,
+                       box(
+                         width = NULL,
+                         plotOutput("disper_depth_emp_out"),   
+                         actionButton("go16", "Update",icon("refresh")),
+                       ),
+                       
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           radioButtons("ErrorProb1_emp", label = p("Genotyping method"),
+                                        choices = ErrorProb_choice,
+                                        selected = "polyrad"),
+                           hr()
+                         ),
+                         
+                         fluidPage(
+                           radioButtons("real1_emp", label = p("Display the"),
+                                        choices = list("estimated genotypes"="estimated_genotypes",
+                                                       "errors rate" = "estimated_errors"),
+                                        selected = "estimated_genotypes"),
+                           hr()
+                         ),
+                         
+                         fluidPage(
+                           radioButtons("geno_from1_emp", label = p("Genotypes from"),
+                                        choices = list("vcf"="vcf",
+                                                       "onemap" = "onemap"),
+                                        selected = "onemap"),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.1_emp", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ), 
+                         fluidPage(
+                           radioButtons("SNPCall1_emp", label = p("SNP calling method"),
+                                        choices = SNPCall_choice,
+                                        selected = "freebayes"),
+                           hr()
+                         ),
+                         
+                         #helpText("Read counts from:"),
+                         fluidPage(
+                           
+                           radioButtons("CountsFrom1_emp", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr(),
+                           div(downloadButton("disper_depth_emp_out_down"),style="float:right")
+                           # ),
+                         )
+                       )
+                ),
+                
+                column(width = 6,
+                       box(
+                         width = NULL,
+                         plotOutput("disper_depth2_emp_out"),
+                         actionButton("go17", "Update",icon("refresh"))
+                       ),
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           radioButtons("ErrorProb2_emp", label = p("Genotyping method"),
+                                        choices = ErrorProb_choice,
+                                        selected = "polyrad"),
+                           hr()
+                         ),
+                         
+                         fluidPage(
+                           radioButtons("real2_emp", label = p("Display the"),
+                                        choices = list("estimated genotypes"="estimated_genotypes",
+                                                       "estimated errors" = "estimated_errors"),
+                                        selected = "estimated_genotypes"),
+                           hr()
+                         ),
+                         
+                         fluidPage(
+                           radioButtons("geno_from2_emp", label = p("Genotypes from"),
+                                        choices = list("vcf"="vcf",
+                                                       "onemap" = "onemap"),
+                                        selected = "onemap"),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.2_emp", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ), 
+                         fluidPage(
+                           radioButtons("SNPCall2_emp", label = p("SNP calling method"),
+                                        choices = SNPCall_choice,
+                                        selected = "freebayes"),
+                           hr()
+                         ),
+                         
+                         
+                         #helpText("Read counts from:"),
+                         fluidPage(
+                           
+                           radioButtons("CountsFrom2_emp", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr()
+                           # ),
+                         )
+                       )
+                )
+              )
+      ),
+      ##########################################################
+      tabItem(tabName = "ind_size_emp",
+              "The boxplots show the distribuition of the difference between estimated and simulated distances between each pair markers of the generated maps.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("ind_size_emp_out"),
+                         actionButton("go18", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb3_emp", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         )
+                       )
+                ),
+                column(width = 6,
+                       box(width = NULL, solidHeader = T,
+                           #helpText("Select the SNP calling method"),
+                           fluidPage(
+                             checkboxGroupInput("SNPCall3_emp", label = p("SNP calling method"),
+                                                choices = SNPCall_choice,
+                                                selected = unlist(SNPCall_choice)),
+                             hr()
+                           ),
+                           fluidPage(
+                             radioButtons("Global0.05.3_emp", label = p("Error rate"),
+                                          choices = global0.05_choices,
+                                          selected = "FALSE"),
+                             hr()
+                           ), 
+                           fluidPage(
+                             
+                             radioButtons("CountsFrom3_emp", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr(),
+                             div(downloadButton("ind_size_out_emp_down"),style="float:right")
+                             # ),
+                           )
+                       )
+                )
+              )
+      ),
+      ###################################################################################
+      tabItem(tabName = "marker_type_emp",
+              "These bar plots describes the number of markers of each type according with Wu et. al 2002a that remained in the built maps of each method.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("marker_type_emp_out"),
+                         actionButton("go19", "Update",icon("refresh")),
+                       )
+                ),
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb10_emp", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                         )
+                       )
+                ),
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("SNPCall10_emp", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                         ),
+                         
+                         fluidPage(
+                           radioButtons("CountsFrom10_emp", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr(),
+                           div(downloadButton("marker_type_emp_out_down"),style="float:right")
+                         )
+                       )
+                )
+              )
+      ),
+      ###################################################################################
+      tabItem(tabName = "times_emp",
+              "The boxplots show the distribuition of times and number of markers of all families by depth.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("times_emp_out"),
+                         actionButton("go20", "Update",icon("refresh")),
+                       )
+                ),
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb9_emp", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                         ),
+                         fluidPage(
+                           checkboxGroupInput("SNPCall9_emp", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                         )
+                       )
+                ),
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           radioButtons("Global0.05.9_emp", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ), 
+                         fluidPage(
+                           radioButtons("CountsFrom9_emp", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           hr(),
+                           div(downloadButton("times_emp_out_down"),style="float:right")
+                         )
+                       )
+                )
+              )
+      ),
+      ###################################################################################
+      tabItem(tabName = "coverage_emp",
+              "This barplots show the percentage of the chromosome covered by the map built. It depends of the 
+            chromosome size information in base pair (bp). The chromosome we used in our example has 1019956 bp (toy sample) or 22862796 bp in chromosome 10 of populus.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("coverage_emp_out"),
+                         actionButton("go21", "Update",icon("refresh")),
+                       ),
+                ),
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb5_emp", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                         ),
+                       )
+                ),
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = T,
+                         fluidPage(
+                           checkboxGroupInput("SNPCall5_emp", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                         ),
+                         fluidPage(
+                           radioButtons("CountsFrom5_emp", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                         ),
+                         
+                         fluidPage(
+                           numericInput("chr_size", label = p("Chromosome size"), value = "complete here"),
+                           
+                           hr(),
+                           div(downloadButton("coverage_emp_out_down"),style="float:right")
+                         )
+                       )
+                )
+              )
+      ),
+      ################################################################################3
+      tabItem(tabName = "filters_emp",
+              "The boxplots here show the total number of markers (n_markers) available for analysis, 
+            the number of markers filtered by OneMap because of missing data, segregation distortion and redundancy.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("filters_emp_out"),
+                         actionButton("go22", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb7_emp", label = p("Genotyping method"),
+                                              choices = ErrorProb_choice,
+                                              selected = unlist(ErrorProb_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.7_emp", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         )
+                       )
+                ),
+                column(width = 6,
+                       box(width = NULL, solidHeader = T,
+                           fluidPage(
+                             checkboxGroupInput("SNPCall7_emp", label = p("SNP calling method"),
+                                                choices = SNPCall_choice,
+                                                selected = names(SNPCall_choice)),
+                             hr()
+                           ),
+                           fluidPage(
+                             radioButtons("CountsFrom7_emp", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr(),
+                             div(downloadButton("filters_emp_out_down"),style="float:right")
+                           )
+                       )
+                )
+              )
+      ),
+      ################################################################################3
+      tabItem(tabName = "heatmaps_emp",
+              fluidRow(
+                box(solidHeader = T,
+                    width = NULL,
+                    plotlyOutput("heatmaps_emp_out", height = 650),
+                    actionButton("go23", "Update",icon("refresh")),
+                )
+              ),
+              fluidRow(
+                column(width = 6,
+                       box(solidHeader = T,
+                           width = 6, 
+                           fluidPage(
+                             radioButtons("ErrorProb8_emp", label = p("Genotyping method"),
+                                          choices = ErrorProb_choice,
+                                          selected = "polyrad"),
+                             hr()
+                           ),
+                           fluidPage(
+                             radioButtons("Global0.05.8_emp", label = p("Error rate"),
+                                          choices = global0.05_choices,
+                                          selected = "FALSE"),
+                             hr()
+                           )
+                       ) 
+                ),
+                column(width = 6,
+                       box(width = 6,solidHeader = T,
+                           fluidPage( 
+                             radioButtons("SNPCall8_emp", label = p("SNP calling method"),
+                                          choices = SNPCall_choice,
+                                          selected = "freebayes"),
+                             hr()
+                           ),
+                           fluidPage(
+                             radioButtons("CountsFrom8_emp", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr(),
+                             div(downloadButton("heatmaps_emp_out_down"),style="float:right")
+                           )
+                       )
+                )
+              )
+      ),
+      ################################################################################3
+      tabItem(tabName = "map_emp",
+              "On the left, it is plotted the heatmap graphic with recombination fraction varying in color according with the 
+            intensity of the linkage. Higher is the recombination fraction hottest is the color. Markers ordered by genome positions are represented in x 
+            and y axis. On the right, the linkage group is plotted with distances between markers proportional to the genetic distances.",
+              fluidRow(
+                column(width = 8,
+                       box(solidHeader = T,
+                           width = NULL,
+                           plotOutput("map1_emp_out"),
+                           hr(),
+                           actionButton("go25", "Update",icon("refresh"))
+                       ),
+                       box(solidHeader = T,
+                           radioButtons("ErrorProb11_emp", label = p("Genotyping method"),
+                                        choices = maps_choice,
+                                        selected = "updog"),
+                       ),
+                       box(solidHeader = T,
+                           radioButtons("SNPCall11_emp", label = p("SNP calling method"),
+                                        choices = SNPCall_choice,
+                                        selected = "gatk"),
+                       ),
+                       box(solidHeader = T,
+                           radioButtons("Global0.05.11_emp", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                       ), 
+                       box(solidHeader = T,
+                           radioButtons("CountsFrom11_emp", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                           div(downloadButton("map_emp_out_down"),style="float:right")
+                       )
+                ),
+                column(width = 4,
+                       actionButton("go24", "Update",icon("refresh")),
+                       imageOutput("map_emp_out")
+                )
+              )
+      ),
+      ################################################################################
+      tabItem(tabName = "haplo_emp",
+              "Based on the built map, progeny haplotypes can be draw by onemap function progeny_haplotypes. Choose pipeline and the individuals you want to check the haplotypes.",
+              hr(),
+              fluidRow(
+                box(
+                  width = NULL,
+                  plotOutput("haplot_emp_out"),
+                  hr(),
+                  actionButton("go26", "Update",icon("refresh")),
+                  hr(),
+                  box(solidHeader = T,
+                      radioButtons("ErrorProb12_emp", label = p("Genotyping method"),
+                                   choices = maps_choice,
+                                   selected = "updog"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("Global0.05.12_emp", label = p("Error rate"),
+                                   choices = global0.05_choices,
+                                   selected = "FALSE"),
+                  ), 
+                  box(solidHeader = T,
+                      radioButtons("Most_likely12_emp", label = p("Choose how to show genotypes probabilities"),
+                                   choices = list("The most likely genotypes receiveis maximum probabilities" = TRUE,
+                                                  "Genotypes probabilities are how they were outputted by HMM"= FALSE),
+                                   selected = "TRUE"),
+                  ), 
+                  
+                  box(solidHeader = T,
+                      radioButtons("SNPCall12_emp", label = p("SNP calling method"),
+                                   choices = SNPCall_choice,
+                                   selected = "gatk"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("CountsFrom12_emp", label = p("Counts from"),
+                                   choices = CountsFrom_choice,
+                                   selected = "vcf"),
+                  ),
+                  box(solidHeader = T, collapsible = T,
+                      checkboxGroupInput("inds12_emp", label = p("Individuals from progeny"),
+                                         choices = "It will be updated",
+                                         selected = "It will be updated"),
+                  ),
+                  div(downloadButton("haplot_emp_out_down"),style="float:right")
+                )
+              )
+      ),
+      ################################################################################3
+      tabItem(tabName = "counts_emp",
+              "Based on the built map, we can count the number of recombination breakpoints in each individual of progeny using function progeny_haplotypes_counts. 
+            Choose pipeline and the individuals you want to check the haplotypes.",
+              hr(),
+              fluidRow(
+                box(
+                  width = NULL,
+                  "Estimated number of recombination breakpoints for each individual",
+                  hr(),
+                  plotOutput("counts_emp_out"),
+                  hr(),
+                  actionButton("go27", "Update",icon("refresh")),
+                  hr(),
+                  box(solidHeader = T,
+                      radioButtons("ErrorProb13_emp", label = p("Genotyping method"),
+                                   choices = maps_choice,
+                                   selected = "updog"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("Global0.05.13_emp", label = p("Error rate"),
+                                   choices = global0.05_choices,
+                                   selected = "FALSE"),
+                  ), 
+                  
+                  box(solidHeader = T,
+                      radioButtons("SNPCall13_emp", label = p("SNP calling method"),
+                                   choices = SNPCall_choice,
+                                   selected = "gatk"),
+                  ),
+                  box(solidHeader = T,
+                      radioButtons("CountsFrom13_emp", label = p("Counts from"),
+                                   choices = CountsFrom_choice,
+                                   selected = "vcf"),
+                  ),
+                  div(downloadButton("counts_emp_out_down"),style="float:right")
+                )
+              )
+      ),
+      ##############################################################################
+      # Workflow times
+      ##############################################################################
+      tabItem(tabName = "wf_times",
+              "Upload the log file generated by the cromwell + WDL workflow. It can be from simulations or empirical. We can upload multiple files.",
+              hr(),
+              box(width = NULL,
+                  box(solidHeader = T,
+                      tags$h4(tags$b("Upload workflow log file")),
+                      # Copy the line below to make a file upload manager
+                      fileInput("wflog", label = h6("slurm_<depth>.out"), multiple = T),
+                  ),
+                  box(solidHeader = T,
+                      # Copy the line below to make a select box 
+                      selectInput("example_wf", label = h4(tags$b("Example")), 
+                                  choices = list("Populus simulation chromosome 10" = "populus_simu",
+                                                 "Eucalyptus simulation chromosome 10" = "eucalyptus_simu", 
+                                                 "Acca simulation chromosome 10" = "acca_simu",
+                                                 "Toy sample simulation" = "toy_sample_simu",
+                                                 "Populus empirical chromosome 10" = "populus_emp",
+                                                 "Eucalyptus empirical chromosome 10" = "eucalyptus_emp", 
+                                                 "Acca empirical chromosome 10" = "acca_emp",
+                                                 "Toy sample empirical" = "toy_sample_emp"), 
+                                  selected = "toy_sample_emp"),
+                  )
+              ),
+              box(solidHeader = T,
+                  width = NULL,
+                  actionButton("go28", "Update",icon("refresh")),
+                  hr(),
+                  plotlyOutput("wf_times_out")
+              )
+      )
+    )
+  )
+  
+  ui <- dashboardPage(header, sidebar, body, skin = "purple")
+  
+  ## Define server logic required to draw a histogram ----
+  server <- function(input, output,session) {
+    ##################################################
+    # Simulations - rearranging data
+    ##################################################
+    prepare_datas_simu <- function(x){
+      # This function makes adjustments in the input tar.gz file to be processed inside the app
+      # It returns six data objects and the app options in a list format
+      withProgress(message = 'Reading simulations data', value = 0, {
+        if(!is.null(x)){
+          data.gz <- x[,4]
+          path = "data/"
+        } else { ######## Available examples
+          if(input$example_simu == "populus"){
+            data.gz <- c("data/ig_populus_simu/depth20_pop50/SimulatedReads_results_depth20.tar.gz")
+          } else if(input$example_simu == "eucalyptus"){
+            data.gz <- c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" )
+          } else if(input$example_simu == "acca"){
+            data.gz <- c("data/acca/SimulatedReads_10.tar.gz", "data/acca/SimulatedReads_20.tar.gz", "data/acca/SimulatedReads_100.tar.gz" )
+          } else if(input$example_simu == "toy_sample"){
+            data.gz <- c("data/ig_toy_sample_simu/SimulatedReads_results_depth10.tar.gz","data/ig_toy_sample_simu/SimulatedReads_results_depth20.tar.gz")
+          }
+          path <- unlist(strsplit(data.gz[1], "/"))
+          path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
+        }
+        list_files <- list()
+        incProgress(0, detail = paste("Doing part", 1))
+        for(i in 1:length(data.gz)){
+          untar(data.gz[i], exdir = path)
+          list_files[[i]] <- untar(data.gz[i], list = T)
+        }
+        
+        incProgress(0.25, detail = paste("Doing part", 2))
+        list_files <- lapply(list_files, function(x) paste0(path, x))
+        for_rm <- sapply(list_files, "[", 1)
+        list_files <- lapply(list_files, "[", -1)
+        
+        # Data
+        datas <- list()
+        for(i in 1:length(list_files[[1]])){
+          datas[[i]] <- sapply(list_files, "[", i)
+        }
+        
+        ## Tables
+        data1 <- data2 <- data3 <- data4 <- data5 <- simu_haplo <- vector()
+        data6 <- names_rdatas <- list()
+        seeds <- depths <- seeds_choices <- depths_choices <- vector()
+        
+        incProgress(0.5, detail = paste("Doing part", 3))
+        for(i in 1:length(datas)){
+          for(j in 1:length(datas[[i]])){
+            if(all(grepl("gusmap_RDatas.RData", datas[[i]]))){
+              temp <- load(datas[[i]][[j]])
+              temp <- get(temp)
+              data6 <- c(data6, temp)
+            } else if(all(grepl("sequences.llo", datas[[i]]))){
+              temp <- readList(datas[[i]][[j]])
+              if(j == 1){
+                saveList(temp, file = "data/temp_file/sequences.llo", append = F, compress = T)
+                inds <- rownames(temp[[1]]$data.name$geno)
+              } else {
+                saveList(temp, file = "data/temp_file/sequences.llo", append = T, compress = T)
+              }
+            } else if(all(grepl("choices.RData", datas[[i]]))){
+              temp <- load(datas[[i]][[j]])
+              temp <- get(temp)
+              depths <- c(depths, temp[[1]])
+              seeds <- c(seeds, temp[[2]])
+              seeds_choices <- c(seeds_choices, temp[[3]])
+              depths_choices <- c(depths_choices, temp[[4]])
+            } else if(all(grepl("names.rds", datas[[i]]))){
+              temp <-  readRDS(datas[[i]][[j]])
+              names_rdatas <- c(names_rdatas, temp)
+            } else {
+              temp <-  readRDS(datas[[i]][[j]])
+              name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
+              name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
+              assign(name_temp, rbind(get(name_temp), temp))
+            }
+          }
+        }
+        
+        incProgress(0.75, detail = paste("Doing part", 4))
+        temp_names <- names(seeds_choices)
+        seeds_choices <- as.list(1:length(seeds_choices))
+        names(seeds_choices) <- temp_names
+        inds_choices <- sort(inds)
+        names(inds_choices) <- sort(inds)
+        
+        names_rdatas <- unlist(names_rdatas)
+        names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+        result_list <- list("data1" = data1, "data2"= data2, 
+                            "data3"=data3, "data4"=data4, "data5"=data5, "data6"=data6, 
+                            "choices" = list(depths, seeds, seeds_choices, depths_choices, inds_choices),
+                            "names" = names_rdatas, 
+                            simu_haplo)
+        
+        system(paste("rm -r", paste(for_rm, collapse = " ")))
+      })
+      return(result_list)
+    }
+    
+    datas_simu <- reactive({prepare_datas_simu(input$simulatedreads)})
+    
+    # Update choices of seed and depth according with the dateset choosed
+    observe({
+      seeds_choice <- datas_simu()[[7]][[3]] 
+      depth_choice <- datas_simu()[[7]][[4]]
+      inds_choice <- datas_simu()[[7]][[5]]
+      
+      updateSelectInput(session, "seed1",
+                        label="Seed",
+                        choices = seeds_choice,
+                        selected=unlist(seeds_choice)[1])
+      
+      
+      updateSelectInput(session, "seed2",
+                        label="Seed",
+                        choices = seeds_choice,
+                        selected=unlist(seeds_choice)[1])
+      
+      
+      updateSelectInput(session, "seed3",
+                        label="Seed",
+                        choices = seeds_choice,
+                        selected=unlist(seeds_choice)[1])
+      
+      
+      updateSelectInput(session, "seed11",
+                        label="Seed",
+                        choices = seeds_choice,
+                        selected=unlist(seeds_choice)[1])
+      
+      updateSelectInput(session, "seed12",
+                        label="Seed",
+                        choices = seeds_choice,
+                        selected=unlist(seeds_choice)[1])
+      
+      updateCheckboxGroupInput(session, "inds12",
+                               label="Individuals from progeny",
+                               choices = inds_choice,
+                               selected=unlist(inds_choice)[1])
+      
+      updateSelectInput(session, "seed13",
+                        label="Seed",
+                        choices = seeds_choice,
+                        selected=unlist(seeds_choice)[1])
+      
+      updateCheckboxGroupInput(session, "depth4",
+                               label="Depth",
+                               choices = depth_choice,
+                               selected=unlist(depth_choice))
+      
+      updateRadioButtons(session, "depth10",
+                         label="Depth",
+                         choices = depth_choice,
+                         selected=names(depth_choice)[1])
+      
+      updateCheckboxGroupInput(session, "depth8",
+                               label="Depth",
+                               choices = depth_choice,
+                               selected=unlist(depth_choice))
+      
+      updateCheckboxGroupInput(session, "depth9",
+                               label="Depth",
+                               choices = depth_choice,
+                               selected=unlist(depth_choice))
+      
+      updateCheckboxGroupInput(session, "depth5",
+                               label="Depth",
+                               choices = depth_choice,
+                               selected=unlist(depth_choice))
+      
+      updateCheckboxGroupInput(session, "depth6",
+                               label="Depth",
+                               choices = depth_choice,
+                               selected=unlist(depth_choice))
+      
+      updateSelectInput(session, "depth7",
+                        label="Depth",
+                        choices = depth_choice,
+                        selected=unlist(depth_choice)[1])
+    })
+    
+    ####################################################################
+    # Empirical - - rearranging data
+    ####################################################################
+    
+    prepare_datas_emp <- function(x){
+      # This function makes adjustments in the input tar.gz file to be processed inside the app
+      # It returns six data objects and the app options in a list format
+      withProgress(message = 'Reading empirical data', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(!is.null(x)){
+          data.gz <- x[,4]
+          path = "data/"
+        } else { ######## Available examples
+          if(input$example_emp == "populus"){
+            data.gz <- c("data/ig_populus_emp/EmpiricalReads_results.tar.gz")
+          } else if(input$example_emp == "eucalyptus"){
+            data.gz <- c("data/ig_eucalyptus_emp/EmpiricalReads_results.tar.gz")
+          } else if(input$example_emp == "acca"){
+            data.gz <- c("data/ig_acca_emp/EmpiricalReads_results.tar.gz")
+          } else if(input$example_emp == "toy_sample"){
+            data.gz <- c("data/ig_toy_sample_emp/EmpiricalReads_results.tar.gz")
+          }
+          path <- unlist(strsplit(data.gz[1], "/"))
+          path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
+        }
+        list_files <- list()
+        for(i in 1:length(data.gz)){
+          untar(data.gz[i], exdir = path)
+          list_files[[i]] <- untar(data.gz[i], list = T)
+        }
+        
+        incProgress(0.5, detail = paste("Doing part", 2))
+        list_files <- lapply(list_files, function(x) paste0(path, x))
+        for_rm <- sapply(list_files, "[", 1)
+        list_files <- lapply(list_files, "[", -1)
+        
+        # Data
+        datas <- list()
+        for(i in 1:7){
+          datas[[i]] <- sapply(list_files, "[", i)
+        }
+        
+        system(paste("mv", datas[[grep("sequences",datas)]], "data/temp_file/"))
+        temp_dat <- readList("data/temp_file/sequences_emp.llo", index = 1)
+        inds <- rownames(temp_dat[[1]]$data.name$geno)
+        inds_list <- as.list(1:length(inds))
+        names(inds_list) <- paste0(inds, " (", inds, ")")
+        
+        data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
+        data5 <- get(data5)
+        
+        ## Tables
+        names_rdatas <- readRDS(datas[[grep("names.rds", datas)]])
+        names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+        result_list <- list("data1" = readRDS(datas[[grep("data1_depths_geno_prob.rds", datas)]]), 
+                            "data2" = readRDS(datas[[grep("data2_maps.rds", datas)]]), 
+                            "data3" = readRDS(datas[[grep("data3_filters.rds", datas)]]), 
+                            "data4" = readRDS(datas[[grep("data4_times.rd", datas)]]), 
+                            "data5" = data5, 
+                            "names" = names_rdatas, inds_list)
+        
+        system(paste("rm -r", paste(for_rm, collapse = " ")))
+      })
+      return(result_list)
+    }
+    
+    datas_emp <- reactive({prepare_datas_emp(input$empiricalreads)})
+    
+    observe({
+      inds_choice <- datas_emp()[[7]]
+      
+      updateCheckboxGroupInput(session, "inds12_emp",
+                               label="Individuals from progeny",
+                               choices = inds_choice,
+                               selected=unlist(inds_choice)[1])
+    })
+    ##################################################################
+    # Simulations
+    ##################################################################
+    
+    button1 <- eventReactive(input$go1, {
+      withProgress(message = 'Building left graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.1){
+          if( input$ErrorProb1 == "OneMap_version2"){
+            geno <- paste0("SNPCaller", 0.05)
+          } else {
+            geno <- paste0(input$ErrorProb1, 0.05)
+          }
+        } else {
+          geno <- input$ErrorProb1
+        }
+        
+        if(input$CountsFrom1 == "bam" & (input$ErrorProb1 == "OneMap_version2" | input$ErrorProb1 == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
+          filter(SNPCall == input$SNPCall1) %>%
+          filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
+          filter(CountsFrom == input$CountsFrom1) %>%
+          filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
+      })
+    })
+    
+    output$disper_depth_out <- renderPlot({
+      errorProb_graph(button1(), input$real1)
+    })
+    
+    ## download
+    output$disper_depth_out_down <- downloadHandler(
+      filename =  function() {
+        paste("snp_genoype_call.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building left graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.1){
+            if( input$ErrorProb1 == "OneMap_version2"){
+              geno <- paste0("SNPCaller", 0.05)
+            } else {
+              geno <- paste0(input$ErrorProb1, 0.05)
+            }
+          } else {
+            geno <- input$ErrorProb1
+          }
+          
+          if(input$CountsFrom1 == "bam" & (input$ErrorProb1 == "OneMap_version2" | input$ErrorProb1 == "SNPCaller")){
+            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          }
+          
+          data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
+            filter(SNPCall == input$SNPCall1) %>%
+            filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
+            filter(CountsFrom == input$CountsFrom1) %>%
+            filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
+          incProgress(0.5, detail = paste("Doing part", 2))
+          p <- errorProb_graph(data, input$real1)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    
+    button2 <- eventReactive(input$go2, {
+      withProgress(message = 'Building right graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.2){
+          if( input$ErrorProb2 == "OneMap_version2"){
+            geno <- paste0("SNPCaller", 0.05)
+          } else {
+            geno <- paste0(input$ErrorProb2, 0.05)
+          }
+        } else {
+          geno <- input$ErrorProb2
+        }
+        data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
+          filter(SNPCall == input$SNPCall2) %>%
+          filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed2)]) %>%
+          filter(CountsFrom == input$CountsFrom2) %>%
+          filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed2)])
+      })
+    })
+    
+    output$disper_depth2_out <- renderPlot({
+      errorProb_graph(button2(), input$real2)
+    })
+    
+    ##################################################################
+    button3 <- eventReactive(input$go3, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.3){
+          geno <- paste0(input$ErrorProb3, 0.05)
+          if(any(input$ErrorProb3 %in% "OneMap_version2"))
+            geno[which(input$ErrorProb3 == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb3 %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb3
+        }
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall3) %>%
+          filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed3)]) %>%
+          filter(CountsFrom == input$CountsFrom3 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
+          filter(fake == input$fake1) %>%
+          mutate(interv.diff = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
+                                        (rf[-1] - rf[-length(rf)]))^2))
+        
+        data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
+          summarise(n = n()) 
+        
+        data<- merge(data, data_n) %>%
+          gather(key, value, interv.diff, n)
+        
+        data$key <- gsub("interv.diff", "diff (cM)", data$key)
+        data$key <- gsub("n", "n markers", data$key)
+        data
+      })
+    })
+    
+    output$ind_size_out <- renderPlot({
+      ind_size_graph(button3())
+    })
+    
+    ## download
+    output$ind_size_out_down <- downloadHandler(
+      filename =  function() {
+        paste("ind_size.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.3){
+            geno <- paste0(input$ErrorProb3, 0.05)
+            if(any(input$ErrorProb3 %in% "OneMap_version2"))
+              geno[which(input$ErrorProb3 == "OneMap_version2")] <- "SNPCaller0.05"
+            if(any(input$ErrorProb3 %in% "gusmap"))
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- input$ErrorProb3
+          }
+          data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+            filter(SNPCall %in% input$SNPCall3) %>%
+            filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed3)]) %>%
+            filter(CountsFrom == input$CountsFrom3 | 
+                     (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+            filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
+            filter(fake == input$fake1) %>%
+            mutate(interv.diff = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
+                                          (rf[-1] - rf[-length(rf)]))^2))
+          
+          data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
+            summarise(n = n()) 
+          
+          data<- merge(data, data_n) %>%
+            gather(key, value, interv.diff, n)
+          
+          data$key <- gsub("interv.diff", "diff (cM)", data$key)
+          data$key <- gsub("n", "n markers", data$key)
+          
+          incProgress(0.5, detail = paste("Doing part", 2))
+          p <- ind_size_graph(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    ##################################################################
+    button4 <- eventReactive(input$go4, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.4){
+          geno <- paste0(input$ErrorProb4, 0.05)
+          if(any(input$ErrorProb4 %in% "OneMap_version2"))
+            geno[which(input$ErrorProb4 == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb4 %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb4
+        }
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall4) %>%
+          filter(CountsFrom == input$CountsFrom4 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(depth %in% input$depth4) %>%
+          filter(fake == input$fake2) %>%
+          group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
+          mutate(interv.diff = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
+                                        (rf[-1] - rf[-length(rf)]))^2))
+        
+        data_n <- data %>%  summarise(n = n()) 
+        
+        data <- switch(input$stats1,
+                       "mean" = summarise(data, value = mean(interv.diff, na.rm=T)),
+                       "median" = summarise(data, value = median(interv.diff, na.rm=T)),
+                       "var" = summarise(data, value = var(interv.diff, na.rm=T)),
+                       "total" = summarise(data, value = sum(interv.diff, na.rm=T)))
+        
+        data<- merge(data, data_n) %>%
+          gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -seed, -depth)
+        
+        data$key <- gsub("n", "n markers", data$key)
+        data$key <- gsub("value", "diff (cM)", data$key)
+        data$depth <- paste0("depth ", as.character(data$depth))
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$all_size_out <- renderPlot({
+      all_size_graph(button4(), input$stats1)
+    })
+    
+    ## download
+    output$all_size_out_down <- downloadHandler(
+      filename =  function() {
+        paste("all_size.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.4){
+            geno <- paste0(input$ErrorProb4, 0.05)
+            if(any(input$ErrorProb4 %in% "OneMap_version2"))
+              geno[which(input$ErrorProb4 == "OneMap_version2")] <- "SNPCaller0.05"
+            if(any(input$ErrorProb4 %in% "gusmap"))
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- input$ErrorProb4
+          }
+          data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+            filter(SNPCall %in% input$SNPCall4) %>%
+            filter(CountsFrom == input$CountsFrom4 | 
+                     (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+            filter(depth %in% input$depth4) %>%
+            filter(fake == input$fake2) %>%
+            group_by(seed,GenoCall, SNPCall, CountsFrom, depth)
+          
+          data_n <- data %>%  group_by(GenoCall, SNPCall, seed, depth) %>%
+            summarise(n = n()) 
+          
+          data <- switch(input$stats1,
+                         "mean" = summarise(data, value = mean(diff, na.rm=T)),
+                         "median" = summarise(data, value = median(diff, na.rm=T)),
+                         "var" = summarise(data, value = var(diff, na.rm=T)),
+                         "total" = summarise(data, value = sum(diff, na.rm=T)))
+          
+          data<- merge(data, data_n) %>%
+            gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -seed, -depth)
+          
+          data$key <- gsub("n", "n markers", data$key)
+          data$key <- gsub("value", "diff (cM)", data$key)
+          data$depth <- paste0("depth ", as.character(data$depth))
+          incProgress(0.5, detail = paste("Doing part", 2))
+          
+          p <- all_size_graph(data, input$stat1)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    #######################################################################
+    button5 <- eventReactive(input$go5, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
+          filter(SNPCall %in% input$SNPCall10) %>%
+          filter(CountsFrom == input$CountsFrom10) %>%
+          filter(depth == input$depth10) %>%
+          filter(fake == input$fake3) %>%
+          group_by(type, real.type, GenoCall, SNPCall, CountsFrom, depth) %>%
+          summarise(n = n()) %>%
+          gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -depth,-n)
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    
+    output$marker_type_out <- renderPlot({
+      marker_type_graph(button5())
+    })
+    
+    ## download
+    output$marker_type_out_down <- downloadHandler(
+      filename =  function() {
+        paste("marker_type.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
+            filter(SNPCall %in% input$SNPCall10) %>%
+            filter(CountsFrom == input$CountsFrom10) %>%
+            filter(depth == input$depth10) %>%
+            filter(fake == input$fake3) %>%
+            group_by(type, real.type, GenoCall, SNPCall, CountsFrom, depth) %>%
+            summarise(n = n()) %>%
+            gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -depth,-n)
+          incProgress(0.5, detail = paste("Doing part", 2))
+          
+          p <- marker_type_graph(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    #######################################################################
+    button6 <- eventReactive(input$go6, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.8){
+          geno <- paste0(input$ErrorProb8, 0.05)
+          if(any(input$ErrorProb8 %in% "OneMap_version2"))
+            geno[which(input$ErrorProb8 == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb8 %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb8
+        }
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall8) %>%
+          filter(CountsFrom == input$CountsFrom8 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(depth == input$depth8) %>%
+          filter(fake == "without-false") 
+        
+        data_n <- data %>%  group_by(GenoCall, SNPCall, seed, depth) %>%
+          summarise(n = n()) 
+        
+        data <- data %>% group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
+          summarise(value= 100*sum(est.phases == real.phases)/length(real.phases))
+        
+        data<- merge(data, data_n) %>%
+          gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -seed, -depth)
+        
+        data$key <- gsub("n", "n markers", data$key)
+        data$key <- gsub("value", "% correct", data$key)
+        data$depth <- paste0("depth ", as.character(data$depth))
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$phases_out <- renderPlot({
+      phases_graph(button6())
+    })
+    
+    ## download
+    output$phases_out_down <- downloadHandler(
+      filename =  function() {
+        paste("phases.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.8){
+            geno <- paste0(input$ErrorProb8, 0.05)
+            if(any(input$ErrorProb8 %in% "OneMap_version2"))
+              geno[which(input$ErrorProb8 == "OneMap_version2")] <- "SNPCaller0.05"
+            if(any(input$ErrorProb8 %in% "gusmap"))
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- input$ErrorProb8
+          }
+          data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+            filter(SNPCall %in% input$SNPCall8) %>%
+            filter(CountsFrom == input$CountsFrom8 | 
+                     (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+            filter(depth == input$depth8) %>%
+            filter(fake == "without-false") 
+          
+          data_n <- data %>%  group_by(GenoCall, SNPCall, seed, depth) %>%
+            summarise(n = n()) 
+          
+          data <- data %>% group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
+            summarise(value= 100*sum(est.phases == real.phases)/length(real.phases))
+          
+          data<- merge(data, data_n) %>%
+            gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -seed, -depth)
+          
+          data$key <- gsub("n", "n markers", data$key)
+          data$key <- gsub("value", "% correct", data$key)
+          data$depth <- paste0("depth ", as.character(data$depth))
+          incProgress(0.5, detail = paste("Doing part", 2))
+          
+          p <- phases_graph(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    #######################################################################
+    button7 <- eventReactive(input$go7, {
+      withProgress(message = 'Times graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.9){
+          geno <- paste0(input$ErrorProb9, 0.05)
+          if(any(input$ErrorProb9 %in% "OneMap_version2"))
+            geno[which(input$ErrorProb9 == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb9 %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb9
+        }
+        
+        data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall9) %>%
+          filter(CountsFrom == input$CountsFrom9 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(fake == input$fake5) %>%
+          group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
+          summarise(n = n()) 
+        
+        data <- datas_simu()[[4]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall9) %>%
+          filter(fake == input$fake5) %>%
+          filter(CountsFrom == input$CountsFrom9 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
+        
+        data<- merge(data, data_n) %>%
+          gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
+        
+        data$key <- gsub("n", "n markers", data$key)
+        data$key <- gsub("time", "seconds", data$key)
+        data$depth <- paste0("depth ", as.character(data$depth))
+        
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$times_out <- renderPlot({
+      times_graph(button7())
+    })
+    
+    ## download
+    output$times_out_down <- downloadHandler(
+      filename =  function() {
+        paste("times.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.9){
+          geno <- paste0(input$ErrorProb9, 0.05)
+          if(any(input$ErrorProb9 %in% "OneMap_version2"))
+            geno[which(input$ErrorProb9 == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb9 %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb9
+        }
+        
+        data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall9) %>%
+          filter(CountsFrom == input$CountsFrom9 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(fake == input$fake5) %>%
+          group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
+          summarise(n = n()) 
+        
+        data <- datas_simu()[[4]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall9) %>%
+          filter(fake == input$fake5) %>%
+          filter(CountsFrom == input$CountsFrom9 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
+        
+        data<- merge(data, data_n) %>%
+          gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
+        
+        data$key <- gsub("n", "n markers", data$key)
+        data$key <- gsub("time", "seconds", data$key)
+        data$depth <- paste0("depth ", as.character(data$depth))
+        
+        incProgress(0.5, detail = paste("Doing part", 2))
+        
+        p <- times_graph(data)      
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
+      } 
+    )
+    #######################################################################
+    button8 <- eventReactive(input$go8, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.5){
+          geno <- paste0(input$ErrorProb5, 0.05)
+          if(any(input$ErrorProb5 %in% "OneMap_version2"))
+            geno[which(input$ErrorProb5 == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb5 %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb5
+        }
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall5) %>%
+          filter(fake == input$fake6) %>%
+          filter(depth == input$depth5) %>%
+          filter(CountsFrom == input$CountsFrom5 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
+          summarise(max = max(pos), min = min(pos))
+        
+        data$coverage <- ((data$max - data$min)/input$chr_size1)*100
+        data$depth <- paste0("depth ", as.character(data$depth))
+        incProgress(0, detail = paste("Doing part", 1))
+        data
+      })
+    })
+    
+    output$coverage_out <- renderPlot({
+      coverage_graph(button8())
+    })
+    
+    ## download
+    output$coverage_out_down <- downloadHandler(
+      filename =  function() {
+        paste("coverage_size.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.5){
+            geno <- paste0(input$ErrorProb5, 0.05)
+            if(any(input$ErrorProb5 %in% "OneMap_version2"))
+              geno[which(input$ErrorProb5 == "OneMap_version2")] <- "SNPCaller0.05"
+            if(any(input$ErrorProb5 %in% "gusmap"))
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- input$ErrorProb5
+          }
+          data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+            filter(SNPCall %in% input$SNPCall5) %>%
+            filter(fake == input$fake6) %>%
+            filter(depth == input$depth5) %>%
+            filter(CountsFrom == input$CountsFrom5 | 
+                     (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+            group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
+            summarise(max = max(pos), min = min(pos))
+          
+          data$coverage <- ((data$max - data$min)/input$chr_size1)*100
+          incProgress(0, detail = paste("Doing part", 1))
+          data$depth <- paste0("depth ", as.character(data$depth))
+          p <- coverage_graph(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          
+          ggsave(file, p, width = 400, height = 200, units="mm")
+          
+        })
+      } 
+    )
+    ##########################################################################
+    button9 <- eventReactive(input$go9, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        data <- datas_simu()[[5]] %>% filter(key %in% input$avalSNPs1) %>%
+          filter(SNPCall %in% input$SNPCall6) %>%
+          filter(depth %in% input$depth6)
+        
+        data$depth <- paste0("depth ", as.character(data$depth))
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$snpcall_out <- renderPlot({
+      avalSNPs_graph(button9())
+    })
+    
+    ## download
+    output$snpcall_out_down <- downloadHandler(
+      filename =  function() {
+        paste("snpcall.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        data <- datas_simu()[[5]] %>% filter(key %in% input$avalSNPs1) %>%
+          filter(SNPCall %in% input$SNPCall6) %>%
+          filter(depth %in% input$depth6)
+        data$depth <- paste0("depth ", as.character(data$depth))
+        p <- avalSNPs_graph(data)
+        p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                       legend.text = element_text(size=17),
+                       axis.title=element_text(size=17),
+                       axis.text = element_text(size=17), 
+                       strip.text = element_text(size=17))
+        ggsave(file, p, width = 400, height = 200, units="mm")
+      } 
+    )
+    ##################################################################
+    button10 <- eventReactive(input$go10, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        choosed <- input$ErrorProb7
+        if(input$Global0.05.7){
+          geno <- paste0(choosed, 0.05)
+          if(any(choosed %in% "OneMap_version2") & !any(choosed %in% "SNPCaller") ){
+            geno[which(choosed %in% "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+          } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
+            geno <- geno[-which(choosed %in% "OneMap_version2")]
+          } else if (any(choosed %in% "gusmap")){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } 
+        } else {
+          geno <- choosed
+        }
+        data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall7) %>%
+          filter(depth == input$depth7) %>%
+          filter(CountsFrom == input$CountsFrom7 | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
+        
+        data$key <- factor(data$key, levels = c("n_markers", "higher than 25% missing", "redundant_markers","redundant_markers2", "distorted_markers", "n_markers_filtered"))
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$filters_out <- renderPlot({
+      filters_graph(button10())
+    })  
+    
+    ## download
+    output$filters_out_down <- downloadHandler(
+      filename =  function() {
+        paste("filters.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          choosed <- input$ErrorProb7
+          if(input$Global0.05.7){
+            geno <- paste0(choosed, 0.05)
+            if(any(choosed %in% "OneMap_version2") & !any(choosed %in% "SNPCaller") ){
+              geno[which(choosed %in% "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+            } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
+              geno <- geno[-which(choosed %in% "OneMap_version2")]
+            } else if (any(choosed %in% "gusmap")){
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            } 
+          } else {
+            geno <- choosed
+          }
+          data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
+            filter(SNPCall %in% input$SNPCall7) %>%
+            filter(depth == input$depth7) %>%
+            filter(CountsFrom == input$CountsFrom7 | 
+                     (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
+          
+          data$key <- factor(data$key, levels = c("n_markers", "mis_markers", "distorted_markers", "redundant_markers"))
+          incProgress(0.5, detail = paste("Doing part", 2))     
+          p <- filters_graph(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    
+    #################################
+    button11 <- eventReactive(input$go11, {
+      withProgress(message = 'Building draw', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        if(input$Global0.05.11){
+          if(input$ErrorProb11 == "OneMap_version2"){
+            geno <- paste0("SNPCaller", 0.05)
+          } else if (input$ErrorProb11 == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb11, 0.05)
+          }
+        } else {
+          geno <- input$ErrorProb11
+        }
+        incProgress(0.25, detail = paste("Doing part", 2))
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall11) %>%
+          filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed11)]) %>%
+          filter(CountsFrom == input$CountsFrom11) %>%
+          filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed11)]) %>%
+          filter(fake == input$fake11)
+        
+        incProgress(0.5, detail = paste("Doing part", 3))
+        if(input$fake11 == "with-false"){
+          false_mks <- as.character(data$mk.name[data$real.mks == "false positives"])
+          data <-   data.frame(data$mk.name, data$rf)
+          outfile <- paste0("temp.", sample(10000,1),".png")
+        } else {
+          data <-   data.frame(data$mk.name, data$rf)
+          outfile <- paste0("temp.", sample(10000,1),".png")
+        }
+        list(data,outfile)
+      })
+    })
+    
+    output$map1_out <- renderImage({
+      if(input$fake11 == "with-false"){
+        draw_map2(button11()[[1]], output = button11()[[2]], tag = false_mks, col.tag = "darkblue", pos = T, id = F)  
+      } else {
+        draw_map2(button11()[[1]], output = button11()[[2]])
+      }
+      
+      list(src = button11()[[2]],
+           contentType = 'image/png',
+           width = 400,
+           height = 900)
+    }, deleteFile = TRUE)
+    
+    button11.1 <- eventReactive(input$go11.1, {
+      withProgress(message = 'Building heatmap', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.11){
+          if( input$ErrorProb11 == "OneMap_version2"){
+            geno <- paste0("default", 0.05)
+          } else if (input$ErrorProb11 == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb11, 0.05)
+          }
+        } else {
+          if( input$ErrorProb11 == "OneMap_version2"){
+            geno <- "default"
+          } else {
+            geno <- input$ErrorProb11
+          }
+        }
+        
+        if(input$CountsFrom11 == "bam" & (input$ErrorProb11 == "OneMap_version2" | input$ErrorProb11 == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
+        if(input$fake11 == "with-false") fake <- T else fake <- F
+        temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
+                         "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
+        
+        incProgress(0.25, detail = paste("Doing part", 2))
+        if(geno == "gusmap"){
+          data <- datas_simu()[[6]][[temp_n]]
+          data$rf_2pt()
+          incProgress(0.5, detail = paste("Doing part", 3))
+        } else {
+          idx <- which(datas_simu()[[8]] == temp_n)
+          data <- readList("data/temp_file/sequences.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          incProgress(0.5, detail = paste("Doing part", 3))
+        }
+        list(data, geno)
+      })
+    })
+    
+    output$map_out <- renderPlot({
+      if(button11.1()[[2]] == "gusmap"){
+        button11.1()[[1]]$plotChr(mat="rf", parent = "both")
+      } else {
+        rf_graph_table(button11.1()[[1]], inter = F, mrk.axis = "none")
+      }
+    })
+    
+    ## download
+    output$map1_out_down <- downloadHandler(
+      filename =  function() {
+        paste("map.RData")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Loading data', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.11){
+            if( input$ErrorProb11 == "OneMap_version2"){
+              geno <- paste0("SNPCaller", 0.05)
+            } else if (input$ErrorProb11 == "gusmap"){
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            } else {
+              geno <- paste0(input$ErrorProb11, 0.05)
+            }
+          } else {
+            geno <- input$ErrorProb11
+          }
+          temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
+          if(input$fake11 == "with-false") fake <- T else fake <- F
+          temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
+                           "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
+          
+          if(geno == "gusmap"){
+            data <- datas_simu()[[6]][[temp_n]]
+          } else {
+            idx <- which(datas_simu()[[8]] == temp_n)
+            data <- readList("data/temp_file/sequences.llo", index = idx)
+            class(data) <- "sequence"
+          }
+          incProgress(0.5, detail = paste("Doing part", 2))
+          outfile <- paste0(temp_n, ".RData")
+          save(data, file = outfile)
+        })
+      } 
+    )
+    
+    #################################
+    button12 <- eventReactive(input$go12, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.12){
+          if( input$ErrorProb12 == "OneMap_version2"){
+            geno <- paste0("default", 0.05)
+          } else if (input$ErrorProb12 == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb12, 0.05)
+          }
+        } else {
+          if( input$ErrorProb12 == "OneMap_version2"){
+            geno <- "default"
+          } else {
+            geno <- input$ErrorProb12
+          }
+        }
+        
+        if(input$CountsFrom12 == "bam" & (input$ErrorProb12 == "OneMap_version2" | input$ErrorProb12 == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
+        if(input$fake12 == "with-false") fake <- T else fake <- F
+        temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
+                         "_map_",input$SNPCall12, "_", input$CountsFrom12, "_", geno, "_", fake)
+        
+        incProgress(0.25, detail = paste("Doing part", 2))
+        if(geno == "gusmap"){
+          stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+        } else {
+          idx <- which(datas_simu()[[8]] == temp_n)
+          data <- readList("data/temp_file/sequences.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          incProgress(0.5, detail = paste("Doing part", 3))
+          idx <- which(rownames(data$data.name$geno) %in% input$inds12)
+          list(data,idx)
+        }
+      })
+    })
+    
+    
+    output$haplot_out <- renderPlot({
+      plot(progeny_haplotypes(button12()[[1]], ind = button12()[[2]], most_likely = input$Most_likely12))
+    })
+    
+    button12.1 <- eventReactive(input$go12.1, {
+      withProgress(message = 'Building graphic', value = 0, {
+        sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed12)] & 
+                            datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed12)] &
+                            datas_simu()[[9]][[3]] %in% input$inds12)
+        
+        sub_dat <- sub_dat[,-c(1,2)]
+        class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
+        sub_dat
+      })
+    })
+    
+    output$haplot_simu_out <- renderPlot({
+      plot(button12.1())
+    })
+    
+    ## download
+    output$haplot_out_down <- downloadHandler(
+      filename =  function() {
+        paste("haplotypes.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.12){
+            if( input$ErrorProb12 == "OneMap_version2"){
+              geno <- paste0("default", 0.05)
+            } else if (input$ErrorProb12 == "gusmap"){
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            } else {
+              geno <- paste0(input$ErrorProb12, 0.05)
+            }
+          } else {
+            if( input$ErrorProb12 == "OneMap_version2"){
+              geno <- "default"
+            } else {
+              geno <- input$ErrorProb12
+            }
+          }
+          
+          if(input$CountsFrom12 == "bam" & (input$ErrorProb12 == "OneMap_version2" | input$ErrorProb12 == "SNPCaller")){
+            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          }
+          
+          temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
+          if(input$fake12 == "with-false") fake <- T else fake <- F
+          temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
+                           "_map_",input$SNPCall12, "_", input$CountsFrom12, "_", geno, "_", fake)
+          
+          incProgress(0.25, detail = paste("Doing part", 2))
+          if(geno == "gusmap"){
+            stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+          } else {
+            idx <- which(datas_simu()[[8]] == temp_n)
+            data <- readList("data/temp_file/sequences.llo", index = idx)
+            data <- data[[1]]
+            class(data) <- "sequence"
+            incProgress(0.5, detail = paste("Doing part", 3))
+            p <-  plot(progeny_haplotypes(data, ind = as.numeric(input$inds12), most_likely = input$Most_likely12), position = "split")
+            ggsave(file, p, width = 400, height = 200, units="mm")
+          }
+        })
+      } 
+    )
+    
+    #################################
+    button13 <- eventReactive(input$go13, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.13){
+          if(input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller"){
+            geno <- paste0("default", 0.05)
+          } else if (input$ErrorProb13 == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb13, 0.05)
+          }
+        } else {
+          if( input$ErrorProb13 == "OneMap_version2"){
+            geno <- "default"
+          } else {
+            geno <- input$ErrorProb13
+          }
+        }
+        
+        if(input$CountsFrom13 == "bam" & (input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
+        if(input$fake13 == "with-false") fake <- T else fake <- F
+        temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
+                         "_map_",input$SNPCall13, "_", input$CountsFrom13, "_", geno, "_", fake)
+        
+        incProgress(0.25, detail = paste("Doing part", 2))
+        if(geno == "gusmap"){
+          stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+        } else {
+          idx <- which(datas_simu()[[8]] == temp_n)
+          data <- readList("data/temp_file/sequences.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          incProgress(0.5, detail = paste("Doing part", 3))
+          inds <- 1:data$data.name$n.ind
+          df <- progeny_haplotypes(data, ind = inds, most_likely = T)
+          progeny_haplotypes_counts(df)
+        }
+      })
+    })
+    
+    output$counts_out <- renderPlot({
+      plot(button13())
+    })
+    
+    button14 <- eventReactive(input$go14, {
+      withProgress(message = 'Building graphic', value = 0, {
+        sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed13)] & 
+                            datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed13)])
+        
+        sub_dat <- sub_dat[,-c(1,2)]
+        class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
+        progeny_haplotypes_counts(sub_dat)
+      })
+    })
+    
+    output$counts_simu_out <- renderPlot({
+      plot(button14())
+    })
+    
+    button15 <- eventReactive(input$go15, {
+      # Correct
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed13)] & 
+                            datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed13)])
+        
+        sub_dat <- sub_dat[,-c(1,2)]
+        class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
+        counts_correct <- progeny_haplotypes_counts(sub_dat)
+        
+        # Estimated
+        incProgress(0.25, detail = paste("Doing part", 2))
+        if(input$Global0.05.13){
+          if( input$ErrorProb13 == "OneMap_version2"){
+            geno <- paste0("default", 0.05)
+          } else if (input$ErrorProb13 == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb13, 0.05)
+          }
+        } else {
+          if(input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller"){
+            geno <- "default"
+          } else {
+            geno <- input$ErrorProb13
+          }
+        }
+        
+        if(input$CountsFrom13 == "bam" & (input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
+        if(input$fake13 == "with-false") fake <- T else fake <- F
+        temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
+                         "_map_",input$SNPCall13, "_", input$CountsFrom13, "_", geno, "_", fake)
+        
+        incProgress(0.50, detail = paste("Doing part", 3))
+        if(geno == "gusmap"){
+          stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+        } else {
+          idx <- which(datas_simu()[[8]] == temp_n)
+          data <- readList("data/temp_file/sequences.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          inds <- 1:data$data.name$n.ind
+          df <- progeny_haplotypes(data, ind = inds, most_likely = T)
+          counts <- progeny_haplotypes_counts(df)
+        }
+        
+        incProgress(0.75, detail = paste("Doing part", 4))
+        
+        counts$grp <- unique(counts_correct$grp)
+        temp_list <- merge(counts_correct, counts, by = c("ind", "grp", "homologs"))
+        wrong_haplotypes <- (sum(temp_list[,4] != temp_list[,5])/(length(inds)*2))*100
+        wrong_haplotypes
+      })
+    })
+    
+    output$wrong_haplotypes <- renderText({
+      paste0(round(button15(),2),"% of the estimated haplotypes are different from simulated and can be considered wrong.")
+    })
+    
+    ## download
+    output$counts_out_down <- downloadHandler(
+      filename =  function() {
+        paste("haplotypes.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.13){
+            if( input$ErrorProb13 == "OneMap_version2"){
+              geno <- paste0("default", 0.05)
+            } else if (input$ErrorProb13 == "gusmap"){
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            } else {
+              geno <- paste0(input$ErrorProb13, 0.05)
+            }
+          } else {
+            if( input$ErrorProb13 == "OneMap_version2"){
+              geno <- "default"
+            } else {
+              geno <- input$ErrorProb13
+            }
+          }
+          
+          if(input$CountsFrom13 == "bam" & (input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller")){
+            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          }
+          
+          temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
+          if(input$fake13 == "with-false") fake <- T else fake <- F
+          temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
+                           "_map_",input$SNPCall13, "_", input$CountsFrom13, "_", geno, "_", fake)
+          
+          incProgress(0.25, detail = paste("Doing part", 2))
+          if(geno == "gusmap"){
+            stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+          } else {
+            idx <- which(datas_simu()[[8]] == temp_n)
+            data <- readList("data/temp_file/sequences.llo", index = idx)
+            data <- data[[1]]
+            class(data) <- "sequence"
+            incProgress(0.5, detail = paste("Doing part", 3))
+            inds <- 1:data$data.name$n.ind
+            df <- progeny_haplotypes(data, ind = inds, most_likely = T)
+            p <- plot(progeny_haplotypes_counts(df), n.graphics = 5, ncol = 5)
+            ggsave(file, p, width = 400, height = 200, units="mm")
+          }
+        })
+      } 
+    )
+    
+    ##################################################################
+    # Empirical 
+    ##################################################################
+    button16 <- eventReactive(input$go16, {
+      withProgress(message = 'Building left graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.1_emp){
+          if(input$ErrorProb1_emp == "OneMap_version2"){
+            geno <- paste0("SNPCaller", 0.05)
+          } else {
+            geno <- paste0(input$ErrorProb1_emp, 0.05)
+          }
+        } else {
+          geno <- input$ErrorProb1_emp
+        }
+        
+        if(input$CountsFrom1_emp == "bam" & (input$ErrorProb1_emp == "OneMap_version2" | input$ErrorProb1_emp == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
+          filter(SNPCall == input$SNPCall1_emp) %>%
+          filter(CountsFrom == input$CountsFrom1_emp)
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$disper_depth_emp_out <- renderPlot({
+      errorProb_graph_emp(button16(), input$real1_emp, input$geno_from1_emp)
+    })
+    
+    ## download
+    output$disper_depth_emp_out_down <- downloadHandler(
+      filename =  function() {
+        paste("depths.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building left graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.1_emp){
+            if( input$ErrorProb1_emp == "OneMap_version2"){
+              geno <- paste0("SNPCaller", 0.05)
+            } else {
+              geno <- paste0(input$ErrorProb1_emp, 0.05)
+            }
+          } else {
+            geno <- input$ErrorProb1_emp
+          }
+          
+          if(input$CountsFrom1_emp == "bam" & (input$ErrorProb1_emp == "OneMap_version2" | input$ErrorProb1_emp == "SNPCaller")){
+            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          }
+          data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
+            filter(SNPCall == input$SNPCall1_emp) %>%
+            filter(CountsFrom == input$CountsFrom1_emp)
+          incProgress(0.5, detail = paste("Doing part", 2))
+          p <- errorProb_graph_emp(data, input$real1_emp, input$geno_from1_emp)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    
+    button17 <- eventReactive(input$go17, {
+      withProgress(message = 'Building right graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.2_emp){
+          if( input$ErrorProb2_emp == "OneMap_version2"){
+            geno <- paste0("SNPCaller", 0.05)
+          } else {
+            geno <- paste0(input$ErrorProb2_emp, 0.05)
+          }
+        } else {
+          geno <- input$ErrorProb2_emp
+        }
+        
+        if(input$CountsFrom2_emp == "bam" & (input$ErrorProb2_emp == "OneMap_version2" | input$ErrorProb2_emp == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
+          filter(SNPCall == input$SNPCall2_emp) %>%
+          filter(CountsFrom == input$CountsFrom2_emp)
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$disper_depth2_emp_out <- renderPlot({
+      errorProb_graph_emp(button17(), input$real2_emp, input$geno_from2_emp)
+    })
+    
+    ##################################################################
+    button18 <- eventReactive(input$go18, {
+      
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        if(input$Global0.05.3_emp){
+          geno <- paste0(input$ErrorProb3_emp, 0.05)
+          if(any(input$ErrorProb3_emp %in% "OneMap_version2"))
+            geno[which(input$ErrorProb3_emp == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb3_emp %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb3_emp
+        }
+        
+        data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall3_emp) %>%
+          filter(CountsFrom == input$CountsFrom3_emp) %>%
+          mutate(interv.diff = sqrt(c(0,cm[-1] - cm[-length(cm)])^2))
+        
+        data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
+          summarise(n = n()) 
+        
+        data<- merge(data, data_n) %>%
+          gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom, -cm)
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data$key <- gsub("interv.diff", "diff (cM)", data$key)
+        data$key <- gsub("n", "n markers", data$key)
+        data
+      })
+    })
+    
+    output$ind_size_emp_out <- renderPlot({
+      ind_size_graph_emp(button18())
+    })
+    
+    ## download
+    output$ind_size_emp_out_down <- downloadHandler(
+      filename =  function() {
+        paste("ind_size.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.3_emp){
+            geno <- paste0(input$ErrorProb3_emp, 0.05)
+            if(any(input$ErrorProb3_emp %in% "OneMap_version2"))
+              geno[which(input$ErrorProb3_emp == "OneMap_version2")] <- "SNPCaller0.05"
+            if(any(input$ErrorProb3_emp %in% "gusmap"))
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- input$ErrorProb3_emp
+          }
+          
+          data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
+            filter(SNPCall %in% input$SNPCall3_emp) %>%
+            filter(CountsFrom == input$CountsFrom3_emp) %>%
+            mutate(interv.diff = sqrt(c(0,cm[-1] - cm[-length(cm)])^2))
+          
+          data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
+            summarise(n = n()) 
+          
+          data<- merge(data, data_n) %>%
+            gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom, -cm)
+          
+          data$key <- gsub("interv.diff", "diff (cM)", data$key)
+          data$key <- gsub("n", "n markers", data$key)
+          incProgress(0.5, detail = paste("Doing part", 2))
+          p <- ind_size_graph_emp(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    #######################################################################
+    button19 <- eventReactive(input$go19, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb10_emp) %>%
+          filter(SNPCall %in% input$SNPCall10_emp) %>%
+          filter(CountsFrom == input$CountsFrom10_emp) %>%
+          group_by(mk.type, GenoCall, SNPCall, CountsFrom) %>%
+          summarise(n = n()) %>%
+          gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
+        data
+      })
+    })
+    
+    
+    output$marker_type_emp_out <- renderPlot({
+      marker_type_graph_emp(button19())
+    })
+    
+    ## download
+    output$marker_type_emp_out_down <- downloadHandler(
+      filename =  function() {
+        paste("marker_type_emp.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb10_emp) %>%
+            filter(SNPCall %in% input$SNPCall10_emp) %>%
+            filter(CountsFrom == input$CountsFrom10_emp) %>%
+            group_by(mk.type, GenoCall, SNPCall, CountsFrom) %>%
+            summarise(n = n()) %>%
+            gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
+          incProgress(0.5, detail = paste("Doing part", 2))
+          p <- marker_type_graph(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    
+    #######################################################################
+    button20 <- eventReactive(input$go20, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.9_emp){
+          geno <- paste0(input$ErrorProb9_emp, 0.05)
+          if(any(input$ErrorProb9_emp %in% "OneMap_version2"))
+            geno[which(input$ErrorProb9_emp == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb9_emp %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb9_emp
+        }
+        
+        data_n <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall9_emp) %>%
+          filter(CountsFrom == input$CountsFrom9_emp) %>%
+          group_by(GenoCall, SNPCall, CountsFrom) %>%
+          summarise(n = n()) 
+        
+        data <- datas_emp()[[4]] %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
+          filter(SNPCall %in% input$SNPCall9_emp) %>%
+          filter(CountsFrom == input$CountsFrom9_emp)
+        
+        data<- merge(data, data_n) %>%
+          gather(key, value, -GenoCall, -SNPCall, -CountsFrom)
+        
+        data$key <- gsub("n", "number of markers", data$key)
+        data$key <- gsub("time", "time (seconds)", data$key)
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$times_emp_out <- renderPlot({
+      times_graph_emp(button20())
+    })
+    
+    ## download
+    output$times_emp_out_down <- downloadHandler(
+      filename =  function() {
+        paste("times.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.9_emp){
+            geno <- paste0(input$ErrorProb9_emp, 0.05)
+            if(any(input$ErrorProb9_emp %in% "OneMap_version2"))
+              geno[which(input$ErrorProb9_emp == "OneMap_version2")] <- "SNPCaller0.05"
+            if(any(input$ErrorProb9_emp %in% "gusmap"))
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- input$ErrorProb9_emp
+          }
+          
+          data_n <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
+            filter(SNPCall %in% input$SNPCall9_emp) %>%
+            filter(CountsFrom == input$CountsFrom9_emp) %>%
+            group_by(GenoCall, SNPCall, CountsFrom) %>%
+            summarise(n = n()) 
+          
+          data <- datas_emp()[[4]] %>% filter(GenoCall %in% input$ErrorProb9_emp) %>%
+            filter(SNPCall %in% input$SNPCall9_emp) %>%
+            filter(CountsFrom == input$CountsFrom9_emp)
+          
+          data<- merge(data, data_n) %>%
+            gather(key, value, -GenoCall, -SNPCall, -CountsFrom)
+          
+          data$key <- gsub("n", "number of markers", data$key)
+          data$key <- gsub("time", "time (seconds)", data$key)
+          incProgress(0.5, detail = paste("Doing part", 2))
+          
+          p <- times_graph_emp(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    ####################################################################### 
+    button21 <- eventReactive(input$go21, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb5_emp) %>%
+          filter(SNPCall %in% input$SNPCall5_emp) %>%
+          filter(CountsFrom %in% input$CountsFrom5_emp) %>%
+          group_by(GenoCall, SNPCall, CountsFrom) %>%
+          summarise(max = max(pos), min = min(pos)) 
+        
+        data$coverage <- ((data$max - data$min)/input$chr_size)*100
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$coverage_emp_out <- renderPlot({
+      coverage_graph_emp(button21())
+    })
+    
+    ## download
+    output$coverage_emp_out_down <- downloadHandler(
+      filename =  function() {
+        paste("coverage_size.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          
+          data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb5_emp) %>%
+            filter(SNPCall %in% input$SNPCall5_emp) %>%
+            filter(CountsFrom %in% input$CountsFrom5_emp) %>%
+            group_by(GenoCall, SNPCall, CountsFrom) %>%
+            summarise(max = max(pos), min = min(pos)) 
+          
+          data$coverage <- ((data$max - data$min)/input$chr_size)*100
+          incProgress(0.5, detail = paste("Doing part", 2))
+          p <- coverage_graph_emp(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    ##################################################################
+    button22 <- eventReactive(input$go22, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        choosed <- input$ErrorProb7_emp
+        if(input$Global0.05.7_emp){
+          geno <- paste0(choosed, 0.05)
+          if(any(choosed %in% "OneMap_version2") & !any(choosed %in% "SNPCaller") ){
+            geno[which(choosed %in% "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+          } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
+            geno <- geno[-which(choosed %in% "OneMap_version2")]
+          } else if (any(choosed %in% "gusmap")){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } 
+        } else {
+          geno <- choosed
+        }
+        datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall7_emp) %>%
+          filter(CountsFrom == input$CountsFrom7_emp) %>%
+          gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
+      })
+    })
+    
+    output$filters_emp_out <- renderPlot({
+      filters_graph_emp(button22())
+    })
+    
+    ## download
+    output$filters_emp_out_down <- downloadHandler(
+      filename =  function() {
+        paste("filters.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          
+          choosed <- input$ErrorProb7_emp
+          if(input$Global0.05.7_emp){
+            geno <- paste0(choosed, 0.05)
+            if(any(choosed %in% "OneMap_version2") & !any(choosed %in% "SNPCaller") ){
+              geno[which(choosed %in% "OneMap_version2")] <- paste0("SNPCaller", 0.05)
+            } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
+              geno <- geno[-which(choosed %in% "OneMap_version2")]
+            } else if (any(choosed %in% "gusmap")){
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            } 
+          } else {
+            geno <- choosed
+          }
+          data <- datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
+            filter(SNPCall %in% input$SNPCall7_emp) %>%
+            filter(CountsFrom == input$CountsFrom7_emp) %>%
+            gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
+          incProgress(0.5, detail = paste("Doing part", 2))
+          
+          p <- filters_graph_emp(data)
+          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
+                         legend.text = element_text(size=17),
+                         axis.title=element_text(size=17),
+                         axis.text = element_text(size=17), 
+                         strip.text = element_text(size=17))
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+    ##################################################################
+    button23 <- eventReactive(input$go23, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.8_emp){
+          if(input$ErrorProb8_emp == "OneMap_version2"){
+            geno <- paste0("SNPCaller", 0.05)
+          } else if (input$ErrorProb8_emp == "gusmap"){
+            stop("Gusmap do not build plotly heatmaps. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb8_emp, 0.05)
+          }
+        } else {
+          ifelse(input$ErrorProb8_emp == "OneMap_version2", geno <- "default", geno <- input$ErrorProb8_emp)
+        }
+        
+        temp_n <- paste0("map_",input$SNPCall8_emp, "_", input$CountsFrom8_emp, "_", geno, ".RData")
+        
+        idx <- which(datas_emp()[[6]] == temp_n)
+        data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+        data <- data[[1]]
+        class(data) <- "sequence"
+        incProgress(0.5, detail = paste("Doing part", 2))
+        data
+      })
+    })
+    
+    output$heatmaps_emp_out <- renderPlotly({
+      rf_graph_table(button23(), inter = T, html.file = "data/temp_file/temp.html",display = F) 
+    })
+    
+    ## download
+    output$heatmaps_emp_out_down <- downloadHandler(
+      filename =  function() {
+        paste("heatmap.html")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          
+          if(input$Global0.05.8_emp){
+            if(input$ErrorProb8_emp == "OneMap_version2"){
+              geno <- paste0("SNPCaller", 0.05)
+            } else if (input$ErrorProb8_emp == "gusmap"){
+              stop("Gusmap do not build plotly heatmaps. Please, select other option.")
+            } else {
+              geno <- paste0(input$ErrorProb8_emp, 0.05)
+            }
+          } else {
+            ifelse(input$ErrorProb8_emp == "OneMap_version2", geno <- "default", geno <- input$ErrorProb8_emp)
+          }
+          
+          if(input$CountsFrom8_emp == "bam" & (input$ErrorProb8_emp == "OneMap_version2" | input$ErrorProb8_emp == "SNPCaller")){
+            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          }
+          
+          temp_n <- paste0("map_",input$SNPCall8_emp, "_", input$CountsFrom8_emp, "_", geno, ".RData")
+          
+          idx <- which(datas_emp()[[6]] == temp_n)
+          data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          incProgress(0.5, detail = paste("Doing part", 2))
+          p <- rf_graph_table(data, inter = T, display = F, html.file = file) 
+          htmlwidgets::saveWidget(p, file)
+        })
+      } 
+    )
+    
+    ################################################################# 
+    button24 <- eventReactive(input$go24, {
+      withProgress(message = 'Building draw', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        if(input$Global0.05.11_emp){
+          if(input$ErrorProb11_emp == "OneMap_version2"){
+            geno <- paste0("SNPCaller", 0.05)
+          } else if (input$ErrorProb11_emp == "gusmap"){
+            stop("Gusmap do not build plotly heatmaps. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb11_emp, 0.05)
+          }
+        } else {
+          geno <- input$ErrorProb11_emp
+        }
+        
+        if(input$CountsFrom11_emp == "bam" & (input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        incProgress(0.25, detail = paste("Doing part", 2))
+        data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall11_emp) %>%
+          filter(CountsFrom == input$CountsFrom11_emp)
+        
+        incProgress(0.5, detail = paste("Doing part", 3))
+        data <-   data.frame(data$mks, data$cm)
+        outfile <- paste0("data/temp_file/temp.", sample(10000,1),".png")
+        list(data, outfile)
+      })
+    })
+    
+    output$map_emp_out <- renderImage({
+      draw_map2(button24()[[1]], output = button24()[[2]], col.tag = "darkblue", pos = T, id = F)  
+      
+      list(src = button24()[[2]],
+           contentType = 'image/png',
+           width = 400,
+           height = 900)
+    }, deleteFile = TRUE)
+    
+    button25 <- eventReactive(input$go25, {
+      withProgress(message = 'Building heatmap', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.11_emp){
+          if( input$ErrorProb11_emp == "OneMap_version2"){
+            geno <- paste0("default", 0.05)
+          } else if (input$ErrorProb11_emp == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb11_emp, 0.05)
+          }
+        } else {
+          if( input$ErrorProb11_emp == "OneMap_version2"){
+            geno <- "default"
+          } else {
+            geno <- input$ErrorProb11_emp
+          }
+        }
+        
+        if(input$CountsFrom11_emp == "bam" & (input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        temp_n <- paste0("map_",input$SNPCall11_emp, "_", input$CountsFrom11_emp, "_", geno, ".RData")
+        
+        incProgress(0.25, detail = paste("Doing part", 2))
+        if(geno == "gusmap"){
+          data <- datas_emp()[[5]][[temp_n]]
+          data$rf_2pt()
+          incProgress(0.5, detail = paste("Doing part", 3))
+          list(data, geno)
+        } else {
+          idx <- which(datas_emp()[[6]] == temp_n)
+          data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          incProgress(0.5, detail = paste("Doing part", 3))
+          list(data, geno)
+        }
+      })
+    })
+    
+    output$map1_emp_out <- renderPlot({
+      if(button25()[[2]] == "gusmap"){
+        button25()[[1]]$plotChr(mat="rf", parent = "both")
+      } else {
+        rf_graph_table(button25()[[1]], inter = F, mrk.axis = "none")
+      }
+    })
+    
+    ## download
+    output$map_emp_out_down <- downloadHandler(
+      filename =  function() {
+        paste("map.RData")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building heatmap', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.11_emp){
+            if( input$ErrorProb11_emp == "OneMap_version2"){
+              geno <- paste0("default", 0.05)
+            } else if (input$ErrorProb11_emp == "gusmap"){
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            } else {
+              geno <- paste0(input$ErrorProb11_emp, 0.05)
+            }
+          } else {
+            if( input$ErrorProb11_emp == "OneMap_version2"){
+              geno <- "default"
+            } else {
+              geno <- input$ErrorProb11_emp
+            }
+          }
+          
+          if(input$CountsFrom11_emp == "bam" & (input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller")){
+            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          }
+          
+          temp_n <- paste0("map_",input$SNPCall11_emp, "_", input$CountsFrom11_emp, "_", geno, ".RData")
+          if(geno == "gusmap"){
+            data <- datas_emp()[[5]][[temp_n]]
+            save(data, file=file)
+          } else {
+            idx <- which(datas_emp()[[6]] == temp_n)
+            data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+            data <- data[[1]]
+            class(data) <- "sequence"
+            save(data, file=file)
+          }
+        })
+      }
+    )
+    
+    #################################
+    button26 <- eventReactive(input$go26, {
+      withProgress(message = 'Building heatmap', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.12_emp){
+          if( input$ErrorProb12_emp == "OneMap_version2"){
+            geno <- paste0("default", 0.05)
+          } else if (input$ErrorProb12_emp == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb12_emp, 0.05)
+          }
+        } else {
+          if( input$ErrorProb12_emp == "OneMap_version2"){
+            geno <- "default"
+          } else {
+            geno <- input$ErrorProb12_emp
+          }
+        }
+        
+        if(input$CountsFrom12_emp == "bam" & (input$ErrorProb12_emp == "OneMap_version2" | input$ErrorProb12_emp == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        temp_n <- paste0("map_",input$SNPCall12_emp, "_", input$CountsFrom12_emp, "_", geno, ".RData")
+        if(geno == "gusmap"){
+          stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
+        } else {
+          idx <- which(datas_emp()[[6]] == temp_n)
+          data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          data
+        }
+      })
+    })
+    
+    output$haplot_emp_out <- renderPlot({
+      plot(progeny_haplotypes(button26(), ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp))
+    })
+    
+    ## download
+    output$haplo_out_down <- downloadHandler(
+      filename =  function() {
+        paste("haplotypes.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building heatmap', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$Global0.05.12_emp){
+            if( input$ErrorProb12_emp == "OneMap_version2"){
+              geno <- paste0("default", 0.05)
+            } else if (input$ErrorProb12_emp == "gusmap"){
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            } else {
+              geno <- paste0(input$ErrorProb12_emp, 0.05)
+            }
+          } else {
+            if( input$ErrorProb12_emp == "OneMap_version2"){
+              geno <- "default"
+            } else {
+              geno <- input$ErrorProb12_emp
+            }
+          }
+          
+          if(input$CountsFrom12_emp == "bam" & (input$ErrorProb12_emp == "OneMap_version2" | input$ErrorProb12_emp == "SNPCaller")){
+            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          }
+          
+          temp_n <- paste0("map_",input$SNPCall12_emp, "_", input$CountsFrom12_emp, "_", geno, ".RData")
+          if(geno == "gusmap"){
+            stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
+          } else {
+            idx <- which(datas_emp()[[6]] == temp_n)
+            data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+            data <- data[[1]]
+            class(data) <- "sequence"
+            p <- plot(progeny_haplotypes(data, ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp))
+            ggsave(file, p, width = 400, height = 200, units="mm")
+          }
+        })
+      } 
+    )
+    #################################
+    button27 <- eventReactive(input$go27, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05.13){
+          if(input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller"){
+            geno <- paste0("default", 0.05)
+          } else if (input$ErrorProb13 == "gusmap"){
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- paste0(input$ErrorProb13, 0.05)
+          }
+        } else {
+          if( input$ErrorProb13 == "OneMap_version2"){
+            geno <- "default"
+          } else {
+            geno <- input$ErrorProb13
+          }
+        }
+        
+        if(input$CountsFrom13_emp == "bam" & (input$ErrorProb13_emp == "OneMap_version2" | input$ErrorProb13_emp == "SNPCaller")){
+          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+        }
+        
+        temp_n <- paste0("map_",input$SNPCall13_emp, "_", input$CountsFrom13_emp, "_", geno, ".RData")
+        if(geno == "gusmap"){
+          stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
+        } else {
+          idx <- which(datas_emp()[[6]] == temp_n)
+          data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+          data <- data[[1]]
+          class(data) <- "sequence"
+          inds <- 1:data$data.name$n.ind
+          incProgress(0.3, detail = paste("Doing part", 2))
+          df <- progeny_haplotypes(data, ind = inds, most_likely = T)
+          incProgress(0.6, detail = paste("Doing part", 3))
+          progeny_haplotypes_counts(df)
+        }
+      })
+    })
+    
+    output$counts_emp_out <- renderPlot({
+      plot(button27())
+    })
+    
+    #################################
+    button28 <- eventReactive(input$go28, {
+      withProgress(message = 'Building heatmap', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$example_wf=="populus_emp"){
+          paste("data/populus/slurm-67440032.out")
+        } else if(input$example_wf=="populus_simu"){
+          paste("data/ig_populus_simu/depth20_pop50/slurm-67454631.out")
+        } else if(input$example_wf=="toy_sample_emp"){
+          paste("data/ig_toy_sample_emp/toy_sample_emp.log")
+        } else if(toy_sample_simu == "toy_sample_simu"){
+          paste("data/ig_toy_sample_emp/toy_sample_simu20.log")
+        }
+      })
+    })
+    
+    output$wf_times_out <- renderPlotly({
+      workflow_times(button28(), interactive=TRUE)
+    })
+    
+    ## download
+    output$wf_out_down <- downloadHandler(
+      filename =  function() {
+        paste("wf_times.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          if(input$example_wf=="populus_emp"){
+            sele_file <- "data/populus/slurm-67440032.out"
+          } else if(input$example_wf=="populus_simu"){
+            sele_file <- "data/populus/slurm-67454631.out"
+          }
+          p <-workflow_times(sele_file)
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
+  }
+  
+  # Create Shiny app ----
+  shinyApp(ui = ui, server = server)
+}
