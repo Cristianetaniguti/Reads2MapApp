@@ -174,7 +174,8 @@ body <- dashboardBody(
               column(width = 6,
                      box(
                        width = NULL,
-                       plotOutput("disper_depth_out")
+                       plotOutput("disper_depth_out"),
+                       actionButton("go1", "Update",icon("refresh")),
                      ),
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -233,8 +234,10 @@ body <- dashboardBody(
               column(width = 6,
                      box(
                        width = NULL,
-                       plotOutput("disper_depth2_out")
+                       plotOutput("disper_depth2_out"),   
+                       actionButton("go2", "Update",icon("refresh")),
                      ),
+                     
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -296,9 +299,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("ind_size_out")
+                       plotOutput("ind_size_out"),
+                       actionButton("go3", "Update",icon("refresh")),
                      )
               ),
+              
               column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -364,9 +369,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("all_size_out")
+                       plotOutput("all_size_out"),
+                       actionButton("go4", "Update",icon("refresh")),
                      )
               ),
+              
               column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -431,9 +438,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("marker_type_out")
+                       plotOutput("marker_type_out"),
+                       actionButton("go5", "Update",icon("refresh")),
                      )
               ),
+              
               column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -485,9 +494,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("phases_out")
+                       plotOutput("phases_out"),
+                       actionButton("go6", "Update",icon("refresh")),
                      )
               ),
+              
               column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -540,9 +551,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("times_out")
+                       plotOutput("times_out"),             
+                       actionButton("go7", "Update",icon("refresh")),
                      )
               ),
+              
               column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -603,9 +616,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("coverage_out")
+                       plotOutput("coverage_out"),
+                       actionButton("go8", "Update",icon("refresh")),
                      )
               ),
+              
               column(width=6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -670,9 +685,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("snpcall_out")
+                       plotOutput("snpcall_out"),    
+                       actionButton("go9", "Update",icon("refresh")),
                      )
               ),
+              
               column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -712,9 +729,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("filters_out")
+                       plotOutput("filters_out"),  
+                       actionButton("go10", "Update",icon("refresh")),
                      )
               ),
+              
               column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -771,6 +790,8 @@ body <- dashboardBody(
                        width = NULL,
                        plotOutput("map_out"),
                        hr(),
+                       actionButton("go11.1", "Update",icon("refresh")),
+                       hr(),
                        box(solidHeader = T,
                            radioButtons("ErrorProb11", label = p("Genotyping method"),
                                         choices = maps_choice,
@@ -805,8 +826,11 @@ body <- dashboardBody(
                        div(downloadButton("map1_out_down"),style="float:right")
                      )
               ),
+              
               column(width = 4,
-                     imageOutput("map1_out")
+                         actionButton("go11", "Update",icon("refresh")),
+                         hr(),
+                         imageOutput("map1_out")
               )
             )
     ),
@@ -819,9 +843,13 @@ body <- dashboardBody(
               box(
                 width = NULL,
                 "Estimated progeny haplotypes",
+                actionButton("go12", "Update",icon("refresh")),
+                hr(),
                 plotOutput("haplot_out"),
                 hr(),
                 "Simulated progeny haplotypes",
+                actionButton("go12.1", "Update",icon("refresh")),
+                hr(),
                 plotOutput("haplot_simu_out"),
                 hr(),
                 box(solidHeader = T,
@@ -878,13 +906,18 @@ body <- dashboardBody(
             fluidRow(
               box(
                 width = NULL,
-                "Estimated number of recombination breakpoints for each individual",
+                "Estimated number of recombination breakpoints for each individual",br(),
+                actionButton("go13", "Update",icon("refresh")),
                 hr(),
                 plotOutput("counts_out"),
                 hr(),
-                "Simulated number of recombination breakpoints for each individual",
+                "Simulated number of recombination breakpoints for each individual", br(),
+                actionButton("go14", "Update",icon("refresh")),
                 hr(),
                 plotOutput("counts_simu_out"),
+                hr(),
+                "Perentage of wrong haplotypes", br(),
+                actionButton("go15", "Update",icon("refresh")),
                 hr(),
                 textOutput("wrong_haplotypes"),
                 hr(),
@@ -936,8 +969,10 @@ body <- dashboardBody(
               column(width = 6,
                      box(
                        width = NULL,
-                       plotOutput("disper_depth_emp_out")
+                       plotOutput("disper_depth_emp_out"),   
+                       actionButton("go16", "Update",icon("refresh")),
                      ),
+                     
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
@@ -991,7 +1026,8 @@ body <- dashboardBody(
               column(width = 6,
                      box(
                        width = NULL,
-                       plotOutput("disper_depth2_emp_out")
+                       plotOutput("disper_depth2_emp_out"),
+                       actionButton("go17", "Update",icon("refresh"))
                      ),
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -1052,9 +1088,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("ind_size_emp_out")
+                       plotOutput("ind_size_emp_out"),
+                       actionButton("go18", "Update",icon("refresh")),
                      )
               ),
+              
               column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -1102,22 +1140,29 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("marker_type_emp_out")
-                     ),
+                       plotOutput("marker_type_emp_out"),
+                       actionButton("go19", "Update",icon("refresh")),
+                     )
+              ),
+              column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
                          checkboxGroupInput("ErrorProb10_emp", label = p("Genotyping method"),
                                             choices = maps_choice,
                                             selected = names(maps_choice)),
-                         hr()
-                       ),
+                       )
+                     )
+              ),
+              column(width = 6,
+                     box(
+                       width = NULL, solidHeader = TRUE,
                        fluidPage(
                          checkboxGroupInput("SNPCall10_emp", label = p("SNP calling method"),
                                             choices = SNPCall_choice,
                                             selected = names(SNPCall_choice)),
-                         hr()
                        ),
+                       
                        fluidPage(
                          radioButtons("CountsFrom10_emp", label = p("Counts from"),
                                       choices = CountsFrom_choice,
@@ -1137,22 +1182,28 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("times_emp_out")
-                     ),
+                       plotOutput("times_emp_out"),
+                       actionButton("go20", "Update",icon("refresh")),
+                     )
+              ),
+              column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
                          checkboxGroupInput("ErrorProb9_emp", label = p("Genotyping method"),
                                             choices = maps_choice,
                                             selected = names(maps_choice)),
-                         hr()
                        ),
                        fluidPage(
                          checkboxGroupInput("SNPCall9_emp", label = p("SNP calling method"),
                                             choices = SNPCall_choice,
                                             selected = names(SNPCall_choice)),
-                         hr()
-                       ),
+                       )
+                     )
+              ),
+              column(width = 6,
+                     box(
+                       width = NULL, solidHeader = TRUE,
                        fluidPage(
                          radioButtons("Global0.05.9_emp", label = p("Error rate"),
                                       choices = global0.05_choices,
@@ -1179,27 +1230,32 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("coverage_emp_out")
+                       plotOutput("coverage_emp_out"),
+                       actionButton("go21", "Update",icon("refresh")),
                      ),
+              ),
+              column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
                        fluidPage(
                          checkboxGroupInput("ErrorProb5_emp", label = p("Genotyping method"),
                                             choices = maps_choice,
                                             selected = names(maps_choice)),
-                         hr()
                        ),
+                     )
+              ),
+              column(width = 6,
+                     box(
+                       width = NULL, solidHeader = T,
                        fluidPage(
                          checkboxGroupInput("SNPCall5_emp", label = p("SNP calling method"),
                                             choices = SNPCall_choice,
                                             selected = names(SNPCall_choice)),
-                         hr()
                        ),
                        fluidPage(
                          radioButtons("CountsFrom5_emp", label = p("Counts from"),
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
-                         hr()
                        ),
                        
                        fluidPage(
@@ -1221,9 +1277,11 @@ body <- dashboardBody(
               column(width = 12,
                      box(
                        width = NULL,
-                       plotOutput("filters_emp_out")
+                       plotOutput("filters_emp_out"),
+                       actionButton("go22", "Update",icon("refresh")),
                      )
               ),
+              
               column(width = 6,
                      box(
                        width = NULL, solidHeader = TRUE,
@@ -1238,17 +1296,17 @@ body <- dashboardBody(
                                       choices = global0.05_choices,
                                       selected = "FALSE"),
                          hr()
-                       ), 
-                       fluidPage(
-                         checkboxGroupInput("SNPCall7_emp", label = p("SNP calling method"),
-                                            choices = SNPCall_choice,
-                                            selected = names(SNPCall_choice)),
-                         hr()
                        )
                      )
               ),
               column(width = 6,
                      box(width = NULL, solidHeader = T,
+                         fluidPage(
+                           checkboxGroupInput("SNPCall7_emp", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = names(SNPCall_choice)),
+                           hr()
+                         ),
                          fluidPage(
                            radioButtons("CountsFrom7_emp", label = p("Counts from"),
                                         choices = CountsFrom_choice,
@@ -1263,31 +1321,32 @@ body <- dashboardBody(
     ################################################################################3
     tabItem(tabName = "heatmaps_emp",
             fluidRow(
-              box(
-                width = NULL,
-                plotlyOutput("heatmaps_emp_out", height = 650)
+              box(solidHeader = T,
+                  width = NULL,
+                  plotlyOutput("heatmaps_emp_out", height = 650),
+                  actionButton("go23", "Update",icon("refresh")),
               )
             ),
             fluidRow(
               column(width = 6,
-                     box(
-                       width = 6, 
-                       fluidPage(
-                         radioButtons("ErrorProb8_emp", label = p("Genotyping method"),
-                                      choices = ErrorProb_choice,
-                                      selected = "polyrad"),
-                         hr()
-                       ),
-                       fluidPage(
-                         radioButtons("Global0.05.8_emp", label = p("Error rate"),
-                                      choices = global0.05_choices,
-                                      selected = "FALSE"),
-                         hr()
-                       )
+                     box(solidHeader = T,
+                         width = 6, 
+                         fluidPage(
+                           radioButtons("ErrorProb8_emp", label = p("Genotyping method"),
+                                        choices = ErrorProb_choice,
+                                        selected = "polyrad"),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05.8_emp", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         )
                      ) 
               ),
               column(width = 6,
-                     box(width = 6,
+                     box(width = 6,solidHeader = T,
                          fluidPage( 
                            radioButtons("SNPCall8_emp", label = p("SNP calling method"),
                                         choices = SNPCall_choice,
@@ -1312,34 +1371,36 @@ body <- dashboardBody(
             and y axis. On the right, the linkage group is plotted with distances between markers proportional to the genetic distances.",
             fluidRow(
               column(width = 8,
-                     box(
-                       width = NULL,
-                       plotOutput("map1_emp_out"),
-                       box(
+                     box(solidHeader = T,
+                         width = NULL,
+                         plotOutput("map1_emp_out"),
+                         hr(),
+                         actionButton("go25", "Update",icon("refresh"))
+                     ),
+                     box(solidHeader = T,
                          radioButtons("ErrorProb11_emp", label = p("Genotyping method"),
                                       choices = maps_choice,
                                       selected = "updog"),
-                       ),
-                       box(
+                     ),
+                     box(solidHeader = T,
                          radioButtons("SNPCall11_emp", label = p("SNP calling method"),
                                       choices = SNPCall_choice,
                                       selected = "gatk"),
-                       ),
-                       box(
+                     ),
+                     box(solidHeader = T,
                          radioButtons("Global0.05.11_emp", label = p("Error rate"),
                                       choices = global0.05_choices,
                                       selected = "FALSE"),
-                         hr()
-                       ), 
-                       box(
+                     ), 
+                     box(solidHeader = T,
                          radioButtons("CountsFrom11_emp", label = p("Counts from"),
                                       choices = CountsFrom_choice,
                                       selected = "vcf"),
                          div(downloadButton("map_emp_out_down"),style="float:right")
-                       )
                      )
               ),
               column(width = 4,
+                     actionButton("go24", "Update",icon("refresh")),
                      imageOutput("map_emp_out")
               )
             )
@@ -1352,6 +1413,8 @@ body <- dashboardBody(
               box(
                 width = NULL,
                 plotOutput("haplot_emp_out"),
+                hr(),
+                actionButton("go26", "Update",icon("refresh")),
                 hr(),
                 box(solidHeader = T,
                     radioButtons("ErrorProb12_emp", label = p("Genotyping method"),
@@ -1400,6 +1463,8 @@ body <- dashboardBody(
                 "Estimated number of recombination breakpoints for each individual",
                 hr(),
                 plotOutput("counts_emp_out"),
+                hr(),
+                actionButton("go27", "Update",icon("refresh")),
                 hr(),
                 box(solidHeader = T,
                     radioButtons("ErrorProb13_emp", label = p("Genotyping method"),
@@ -1454,6 +1519,8 @@ body <- dashboardBody(
             ),
             box(solidHeader = T,
                 width = NULL,
+                actionButton("go28", "Update",icon("refresh")),
+                hr(),
                 plotlyOutput("wf_times_out")
             )
     )
@@ -1467,7 +1534,6 @@ server <- function(input, output,session) {
   ##################################################
   # Simulations - rearranging data
   ##################################################
-  
   prepare_datas_simu <- function(x){
     # This function makes adjustments in the input tar.gz file to be processed inside the app
     # It returns six data objects and the app options in a list format
@@ -1727,7 +1793,7 @@ server <- function(input, output,session) {
   # Simulations
   ##################################################################
   
-  output$disper_depth_out <- renderPlot({
+  button1 <- eventReactive(input$go1, {
     withProgress(message = 'Building left graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.1){
@@ -1744,15 +1810,18 @@ server <- function(input, output,session) {
         stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
       }
       
-      data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
+      datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
         filter(SNPCall == input$SNPCall1) %>%
         filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
         filter(CountsFrom == input$CountsFrom1) %>%
         filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
-      incProgress(0.5, detail = paste("Doing part", 2))
-      errorProb_graph(data, input$real1)
     })
   })
+  
+  output$disper_depth_out <- renderPlot({
+    errorProb_graph(button1(), input$real1)
+  })
+  
   ## download
   output$disper_depth_out_down <- downloadHandler(
     filename =  function() {
@@ -1794,7 +1863,7 @@ server <- function(input, output,session) {
     } 
   )
   
-  output$disper_depth2_out <- renderPlot({
+  button2 <- eventReactive(input$go2, {
     withProgress(message = 'Building right graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.2){
@@ -1811,13 +1880,15 @@ server <- function(input, output,session) {
         filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed2)]) %>%
         filter(CountsFrom == input$CountsFrom2) %>%
         filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed2)])
-      incProgress(0.5, detail = paste("Doing part", 2))
-      errorProb_graph(data, input$real2)
     })
   })
   
+  output$disper_depth2_out <- renderPlot({
+    errorProb_graph(button2(), input$real2)
+  })
+  
   ##################################################################
-  output$ind_size_out <- renderPlot({
+  button3 <- eventReactive(input$go3, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.3){
@@ -1847,9 +1918,12 @@ server <- function(input, output,session) {
       
       data$key <- gsub("interv.diff", "diff (cM)", data$key)
       data$key <- gsub("n", "n markers", data$key)
-      incProgress(0.5, detail = paste("Doing part", 2))
-      ind_size_graph(data)
+      data
     })
+  })
+  
+  output$ind_size_out <- renderPlot({
+    ind_size_graph(button3())
   })
   
   ## download
@@ -1901,7 +1975,7 @@ server <- function(input, output,session) {
     } 
   )
   ##################################################################
-  output$all_size_out <- renderPlot({
+  button4 <- eventReactive(input$go4, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.4){
@@ -1938,8 +2012,12 @@ server <- function(input, output,session) {
       data$key <- gsub("value", "diff (cM)", data$key)
       data$depth <- paste0("depth ", as.character(data$depth))
       incProgress(0.5, detail = paste("Doing part", 2))
-      all_size_graph(data, input$stats1)
+      data
     })
+  })
+  
+  output$all_size_out <- renderPlot({
+    all_size_graph(button4(), input$stats1)
   })
   
   ## download
@@ -1996,7 +2074,7 @@ server <- function(input, output,session) {
     } 
   )
   #######################################################################
-  output$marker_type_out <- renderPlot({
+  button5 <- eventReactive(input$go5, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
@@ -2008,8 +2086,13 @@ server <- function(input, output,session) {
         summarise(n = n()) %>%
         gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -depth,-n)
       incProgress(0.5, detail = paste("Doing part", 2))
-      marker_type_graph(data)
+      data
     })
+  })
+  
+  
+  output$marker_type_out <- renderPlot({
+    marker_type_graph(button5())
   })
   
   ## download
@@ -2042,7 +2125,7 @@ server <- function(input, output,session) {
     } 
   )
   #######################################################################
-  output$phases_out <- renderPlot({
+  button6 <- eventReactive(input$go6, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.8){
@@ -2074,9 +2157,14 @@ server <- function(input, output,session) {
       data$key <- gsub("value", "% correct", data$key)
       data$depth <- paste0("depth ", as.character(data$depth))
       incProgress(0.5, detail = paste("Doing part", 2))
-      phases_graph(data)
+      data
     })
   })
+  
+  output$phases_out <- renderPlot({
+    phases_graph(button6())
+  })
+  
   ## download
   output$phases_out_down <- downloadHandler(
     filename =  function() {
@@ -2127,7 +2215,7 @@ server <- function(input, output,session) {
     } 
   )
   #######################################################################
-  output$times_out <- renderPlot({
+  button7 <- eventReactive(input$go7, {
     withProgress(message = 'Times graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.9){
@@ -2162,8 +2250,12 @@ server <- function(input, output,session) {
       data$depth <- paste0("depth ", as.character(data$depth))
       
       incProgress(0.5, detail = paste("Doing part", 2))
-      times_graph(data)
+      data
     })
+  })
+  
+  output$times_out <- renderPlot({
+    times_graph(button7())
   })
   
   ## download
@@ -2217,7 +2309,7 @@ server <- function(input, output,session) {
     } 
   )
   #######################################################################
-  output$coverage_out <- renderPlot({
+  button8 <- eventReactive(input$go8, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.5){
@@ -2241,8 +2333,12 @@ server <- function(input, output,session) {
       data$coverage <- ((data$max - data$min)/input$chr_size1)*100
       data$depth <- paste0("depth ", as.character(data$depth))
       incProgress(0, detail = paste("Doing part", 1))
-      coverage_graph(data)
+      data
     })
+  })
+  
+  output$coverage_out <- renderPlot({
+    coverage_graph(button8())
   })
   
   ## download
@@ -2288,7 +2384,7 @@ server <- function(input, output,session) {
     } 
   )
   ##########################################################################
-  output$snpcall_out <- renderPlot({
+  button9 <- eventReactive(input$go9, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       data <- datas_simu()[[5]] %>% filter(key %in% input$avalSNPs1) %>%
@@ -2297,8 +2393,12 @@ server <- function(input, output,session) {
       
       data$depth <- paste0("depth ", as.character(data$depth))
       incProgress(0.5, detail = paste("Doing part", 2))
-      avalSNPs_graph(data)
+      data
     })
+  })
+  
+  output$snpcall_out <- renderPlot({
+    avalSNPs_graph(button9())
   })
   
   ## download
@@ -2322,7 +2422,7 @@ server <- function(input, output,session) {
     } 
   )
   ##################################################################
-  output$filters_out <- renderPlot({
+  button10 <- eventReactive(input$go10, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       choosed <- input$ErrorProb7
@@ -2346,8 +2446,12 @@ server <- function(input, output,session) {
       
       data$key <- factor(data$key, levels = c("n_markers", "higher than 25% missing", "redundant_markers","redundant_markers2", "distorted_markers", "n_markers_filtered"))
       incProgress(0.5, detail = paste("Doing part", 2))
-      filters_graph(data)
+      data
     })
+  })
+  
+  output$filters_out <- renderPlot({
+    filters_graph(button10())
   })  
   
   ## download
@@ -2392,7 +2496,7 @@ server <- function(input, output,session) {
   )
   
   #################################
-  output$map1_out <- renderImage({
+  button11 <- eventReactive(input$go11, {
     withProgress(message = 'Building draw', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
@@ -2420,20 +2524,28 @@ server <- function(input, output,session) {
         false_mks <- as.character(data$mk.name[data$real.mks == "false positives"])
         data <-   data.frame(data$mk.name, data$rf)
         outfile <- paste0("temp.", sample(10000,1),".png")
-        draw_map2(data, output = outfile, tag = false_mks, col.tag = "darkblue", pos = T, id = F)  
       } else {
         data <-   data.frame(data$mk.name, data$rf)
         outfile <- paste0("temp.", sample(10000,1),".png")
-        draw_map2(data, output = outfile)
       }
-      list(src = outfile,
-           contentType = 'image/png',
-           width = 400,
-           height = 900)
+      list(data,outfile)
     })
+  })
+  
+  output$map1_out <- renderImage({
+    if(input$fake11 == "with-false"){
+      draw_map2(button11()[[1]], output = button11()[[2]], tag = false_mks, col.tag = "darkblue", pos = T, id = F)  
+    } else {
+      draw_map2(button11()[[1]], output = button11()[[2]])
+    }
+    
+    list(src = button11()[[2]],
+         contentType = 'image/png',
+         width = 400,
+         height = 900)
   }, deleteFile = TRUE)
   
-  output$map_out <- renderPlot({
+  button11.1 <- eventReactive(input$go11.1, {
     withProgress(message = 'Building heatmap', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.11){
@@ -2466,16 +2578,23 @@ server <- function(input, output,session) {
         data <- datas_simu()[[6]][[temp_n]]
         data$rf_2pt()
         incProgress(0.5, detail = paste("Doing part", 3))
-        data$plotChr(mat="rf", parent = "both")
       } else {
         idx <- which(datas_simu()[[8]] == temp_n)
         data <- readList("data/temp_file/sequences.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
         incProgress(0.5, detail = paste("Doing part", 3))
-        rf_graph_table(data, inter = F, mrk.axis = "none")
       }
+      list(data, geno)
     })
+  })
+  
+  output$map_out <- renderPlot({
+    if(button11.1()[[2]] == "gusmap"){
+      button11.1()[[1]]$plotChr(mat="rf", parent = "both")
+    } else {
+      rf_graph_table(button11.1()[[1]], inter = F, mrk.axis = "none")
+    }
   })
   
   ## download
@@ -2518,7 +2637,7 @@ server <- function(input, output,session) {
   )
   
   #################################
-  output$haplot_out <- renderPlot({
+  button12 <- eventReactive(input$go12, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.12){
@@ -2541,28 +2660,32 @@ server <- function(input, output,session) {
         stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
       }
       
-      temp_n <- paste0(result_list[[7]][[1]][as.numeric(input$seed12)])
+      temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
       if(input$fake12 == "with-false") fake <- T else fake <- F
-      temp_n <- paste0(result_list[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
+      temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
                        "_map_",input$SNPCall12, "_", input$CountsFrom12, "_", geno, "_", fake)
       
       incProgress(0.25, detail = paste("Doing part", 2))
       if(geno == "gusmap"){
         stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
       } else {
-        idx <- which(result_list[[8]] == temp_n)
+        idx <- which(datas_simu()[[8]] == temp_n)
         data <- readList("data/temp_file/sequences.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
         incProgress(0.5, detail = paste("Doing part", 3))
-        idx <- which(rownames(data$data.name$geno) == input$inds12)
-        plot(progeny_haplotypes(data, ind = idx, most_likely = input$Most_likely12))
+        idx <- which(rownames(data$data.name$geno) %in% input$inds12)
+        list(data,idx)
       }
     })
   })
   
-  output$haplot_simu_out <- renderPlot({
-    library(vcfR)
+  
+  output$haplot_out <- renderPlot({
+    plot(progeny_haplotypes(button12()[[1]], ind = button12()[[2]], most_likely = input$Most_likely12))
+  })
+  
+  button12.1 <- eventReactive(input$go12.1, {
     withProgress(message = 'Building graphic', value = 0, {
       sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed12)] & 
                           datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed12)] &
@@ -2570,8 +2693,12 @@ server <- function(input, output,session) {
       
       sub_dat <- sub_dat[,-c(1,2)]
       class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
-      plot(sub_dat)
+      sub_dat
     })
+  })
+  
+  output$haplot_simu_out <- renderPlot({
+    plot(button12.1())
   })
   
   ## download
@@ -2625,7 +2752,7 @@ server <- function(input, output,session) {
   )
   
   #################################
-  output$counts_out <- renderPlot({
+  button13 <- eventReactive(input$go13, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.13){
@@ -2648,42 +2775,47 @@ server <- function(input, output,session) {
         stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
       }
       
-      temp_n <- paste0(result_list[[7]][[1]][as.numeric(input$seed13)])
+      temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
       if(input$fake13 == "with-false") fake <- T else fake <- F
-      temp_n <- paste0(result_list[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
+      temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
                        "_map_",input$SNPCall13, "_", input$CountsFrom13, "_", geno, "_", fake)
       
       incProgress(0.25, detail = paste("Doing part", 2))
       if(geno == "gusmap"){
         stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
       } else {
-        idx <- which(result_list[[8]] == temp_n)
+        idx <- which(datas_simu()[[8]] == temp_n)
         data <- readList("data/temp_file/sequences.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
         incProgress(0.5, detail = paste("Doing part", 3))
         inds <- 1:data$data.name$n.ind
         df <- progeny_haplotypes(data, ind = inds, most_likely = T)
-        counts <- progeny_haplotypes_counts(df)
-        plot(counts)
+        progeny_haplotypes_counts(df)
       }
     })
   })
   
-  output$counts_simu_out <- renderPlot({
-    library(vcfR)
+  output$counts_out <- renderPlot({
+    plot(button13())
+  })
+  
+  button14 <- eventReactive(input$go14, {
     withProgress(message = 'Building graphic', value = 0, {
       sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed13)] & 
                           datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed13)])
       
       sub_dat <- sub_dat[,-c(1,2)]
       class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
-      counts_correct <- progeny_haplotypes_counts(sub_dat)
-      plot(counts_correct)
+      progeny_haplotypes_counts(sub_dat)
     })
   })
   
-  output$wrong_haplotypes <- renderText({
+  output$counts_simu_out <- renderPlot({
+    plot(button14())
+  })
+  
+  button15 <- eventReactive(input$go15, {
     # Correct
     library(vcfR)
     withProgress(message = 'Building graphic', value = 0, {
@@ -2730,7 +2862,6 @@ server <- function(input, output,session) {
         data <- readList("data/temp_file/sequences.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
-        incProgress(0.5, detail = paste("Doing part", 3))
         inds <- 1:data$data.name$n.ind
         df <- progeny_haplotypes(data, ind = inds, most_likely = T)
         counts <- progeny_haplotypes_counts(df)
@@ -2740,9 +2871,13 @@ server <- function(input, output,session) {
       
       counts$grp <- unique(counts_correct$grp)
       temp_list <- merge(counts_correct, counts, by = c("ind", "grp", "homologs"))
-      wrong_haploypes <- (sum(temp_list[,4] != temp_list[,5])/(length(inds)*2))*100
-      paste0(round(wrong_haploypes,2),"% of the estimated haplotypes are different from simulated and can be considered wrong.")
+      wrong_haplotypes <- (sum(temp_list[,4] != temp_list[,5])/(length(inds)*2))*100
+      wrong_haplotypes
     })
+  })
+  
+  output$wrong_haplotypes <- renderText({
+    paste0(round(button15(),2),"% of the estimated haplotypes are different from simulated and can be considered wrong.")
   })
   
   ## download
@@ -2800,8 +2935,7 @@ server <- function(input, output,session) {
   ##################################################################
   # Empirical 
   ##################################################################
-  
-  output$disper_depth_emp_out <- renderPlot({
+  button16 <- eventReactive(input$go16, {
     withProgress(message = 'Building left graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.1_emp){
@@ -2821,8 +2955,12 @@ server <- function(input, output,session) {
         filter(SNPCall == input$SNPCall1_emp) %>%
         filter(CountsFrom == input$CountsFrom1_emp)
       incProgress(0.5, detail = paste("Doing part", 2))
-      errorProb_graph_emp(data, input$real1_emp, input$geno_from1_emp)
+      data
     })
+  })
+  
+  output$disper_depth_emp_out <- renderPlot({
+    errorProb_graph_emp(button16(), input$real1_emp, input$geno_from1_emp)
   })
   
   ## download
@@ -2862,7 +3000,7 @@ server <- function(input, output,session) {
     } 
   )
   
-  output$disper_depth2_emp_out <- renderPlot({
+  button17 <- eventReactive(input$go17, {
     withProgress(message = 'Building right graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.2_emp){
@@ -2882,12 +3020,17 @@ server <- function(input, output,session) {
         filter(SNPCall == input$SNPCall2_emp) %>%
         filter(CountsFrom == input$CountsFrom2_emp)
       incProgress(0.5, detail = paste("Doing part", 2))
-      errorProb_graph_emp(data, input$real2_emp, input$geno_from2_emp)
+      data
     })
   })
   
+  output$disper_depth2_emp_out <- renderPlot({
+    errorProb_graph_emp(button17(), input$real2_emp, input$geno_from2_emp)
+  })
+  
   ##################################################################
-  output$ind_size_emp_out <- renderPlot({
+  button18 <- eventReactive(input$go18, {
+    
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
@@ -2911,12 +3054,15 @@ server <- function(input, output,session) {
       
       data<- merge(data, data_n) %>%
         gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom, -cm)
-      
+      incProgress(0.5, detail = paste("Doing part", 2))
       data$key <- gsub("interv.diff", "diff (cM)", data$key)
       data$key <- gsub("n", "n markers", data$key)
-      incProgress(0.5, detail = paste("Doing part", 2))
-      ind_size_graph_emp(data)
+      data
     })
+  })
+  
+  output$ind_size_emp_out <- renderPlot({
+    ind_size_graph_emp(button18())
   })
   
   ## download
@@ -2963,7 +3109,7 @@ server <- function(input, output,session) {
     } 
   )
   #######################################################################
-  output$marker_type_emp_out <- renderPlot({
+  button19 <- eventReactive(input$go19, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb10_emp) %>%
@@ -2972,9 +3118,13 @@ server <- function(input, output,session) {
         group_by(mk.type, GenoCall, SNPCall, CountsFrom) %>%
         summarise(n = n()) %>%
         gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
-      incProgress(0.5, detail = paste("Doing part", 2))
-      marker_type_graph_emp(data)
+      data
     })
+  })
+  
+  
+  output$marker_type_emp_out <- renderPlot({
+    marker_type_graph_emp(button19())
   })
   
   ## download
@@ -3005,7 +3155,7 @@ server <- function(input, output,session) {
   )
   
   #######################################################################
-  output$times_emp_out <- renderPlot({
+  button20 <- eventReactive(input$go20, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.9_emp){
@@ -3034,8 +3184,12 @@ server <- function(input, output,session) {
       data$key <- gsub("n", "number of markers", data$key)
       data$key <- gsub("time", "time (seconds)", data$key)
       incProgress(0.5, detail = paste("Doing part", 2))
-      times_graph_emp(data)
+      data
     })
+  })
+  
+  output$times_emp_out <- renderPlot({
+    times_graph_emp(button20())
   })
   
   ## download
@@ -3085,7 +3239,7 @@ server <- function(input, output,session) {
     } 
   )
   ####################################################################### 
-  output$coverage_emp_out <- renderPlot({
+  button21 <- eventReactive(input$go21, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
@@ -3097,9 +3251,12 @@ server <- function(input, output,session) {
       
       data$coverage <- ((data$max - data$min)/input$chr_size)*100
       incProgress(0.5, detail = paste("Doing part", 2))
-      
-      coverage_graph_emp(data)
+      data
     })
+  })
+  
+  output$coverage_emp_out <- renderPlot({
+    coverage_graph_emp(button21())
   })
   
   ## download
@@ -3131,7 +3288,7 @@ server <- function(input, output,session) {
     } 
   )
   ##################################################################
-  output$filters_emp_out <- renderPlot({
+  button22 <- eventReactive(input$go22, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
@@ -3148,13 +3305,15 @@ server <- function(input, output,session) {
       } else {
         geno <- choosed
       }
-      data <- datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
+      datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall7_emp) %>%
         filter(CountsFrom == input$CountsFrom7_emp) %>%
         gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
-      incProgress(0.5, detail = paste("Doing part", 2))
-      filters_graph_emp(data)
     })
+  })
+  
+  output$filters_emp_out <- renderPlot({
+    filters_graph_emp(button22())
   })
   
   ## download
@@ -3197,7 +3356,7 @@ server <- function(input, output,session) {
     } 
   )
   ##################################################################
-  output$heatmaps_emp_out <- renderPlotly({
+  button23 <- eventReactive(input$go23, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.8_emp){
@@ -3219,8 +3378,12 @@ server <- function(input, output,session) {
       data <- data[[1]]
       class(data) <- "sequence"
       incProgress(0.5, detail = paste("Doing part", 2))
-      rf_graph_table(data, inter = T, html.file = "data/temp_file/temp.html",display = F) 
+      data
     })
+  })
+  
+  output$heatmaps_emp_out <- renderPlotly({
+    rf_graph_table(button23(), inter = T, html.file = "data/temp_file/temp.html",display = F) 
   })
   
   ## download
@@ -3263,7 +3426,7 @@ server <- function(input, output,session) {
   )
   
   ################################################################# 
-  output$map_emp_out <- renderImage({
+  button24 <- eventReactive(input$go24, {
     withProgress(message = 'Building draw', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
@@ -3291,16 +3454,20 @@ server <- function(input, output,session) {
       incProgress(0.5, detail = paste("Doing part", 3))
       data <-   data.frame(data$mks, data$cm)
       outfile <- paste0("data/temp_file/temp.", sample(10000,1),".png")
-      draw_map2(data, output = outfile, col.tag = "darkblue", pos = T, id = F)  
-      
-      list(src = outfile,
-           contentType = 'image/png',
-           width = 400,
-           height = 900)
+      list(data, outfile)
     })
+  })
+  
+  output$map_emp_out <- renderImage({
+    draw_map2(button24()[[1]], output = button24()[[2]], col.tag = "darkblue", pos = T, id = F)  
+    
+    list(src = button24()[[2]],
+         contentType = 'image/png',
+         width = 400,
+         height = 900)
   }, deleteFile = TRUE)
   
-  output$map1_emp_out <- renderPlot({
+  button25 <- eventReactive(input$go25, {
     withProgress(message = 'Building heatmap', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.11_emp){
@@ -3330,16 +3497,24 @@ server <- function(input, output,session) {
         data <- datas_emp()[[5]][[temp_n]]
         data$rf_2pt()
         incProgress(0.5, detail = paste("Doing part", 3))
-        data$plotChr(mat="rf", parent = "both")
+        list(data, geno)
       } else {
         idx <- which(datas_emp()[[6]] == temp_n)
         data <- readList("data/temp_file/sequences_emp.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
         incProgress(0.5, detail = paste("Doing part", 3))
-        rf_graph_table(data, inter = F, mrk.axis = "none")
+        list(data, geno)
       }
     })
+  })
+  
+  output$map1_emp_out <- renderPlot({
+    if(button25()[[2]] == "gusmap"){
+      button25()[[1]]$plotChr(mat="rf", parent = "both")
+    } else {
+      rf_graph_table(button25()[[1]], inter = F, mrk.axis = "none")
+    }
   })
   
   ## download
@@ -3387,7 +3562,7 @@ server <- function(input, output,session) {
   )
   
   #################################
-  output$haplot_emp_out <- renderPlot({
+  button26 <- eventReactive(input$go26, {
     withProgress(message = 'Building heatmap', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.12_emp){
@@ -3418,9 +3593,13 @@ server <- function(input, output,session) {
         data <- readList("data/temp_file/sequences_emp.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
-        plot(progeny_haplotypes(data, ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp))
+        data
       }
     })
+  })
+  
+  output$haplot_emp_out <- renderPlot({
+    plot(progeny_haplotypes(button26(), ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp))
   })
   
   ## download
@@ -3467,7 +3646,7 @@ server <- function(input, output,session) {
     } 
   )
   #################################
-  output$counts_emp_out <- renderPlot({
+  button27 <- eventReactive(input$go27, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$Global0.05.13){
@@ -3502,28 +3681,33 @@ server <- function(input, output,session) {
         incProgress(0.3, detail = paste("Doing part", 2))
         df <- progeny_haplotypes(data, ind = inds, most_likely = T)
         incProgress(0.6, detail = paste("Doing part", 3))
-        counts <- progeny_haplotypes_counts(df)
-        plot(counts)
+        progeny_haplotypes_counts(df)
       }
     })
   })
   
+  output$counts_emp_out <- renderPlot({
+    plot(button27())
+  })
+  
   #################################
-  output$wf_times_out <- renderPlotly({
+  button28 <- eventReactive(input$go28, {
     withProgress(message = 'Building heatmap', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       if(input$example_wf=="populus_emp"){
-        sele_file <- "data/populus/slurm-67440032.out"
+        paste("data/populus/slurm-67440032.out")
       } else if(input$example_wf=="populus_simu"){
-        sele_file <- "data/ig_populus_simu/depth20_pop50/slurm-67454631.out"
+        paste("data/ig_populus_simu/depth20_pop50/slurm-67454631.out")
       } else if(input$example_wf=="toy_sample_emp"){
-        sele_file <- "data/ig_toy_sample_emp/toy_sample_emp.log"
+        paste("data/ig_toy_sample_emp/toy_sample_emp.log")
       } else if(toy_sample_simu == "toy_sample_simu"){
-        sele_file <- "data/ig_toy_sample_emp/toy_sample_simu20.log"
+        paste("data/ig_toy_sample_emp/toy_sample_simu20.log")
       }
-      incProgress(0.5, detail = paste("Doing part", 2))
-      workflow_times(sele_file, interactive=TRUE)
     })
+  })
+  
+  output$wf_times_out <- renderPlotly({
+    workflow_times(button28(), interactive=TRUE)
   })
   
   ## download
