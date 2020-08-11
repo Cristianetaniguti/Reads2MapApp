@@ -6,7 +6,7 @@
 ##'@import dplyr
 ##'@import tidyr
 ##'@import GUSMap
-##'@importFrom plotly plotlyOutput renderPlotly
+##'@importFrom plotly plotlyOutput renderPlotly ggplotly
 ##'@import ggplot2
 ##'
 ##'@export
@@ -50,7 +50,7 @@ OneMapWorkflowsApp <- function(...) {
   
   ## Header
   header <- dashboardHeader(
-    title = "Error workflow results",
+    title = "OneMap Workflows",
     titleWidth = 250)
   
   sidebar <- dashboardSidebar(
@@ -92,7 +92,7 @@ OneMapWorkflowsApp <- function(...) {
     tabItems(
       ##########################################################
       tabItem(tabName = "about",
-              includeMarkdown("docs/about.Rmd")
+              includeMarkdown(system.file("docs", "about.Rmd", package = "OneMapWorkflowsApp"))
       ),
       ####################################################################################
       # tabItem(tabName = "parallel", # Se eu deixo isso funcional o menu deixa de ser dinamico
@@ -116,10 +116,11 @@ OneMapWorkflowsApp <- function(...) {
                      box(width = 12,
                          fluidPage(
                            tags$h4(tags$b("Upload SimulatesReads results:")),
-                           "If you have more than one depth value, submit all files in the same window.",
+                           "If you have more than one depth value, submit all files in the same window.", br(),
                            # Copy the line below to make a file upload manager
-                           fileInput("simulatedreads", label = h6("SimulatedReads_<depth>.tar.gz"), multiple = T),
-                           
+                           #fileInput("simulatedreads", label = h6("SimulatedReads_<depth>.tar.gz"), multiple = T),
+                           tags$strong("This option is not avaible in this server. Please use:"), br(),
+                           tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
                          ),
                          
                          fluidPage(
@@ -138,9 +139,11 @@ OneMapWorkflowsApp <- function(...) {
                          fluidPage(
                            
                            tags$h4(tags$b("Upload EmpiricalReads results:")),
-                           "If you have more than one depth value, submit all files in the same window.",
+                           "If you have more than one depth value, submit all files in the same window.", br(),
                            # Copy the line below to make a file upload manager
-                           fileInput("empiricalreads", label = h6("EmpiricalReads_<depth>.tar.gz"), multiple = T),
+                           #fileInput("empiricalreads", label = h6("EmpiricalReads_<depth>.tar.gz"), multiple = T),
+                           tags$strong("This option is not avaible in this server. Please use:"), br(),
+                           tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
                          ),
                          fluidPage(
                            # Copy the line below to make a select box 
@@ -1492,9 +1495,11 @@ OneMapWorkflowsApp <- function(...) {
               hr(),
               box(width = NULL,
                   box(solidHeader = T,
-                      tags$h4(tags$b("Upload workflow log file")),
+                      tags$h4(tags$b("Upload workflow log file")), br(),
                       # Copy the line below to make a file upload manager
-                      fileInput("wflog", label = h6("slurm_<depth>.out"), multiple = T),
+                      # fileInput("wflog", label = h6("slurm_<depth>.out"), multiple = T),
+                      tags$strong("This option is not avaible in this server. Please use:"), br(),
+                      tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
                   ),
                   box(solidHeader = T,
                       # Copy the line below to make a select box 
@@ -1542,7 +1547,8 @@ OneMapWorkflowsApp <- function(...) {
           } else if(input$example_simu == "acca"){
             data.gz <- c("data/acca/SimulatedReads_10.tar.gz", "data/acca/SimulatedReads_20.tar.gz", "data/acca/SimulatedReads_100.tar.gz" )
           } else if(input$example_simu == "toy_sample"){
-            data.gz <- c("data/ig_toy_sample_simu/SimulatedReads_results_depth10.tar.gz","data/ig_toy_sample_simu/SimulatedReads_results_depth20.tar.gz")
+            data.gz <- c(system.file("ext","toy_sample_simu/SimulatedReads_results_depth10.tar.gz", package = "OneMapWorkflowsApp"),
+                         system.file("ext","toy_sample_simu/SimulatedReads_results_depth20.tar.gz", package = "OneMapWorkflowsApp"))
           }
           path <- unlist(strsplit(data.gz[1], "/"))
           path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
@@ -1569,6 +1575,7 @@ OneMapWorkflowsApp <- function(...) {
         data1 <- data2 <- data3 <- data4 <- data5 <- simu_haplo <- vector()
         data6 <- names_rdatas <- list()
         seeds <- depths <- seeds_choices <- depths_choices <- vector()
+        system("mkdir temp_file_OneMapWorkflowsApp123")
         
         incProgress(0.5, detail = paste("Doing part", 3))
         for(i in 1:length(datas)){
@@ -1580,10 +1587,10 @@ OneMapWorkflowsApp <- function(...) {
             } else if(all(grepl("sequences.llo", datas[[i]]))){
               temp <- readList(datas[[i]][[j]])
               if(j == 1){
-                saveList(temp, file = "data/temp_file/sequences.llo", append = F, compress = T)
+                saveList(temp, file = "temp_file_OneMapWorkflowsApp123/sequences.llo", append = F, compress = T)
                 inds <- rownames(temp[[1]]$data.name$geno)
               } else {
-                saveList(temp, file = "data/temp_file/sequences.llo", append = T, compress = T)
+                saveList(temp, file = "temp_file_OneMapWorkflowsApp123/sequences.llo", append = T, compress = T)
               }
             } else if(all(grepl("choices.RData", datas[[i]]))){
               temp <- load(datas[[i]][[j]])
@@ -1726,7 +1733,7 @@ OneMapWorkflowsApp <- function(...) {
           } else if(input$example_emp == "acca"){
             data.gz <- c("data/ig_acca_emp/EmpiricalReads_results.tar.gz")
           } else if(input$example_emp == "toy_sample"){
-            data.gz <- c("data/ig_toy_sample_emp/EmpiricalReads_results.tar.gz")
+            data.gz <- system.file("ext","toy_sample_emp/EmpiricalReads_results.tar.gz", package = "OneMapWorkflowsApp")
           }
           path <- unlist(strsplit(data.gz[1], "/"))
           path <- paste0(paste0(path[-length(path)], collapse = "/"), "/")
@@ -1748,8 +1755,10 @@ OneMapWorkflowsApp <- function(...) {
           datas[[i]] <- sapply(list_files, "[", i)
         }
         
-        system(paste("mv", datas[[grep("sequences",datas)]], "data/temp_file/"))
-        temp_dat <- readList("data/temp_file/sequences_emp.llo", index = 1)
+        system("mkdir temp_file_OneMapWorkflowsApp1234")
+        
+        system(paste("mv", datas[[grep("sequences",datas)]], "temp_file_OneMapWorkflowsApp1234/"))
+        temp_dat <- readList("temp_file_OneMapWorkflowsApp1234/sequences_emp.llo", index = 1)
         inds <- rownames(temp_dat[[1]]$data.name$geno)
         inds_list <- as.list(1:length(inds))
         names(inds_list) <- paste0(inds, " (", inds, ")")
@@ -2573,7 +2582,7 @@ OneMapWorkflowsApp <- function(...) {
           incProgress(0.5, detail = paste("Doing part", 3))
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList("data/temp_file/sequences.llo", index = idx)
+          data <- readList("temp_file_OneMapWorkflowsApp123/sequences.llo", index = idx)
           data <- data[[1]]
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
@@ -2619,7 +2628,7 @@ OneMapWorkflowsApp <- function(...) {
             data <- datas_simu()[[6]][[temp_n]]
           } else {
             idx <- which(datas_simu()[[8]] == temp_n)
-            data <- readList("data/temp_file/sequences.llo", index = idx)
+            data <- readList("temp_file_OneMapWorkflowsApp123/sequences.llo", index = idx)
             class(data) <- "sequence"
           }
           incProgress(0.5, detail = paste("Doing part", 2))
@@ -2663,7 +2672,7 @@ OneMapWorkflowsApp <- function(...) {
           stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList("data/temp_file/sequences.llo", index = idx)
+          data <- readList("temp_file_OneMapWorkflowsApp123/sequences.llo", index = idx)
           data <- data[[1]]
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
@@ -2733,7 +2742,7 @@ OneMapWorkflowsApp <- function(...) {
             stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
           } else {
             idx <- which(datas_simu()[[8]] == temp_n)
-            data <- readList("data/temp_file/sequences.llo", index = idx)
+            data <- readList("temp_file_OneMapWorkflowsApp123/sequences.llo", index = idx)
             data <- data[[1]]
             class(data) <- "sequence"
             incProgress(0.5, detail = paste("Doing part", 3))
@@ -2778,7 +2787,7 @@ OneMapWorkflowsApp <- function(...) {
           stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList("data/temp_file/sequences.llo", index = idx)
+          data <- readList("temp_file_OneMapWorkflowsApp123/sequences.llo", index = idx)
           data <- data[[1]]
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
@@ -2851,7 +2860,7 @@ OneMapWorkflowsApp <- function(...) {
           stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList("data/temp_file/sequences.llo", index = idx)
+          data <- readList("temp_file_OneMapWorkflowsApp123/sequences.llo", index = idx)
           data <- data[[1]]
           class(data) <- "sequence"
           inds <- 1:data$data.name$n.ind
@@ -2911,7 +2920,7 @@ OneMapWorkflowsApp <- function(...) {
             stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
           } else {
             idx <- which(datas_simu()[[8]] == temp_n)
-            data <- readList("data/temp_file/sequences.llo", index = idx)
+            data <- readList("temp_file_OneMapWorkflowsApp123/sequences.llo", index = idx)
             data <- data[[1]]
             class(data) <- "sequence"
             incProgress(0.5, detail = paste("Doing part", 3))
@@ -3366,7 +3375,7 @@ OneMapWorkflowsApp <- function(...) {
         temp_n <- paste0("map_",input$SNPCall8_emp, "_", input$CountsFrom8_emp, "_", geno, ".RData")
         
         idx <- which(datas_emp()[[6]] == temp_n)
-        data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+        data <- readList("temp_file_OneMapWorkflowsApp1234/sequences_emp.llo", index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
         incProgress(0.5, detail = paste("Doing part", 2))
@@ -3375,7 +3384,7 @@ OneMapWorkflowsApp <- function(...) {
     })
     
     output$heatmaps_emp_out <- renderPlotly({
-      rf_graph_table(button23(), inter = T, html.file = "data/temp_file/temp.html",display = F) 
+      rf_graph_table(button23(), inter = T, html.file = "temp_file_OneMapWorkflowsApp1234/temp.html",display = F) 
     })
     
     ## download
@@ -3407,7 +3416,7 @@ OneMapWorkflowsApp <- function(...) {
           temp_n <- paste0("map_",input$SNPCall8_emp, "_", input$CountsFrom8_emp, "_", geno, ".RData")
           
           idx <- which(datas_emp()[[6]] == temp_n)
-          data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+          data <- readList("temp_file_OneMapWorkflowsApp1234/sequences_emp.llo", index = idx)
           data <- data[[1]]
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 2))
@@ -3445,7 +3454,7 @@ OneMapWorkflowsApp <- function(...) {
         
         incProgress(0.5, detail = paste("Doing part", 3))
         data <-   data.frame(data$mks, data$cm)
-        outfile <- paste0("data/temp_file/temp.", sample(10000,1),".png")
+        outfile <- paste0("temp_file_OneMapWorkflowsApp1234/temp.", sample(10000,1),".png")
         list(data, outfile)
       })
     })
@@ -3492,7 +3501,7 @@ OneMapWorkflowsApp <- function(...) {
           list(data, geno)
         } else {
           idx <- which(datas_emp()[[6]] == temp_n)
-          data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+          data <- readList("temp_file_OneMapWorkflowsApp1234/sequences_emp.llo", index = idx)
           data <- data[[1]]
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
@@ -3544,7 +3553,7 @@ OneMapWorkflowsApp <- function(...) {
             save(data, file=file)
           } else {
             idx <- which(datas_emp()[[6]] == temp_n)
-            data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+            data <- readList("temp_file_OneMapWorkflowsApp1234/sequences_emp.llo", index = idx)
             data <- data[[1]]
             class(data) <- "sequence"
             save(data, file=file)
@@ -3582,7 +3591,7 @@ OneMapWorkflowsApp <- function(...) {
           stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
         } else {
           idx <- which(datas_emp()[[6]] == temp_n)
-          data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+          data <- readList("temp_file_OneMapWorkflowsApp1234/sequences_emp.llo", index = idx)
           data <- data[[1]]
           class(data) <- "sequence"
           data
@@ -3628,7 +3637,7 @@ OneMapWorkflowsApp <- function(...) {
             stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
           } else {
             idx <- which(datas_emp()[[6]] == temp_n)
-            data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+            data <- readList("temp_file_OneMapWorkflowsApp1234/sequences_emp.llo", index = idx)
             data <- data[[1]]
             class(data) <- "sequence"
             p <- plot(progeny_haplotypes(data, ind = as.numeric(input$inds12_emp), most_likely = input$Most_likely12_emp))
@@ -3666,7 +3675,7 @@ OneMapWorkflowsApp <- function(...) {
           stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
         } else {
           idx <- which(datas_emp()[[6]] == temp_n)
-          data <- readList("data/temp_file/sequences_emp.llo", index = idx)
+          data <- readList("temp_file_OneMapWorkflowsApp1234/sequences_emp.llo", index = idx)
           data <- data[[1]]
           class(data) <- "sequence"
           inds <- 1:data$data.name$n.ind
@@ -3691,9 +3700,9 @@ OneMapWorkflowsApp <- function(...) {
         } else if(input$example_wf=="populus_simu"){
           paste("data/ig_populus_simu/depth20_pop50/slurm-67454631.out")
         } else if(input$example_wf=="toy_sample_emp"){
-          paste("data/ig_toy_sample_emp/toy_sample_emp.log")
+          paste(system.file("ext","toy_sample_emp/toy_sample_emp.log", package = "OneMapWorkflowsApp"))
         } else if(toy_sample_simu == "toy_sample_simu"){
-          paste("data/ig_toy_sample_emp/toy_sample_simu20.log")
+          paste(system.file("ext","toy_sample_simu/toy_sample_simu20.log", package = "OneMapWorkflowsApp"))
         }
       })
     })
@@ -3721,6 +3730,11 @@ OneMapWorkflowsApp <- function(...) {
         })
       } 
     )
+    
+    # This code will be run after the client has disconnected
+    session$onSessionEnded(function() {
+      system("rm -r temp_file_OneMapWorkflowsApp123 temp_file_OneMapWorkflowsApp1234")
+    })
   }
   
   # Create Shiny app ----
