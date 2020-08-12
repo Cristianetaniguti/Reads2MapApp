@@ -23,4 +23,5 @@ Imports:
     largeList,
     ggpubr,
     plotly,
-    ggplot2
+    ggplot2,
+    pkgload

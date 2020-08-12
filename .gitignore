@@ -2,5 +2,4 @@
 .Rproj.user
 *~
 .Rhistory
-data/ig*
-data/temp_file
+inst/ext/populus

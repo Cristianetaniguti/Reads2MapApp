@@ -1732,7 +1732,7 @@ OneMapWorkflowsApp <- function(...) {
           path = "data/"
         } else { ######## Available examples
           if(input$example_emp == "populus"){
-            data.gz <- c("data/ig_populus_emp/EmpiricalReads_results.tar.gz")
+            paste(system.file("ext","populus/EmpiricalReads_results.tar.gz", package = "OneMapWorkflowsApp"))
           } else if(input$example_emp == "eucalyptus"){
             data.gz <- c("data/ig_eucalyptus_emp/EmpiricalReads_results.tar.gz")
           } else if(input$example_emp == "acca"){
