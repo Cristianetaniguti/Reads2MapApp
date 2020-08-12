@@ -1752,13 +1752,15 @@ OneMapWorkflowsApp <- function(...) {
         incProgress(0.5, detail = paste("Doing part", 2))
         list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
         list_files <- lapply(list_files, "[", -1)
-        for_rm <- sapply(list_files, "[", -grep("sequences",datas))
+        
         
         # Data
         datas <- list()
         for(i in 1:7){
           datas[[i]] <- sapply(list_files, "[", i)
         }
+        
+        for_rm <- sapply(list_files, "[", -grep("sequences",datas))
         
         temp_dat <- readList(datas[[grep("sequences",datas)]], index = 1)
         inds <- rownames(temp_dat[[1]]$data.name$geno)
