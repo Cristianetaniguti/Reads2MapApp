@@ -8,6 +8,7 @@
 ##'@import GUSMap
 ##'@importFrom plotly plotlyOutput renderPlotly ggplotly
 ##'@import ggplot2
+##'@importFrom irr 
 ##'
 ##'@export
 OneMapWorkflowsApp <- function(...) {
@@ -61,7 +62,7 @@ OneMapWorkflowsApp <- function(...) {
       menuItem("Upload data", icon = icon("upload"), tabName= "upload"),
       menuItem("Simulation results", icon = icon("dot-circle"), tabName= "simulations",
                menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall"),
-               menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage"),
+               #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage"),
                menuSubItem("Filters", icon = icon("circle"), tabName = "filters"),
                menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type"),
                menuSubItem("Times", icon = icon("circle"), tabName = "times"),
@@ -74,7 +75,7 @@ OneMapWorkflowsApp <- function(...) {
                menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts")),
       
       menuItem("Empirical data results", icon = icon("dot-circle" ), tabName = "empirical",
-               menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
+               #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
                menuSubItem("Filters", icon = icon("circle"), tabName = "filters_emp"),
                menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type_emp"),
                menuSubItem("Times", icon = icon("circle"), tabName = "times_emp"),
@@ -83,7 +84,8 @@ OneMapWorkflowsApp <- function(...) {
                menuSubItem("Plotly heatmaps", icon = icon("circle"), tabName = "heatmaps_emp"),
                menuSubItem("Maps", icon = icon("circle"), tabName = "map_emp"),
                menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp"),
-               menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts_emp")),
+               menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts_emp"),
+               menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb_emp")),
       menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times")
     )
   )
@@ -118,17 +120,16 @@ OneMapWorkflowsApp <- function(...) {
                            tags$h4(tags$b("Upload SimulatesReads results:")),
                            "If you have more than one depth value, submit all files in the same window.", br(),
                            # Copy the line below to make a file upload manager
-                           #fileInput("simulatedreads", label = h6("SimulatedReads_<depth>.tar.gz"), multiple = T),
-                           tags$strong("This option is not avaible in this server. Please use:"), br(),
-                           tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
+                           fileInput("simulatedreads", label = h6("SimulatedReads_<depth>.tar.gz"), multiple = T),
+                           #tags$strong("This option is not avaible in this server. Please use:"), br(),
+                           #tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
                          ),
                          
                          fluidPage(
                            # Copy the line below to make a select box 
                            selectInput("example_simu", label = h4(tags$b("SimulatedReads.wdl example results")), 
-                                       choices = list("Populus chromosome 10" = "populus",
-                                                      "Eucalyptus chromosome 10" = "eucalyptus", 
-                                                      "Acca chromosome 10" = "acca",
+                                       choices = list("Populus chromosome 10 pop size 50" = "populus_50",
+                                                      "Populus chromosome 10 pop size 150" = "populus_150",
                                                       "Toy sample" = "toy_sample"), 
                                        selected = "toy_sample"),
                          )
@@ -141,16 +142,14 @@ OneMapWorkflowsApp <- function(...) {
                            tags$h4(tags$b("Upload EmpiricalReads results:")),
                            "If you have more than one depth value, submit all files in the same window.", br(),
                            # Copy the line below to make a file upload manager
-                           #fileInput("empiricalreads", label = h6("EmpiricalReads_<depth>.tar.gz"), multiple = T),
-                           tags$strong("This option is not avaible in this server. Please use:"), br(),
-                           tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
+                           fileInput("empiricalreads", label = h6("EmpiricalReads_<depth>.tar.gz"), multiple = T),
+                           #tags$strong("This option is not avaible in this server. Please use:"), br(),
+                           #tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
                          ),
                          fluidPage(
                            # Copy the line below to make a select box 
                            selectInput("example_emp", label = h4(tags$b("EmpiricalReads.wdl example results")), 
-                                       choices = list("Populus chromosome 10" = "populus", 
-                                                      "Eucalyptus chromosome 10" = "eucalyptus", 
-                                                      "Acca chromosome 10" = "acca",
+                                       choices = list("Populus chromosome 10" = "populus",
                                                       "Toy sample" = "toy_sample"), 
                                        selected = "toy_sample"),
                          )
@@ -171,6 +170,8 @@ OneMapWorkflowsApp <- function(...) {
                        box(
                          width = NULL,
                          plotOutput("disper_depth_out"),
+                         hr(),
+                         tableOutput('disper_depth_cor_out'),
                          actionButton("go1", "Update",icon("refresh")),
                        ),
                        box(
@@ -230,7 +231,9 @@ OneMapWorkflowsApp <- function(...) {
                 column(width = 6,
                        box(
                          width = NULL,
-                         plotOutput("disper_depth2_out"),   
+                         plotOutput("disper_depth2_out"), 
+                         hr(),
+                         tableOutput('disper_depth2_cor_out'),
                          actionButton("go2", "Update",icon("refresh")),
                        ),
                        
@@ -903,19 +906,16 @@ OneMapWorkflowsApp <- function(...) {
                 box(
                   width = NULL,
                   "Estimated number of recombination breakpoints for each individual",br(),
-                  actionButton("go13", "Update",icon("refresh")),
                   hr(),
                   plotOutput("counts_out"),
                   hr(),
                   "Simulated number of recombination breakpoints for each individual", br(),
-                  actionButton("go14", "Update",icon("refresh")),
                   hr(),
                   plotOutput("counts_simu_out"),
                   hr(),
-                  "Perentage of wrong haplotypes", br(),
-                  actionButton("go15", "Update",icon("refresh")),
+                  tableOutput("wrong_haplotypes"),
                   hr(),
-                  textOutput("wrong_haplotypes"),
+                  actionButton("go13", "Update",icon("refresh")),
                   hr(),
                   box(solidHeader = T,
                       radioButtons("ErrorProb13", label = p("Genotyping method"),
@@ -1487,6 +1487,58 @@ OneMapWorkflowsApp <- function(...) {
                 )
               )
       ),
+      ################################################################################3
+      tabItem(tabName = "cmxmb_emp",
+              "The graphic here show the relation between the position of marker in centimorgan and their position in reference genome (Mb).",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("cmxmb_emp_out"),
+                         actionButton("go29", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width = 6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb14_emp", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         )
+                       )
+                ),
+                column(width = 6,
+                       box(width = NULL, solidHeader = T,
+                           #helpText("Select the SNP calling method"),
+                           fluidPage(
+                             checkboxGroupInput("SNPCall14_emp", label = p("SNP calling method"),
+                                                choices = SNPCall_choice,
+                                                selected = unlist(SNPCall_choice)),
+                             hr()
+                           ),
+                           fluidPage(
+                             radioButtons("Global0.05.14_emp", label = p("Error rate"),
+                                          choices = global0.05_choices,
+                                          selected = "FALSE"),
+                             hr()
+                           ), 
+                           fluidPage(
+                             
+                             radioButtons("CountsFrom14_emp", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr(),
+                             div(downloadButton("cmxmb_emp_down"),style="float:right")
+                             # ),
+                           )
+                       )
+                )
+              )
+      ),
       ##############################################################################
       # Workflow times
       ##############################################################################
@@ -1504,13 +1556,11 @@ OneMapWorkflowsApp <- function(...) {
                   box(solidHeader = T,
                       # Copy the line below to make a select box 
                       selectInput("example_wf", label = h4(tags$b("Example")), 
-                                  choices = list("Populus simulation chromosome 10" = "populus_simu",
-                                                 "Eucalyptus simulation chromosome 10" = "eucalyptus_simu", 
-                                                 "Acca simulation chromosome 10" = "acca_simu",
+                                  choices = list("Populus simulation chromosome 10 pop size 50 depth 20" = "populus_simu_pop50_depth20",
+                                                 "Populus simulation chromosome 10 pop size 150 depth 10" = "populus_simu_pop150_depth10",
+                                                 "Populus simulation chromosome 10 pop size 150 depth 5" = "populus_simu_pop150_depth5",
                                                  "Toy sample simulation" = "toy_sample_simu",
                                                  "Populus empirical chromosome 10" = "populus_emp",
-                                                 "Eucalyptus empirical chromosome 10" = "eucalyptus_emp", 
-                                                 "Acca empirical chromosome 10" = "acca_emp",
                                                  "Toy sample empirical" = "toy_sample_emp"), 
                                   selected = "toy_sample_emp"),
                   )
@@ -1540,18 +1590,16 @@ OneMapWorkflowsApp <- function(...) {
           data.gz <- x[,4]
           path = "data/"
         } else { ######## Available examples
-          if(input$example_simu == "populus"){
-            data.gz <- c("data/ig_populus_simu/depth20_pop50/SimulatedReads_results_depth20.tar.gz")
-          } else if(input$example_simu == "eucalyptus"){
-            data.gz <- c("data/eucalyptus/SimulatedReads_10.tar.gz", "data/eucalyptus/SimulatedReads_20.tar.gz", "data/eucalyptus/SimulatedReads_100.tar.gz" )
-          } else if(input$example_simu == "acca"){
-            data.gz <- c("data/acca/SimulatedReads_10.tar.gz", "data/acca/SimulatedReads_20.tar.gz", "data/acca/SimulatedReads_100.tar.gz" )
+          if(input$example_simu == "populus_50"){
+            data.gz <- system.file("ext","simulations/popsize50/SimulatedReads_results_depth20.tar.gz", package = "OneMapWorkflowsApp")
+          } else if(input$example_simu == "populus_150"){
+            data.gz <- c(system.file("ext","simulations/popsize150/SimulatedReads_results_depth10.tar.gz", package = "OneMapWorkflowsApp"),
+                         system.file("ext","simulations/popsize150/SimulatedReads_results_depth5.tar.gz", package = "OneMapWorkflowsApp"))
           } else if(input$example_simu == "toy_sample"){
             data.gz <- c(system.file("ext","toy_sample_simu/SimulatedReads_results_depth10.tar.gz", package = "OneMapWorkflowsApp"),
                          system.file("ext","toy_sample_simu/SimulatedReads_results_depth20.tar.gz", package = "OneMapWorkflowsApp"))
           }
         }
-        
         path_dir <- tempdir()
         list_files <- list()
         incProgress(0, detail = paste("Doing part", 1))
@@ -1732,7 +1780,7 @@ OneMapWorkflowsApp <- function(...) {
           path = "data/"
         } else { ######## Available examples
           if(input$example_emp == "populus"){
-            paste(system.file("ext","populus/EmpiricalReads_results.tar.gz", package = "OneMapWorkflowsApp"))
+            data.gz <- paste(system.file("ext","populus/EmpiricalReads_results.tar.gz", package = "OneMapWorkflowsApp"))
           } else if(input$example_emp == "eucalyptus"){
             data.gz <- c("data/ig_eucalyptus_emp/EmpiricalReads_results.tar.gz")
           } else if(input$example_emp == "acca"){
@@ -1818,16 +1866,52 @@ OneMapWorkflowsApp <- function(...) {
           stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
         }
         
-        datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
+        data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
           filter(SNPCall == input$SNPCall1) %>%
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
           filter(CountsFrom == input$CountsFrom1) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
+        data[,8:9] <- apply(data[,8:9], 2, as.character)
+        data$gabGT[which(data$gabGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
+        data$gabGT[which(data$gabGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
+        data$methGT[which(data$methGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
+        data$methGT[which(data$methGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
+      
+        # Why are there NAs in ref and alt of polyrad?
+        data <- data[-which(is.na(data$ref)),]
+        
+        gab <- as.numeric(factor(data$gabGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt"))) 
+        est <- as.numeric(factor(data$methGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt", "missing")))
+        
+        m <- cbind(gab, est) 
+        kendall.concor <- kendall(m)
+        cor.idx <- cor.test(gab,est, method="kendall", use="pairwise")
+        kappa <- kappa2(m)
+        perc.agree <- agree(m)
+        
+        data1 <- data.frame(c(kendall.concor$value, kendall.concor$p.value), 
+                            c(cor.idx$estimate, cor.idx$p.value),
+                            c(kappa$value, kappa$p.value),
+                            c(round(perc.agree$value,2), "-"))
+        
+        data1 <- cbind(c("value", "p-value"), data1)
+        
+        colnames(data1) <- c("",
+                             "Kendall's coefficient of concordance",
+                             "Kendall's correlation coefficient",
+                             "Kappa statistics",
+                             "Percentage of agreement")
+
+        list(data, data1)
       })
     })
     
     output$disper_depth_out <- renderPlot({
-      errorProb_graph(button1(), input$real1)
+      errorProb_graph(button1()[[1]], input$real1)
+    })
+    
+    output$disper_depth_cor_out <- renderTable({
+      button1()[[2]]
     })
     
     ## download
@@ -1888,11 +1972,47 @@ OneMapWorkflowsApp <- function(...) {
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed2)]) %>%
           filter(CountsFrom == input$CountsFrom2) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed2)])
+        data[,8:9] <- apply(data[,8:9], 2, as.character)
+        data$gabGT[which(data$gabGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
+        data$gabGT[which(data$gabGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
+        data$methGT[which(data$methGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
+        data$methGT[which(data$methGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
+        
+        # Why are there NAs in ref and alt of polyrad?
+        data <- data[-which(is.na(data$ref)),]
+        
+        gab <- as.numeric(factor(data$gabGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt"))) 
+        est <- as.numeric(factor(data$methGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt", "missing")))
+        
+        m <- cbind(gab, est) 
+        kendall.concor <- kendall(m)
+        cor.idx <- cor.test(gab,est, method="kendall", use="pairwise")
+        kappa <- kappa2(m)
+        perc.agree <- agree(m)
+        
+        data1 <- data.frame(c(kendall.concor$value, kendall.concor$p.value), 
+                            c(cor.idx$estimate, cor.idx$p.value),
+                            c(kappa$value, kappa$p.value),
+                            c(round(perc.agree$value,2), "-"))
+        
+        data1 <- cbind(c("value", "p-value"), data1)
+        
+        colnames(data1) <- c("",
+                             "Kendall's coefficient of concordance",
+                             "Kendall's correlation coefficient",
+                             "Kappa statistics",
+                             "Percentage of agreement")
+        
+        list(data, data1)
       })
     })
     
     output$disper_depth2_out <- renderPlot({
-      errorProb_graph(button2(), input$real2)
+      errorProb_graph(button2()[[1]], input$real2)
+    })
+    
+    output$disper_depth2_cor_out <- renderTable({
+      button2()[[2]]
     })
     
     ##################################################################
@@ -2799,92 +2919,55 @@ OneMapWorkflowsApp <- function(...) {
           incProgress(0.5, detail = paste("Doing part", 3))
           inds <- 1:data$data.name$n.ind
           df <- progeny_haplotypes(data, ind = inds, most_likely = T)
-          progeny_haplotypes_counts(df)
+          data1 <- progeny_haplotypes_counts(df)
+          
+          ## Correct
+          sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed13)] & 
+                              datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed13)])
+          
+          sub_dat <- sub_dat[,-c(1,2)]
+          class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
+          data2 <- progeny_haplotypes_counts(x = sub_dat)
+          
+          data1$grp <- unique(data2$grp)
+          temp_list <- merge(data2, data1, by = c("ind", "grp", "homologs"))
+
+          m <- cbind(temp_list[,4], temp_list[,5])
+          kendall.concor <- kendall(m)
+          cor.idx <- cor.test(temp_list[,4],temp_list[,5], method="kendall", use="pairwise")
+          kappa <- kappa2(m)
+          perc.agree <- agree(m)
+          
+          data3 <- data.frame(c(kendall.concor$value, kendall.concor$p.value), 
+                              c(cor.idx$estimate, cor.idx$p.value),
+                              c(kappa$value, kappa$p.value),
+                              c(round(perc.agree$value,2)))
+          
+          data3 <- cbind(c("value", "p-value"), data3)
+          
+          colnames(data3) <- c("",
+                               "Kendall's coefficient of concordance",
+                               "Kendall's correlation coefficient",
+                               "Kappa statistics",
+                               "Percentage of agreement")
+          
+
+          
+          list(data1, data2, data3)
         }
       })
     })
     
     output$counts_out <- renderPlot({
-      plot(button13())
-    })
-    
-    button14 <- eventReactive(input$go14, {
-      withProgress(message = 'Building graphic', value = 0, {
-        sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed13)] & 
-                            datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed13)])
-        
-        sub_dat <- sub_dat[,-c(1,2)]
-        class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
-        progeny_haplotypes_counts(sub_dat)
-      })
+      plot(button13()[[1]])
     })
     
     output$counts_simu_out <- renderPlot({
-      plot(button14())
+      plot(button13()[[2]])
     })
     
-    button15 <- eventReactive(input$go15, {
-      # Correct
-      withProgress(message = 'Building graphic', value = 0, {
-        incProgress(0, detail = paste("Doing part", 1))
-        sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed13)] & 
-                            datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed13)])
-        
-        sub_dat <- sub_dat[,-c(1,2)]
-        class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
-        counts_correct <- progeny_haplotypes_counts(sub_dat)
-        
-        # Estimated
-        incProgress(0.25, detail = paste("Doing part", 2))
-        if(input$Global0.05.13){
-          if( input$ErrorProb13 == "OneMap_version2"){
-            geno <- paste0("default", 0.05)
-          } else if (input$ErrorProb13 == "gusmap"){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } else {
-            geno <- paste0(input$ErrorProb13, 0.05)
-          }
-        } else {
-          if(input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller"){
-            geno <- "default"
-          } else {
-            geno <- input$ErrorProb13
-          }
-        }
-        
-        if(input$CountsFrom13 == "bam" & (input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
-        }
-        
-        temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
-        if(input$fake13 == "with-false") fake <- T else fake <- F
-        temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
-                         "_map_",input$SNPCall13, "_", input$CountsFrom13, "_", geno, "_", fake)
-        
-        incProgress(0.50, detail = paste("Doing part", 3))
-        if(geno == "gusmap"){
-          stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
-        } else {
-          idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList(datas_simu()[[10]], index = idx)
-          data <- data[[1]]
-          class(data) <- "sequence"
-          inds <- 1:data$data.name$n.ind
-          df <- progeny_haplotypes(data, ind = inds, most_likely = T)
-          counts <- progeny_haplotypes_counts(df)
-        }
-        
-        incProgress(0.75, detail = paste("Doing part", 4))
-        
-        counts$grp <- unique(counts_correct$grp)
-        temp_list <- merge(counts_correct, counts, by = c("ind", "grp", "homologs"))
-        wrong_haplotypes <- (sum(temp_list[,4] != temp_list[,5])/(length(inds)*2))*100
-        wrong_haplotypes
-      })
-    })
-    
-    output$wrong_haplotypes <- renderText({
-      paste0(round(button15(),2),"% of the estimated haplotypes are different from simulated and can be considered wrong.")
+    output$wrong_haplotypes <- renderTable({
+      button13()[[3]]
     })
     
     ## download
@@ -3367,8 +3450,8 @@ OneMapWorkflowsApp <- function(...) {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         if(input$Global0.05.8_emp){
-          if(input$ErrorProb8_emp == "OneMap_version2"){
-            geno <- paste0("SNPCaller", 0.05)
+          if(input$ErrorProb8_emp == "OneMap_version2" | input$ErrorProb8_emp == "SNPCaller"){
+            geno <- paste0("default", 0.05)
           } else if (input$ErrorProb8_emp == "gusmap"){
             stop("Gusmap do not build plotly heatmaps. Please, select other option.")
           } else {
@@ -3379,18 +3462,22 @@ OneMapWorkflowsApp <- function(...) {
         }
         
         temp_n <- paste0("map_",input$SNPCall8_emp, "_", input$CountsFrom8_emp, "_", geno, ".RData")
-        
+        incProgress(0.25, detail = paste("Doing part", 2))
         idx <- which(datas_emp()[[6]] == temp_n)
         data <- readList(datas_emp()[[8]], index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
-        incProgress(0.5, detail = paste("Doing part", 2))
+        incProgress(0.5, detail = paste("Doing part", 3))
         data
       })
     })
     
     output$heatmaps_emp_out <- renderPlotly({
-      rf_graph_table(button23(), inter = T, html.file = "temp_file_OneMapWorkflowsApp1234/temp.html",display = F) 
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0.75, detail = paste("Doing part", 4))
+        rf_graph_table(button23(), inter = T, html.file = tempfile(patter="file", fileext = ".html"),display = F) 
+        incProgress(0.85, detail = paste("Almost there", 5))
+      })
     })
     
     ## download
@@ -3696,15 +3783,83 @@ OneMapWorkflowsApp <- function(...) {
     output$counts_emp_out <- renderPlot({
       plot(button27())
     })
+
+    ##################################################################
+    button29 <- eventReactive(input$go29, {
+      
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        if(input$Global0.05.14_emp){
+          geno <- paste0(input$ErrorProb14_emp, 0.05)
+          if(any(input$ErrorProb14_emp %in% "OneMap_version2"))
+            geno[which(input$ErrorProb14_emp == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb14_emp %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb14_emp
+        }
+        
+        data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall14_emp) %>%
+          filter(CountsFrom == input$CountsFrom14_emp) 
+        data$pos <- data$pos/1000 
+        data
+      })
+    })
+    
+    output$cmxmb_emp_out <- renderPlot({
+      ggplot(button29(), aes(x=cm, y=pos)) +
+        geom_point(size=2, shape=20) + facet_grid(SNPCall~GenoCall, scales = "free") +
+        xlab("cM") + ylab("Mb")
+    })
+    
+    ## download
+    output$cmxmb_emp_out_down <- downloadHandler(
+      filename =  function() {
+        paste("cmxmb.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        withProgress(message = 'Building graphic', value = 0, {
+          incProgress(0, detail = paste("Doing part", 1))
+          
+          if(input$Global0.05.14_emp){
+            geno <- paste0(input$ErrorProb14_emp, 0.05)
+            if(any(input$ErrorProb14_emp %in% "OneMap_version2"))
+              geno[which(input$ErrorProb14_emp == "OneMap_version2")] <- "SNPCaller0.05"
+            if(any(input$ErrorProb14_emp %in% "gusmap"))
+              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+          } else {
+            geno <- input$ErrorProb14_emp
+          }
+          
+          data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
+            filter(SNPCall %in% input$SNPCall14_emp) %>%
+            filter(CountsFrom == input$CountsFrom14_emp) 
+          data$pos <- data$pos/1000 
+          
+          p <-  ggplot(data, aes(x=cm, y=pos)) +
+            geom_point(size=2, shape=20) + facet_grid(SNPCall~GenoCall) +
+            xlab("cM") + ylab("Mb")
+          
+          ggsave(file, p, width = 400, height = 200, units="mm")
+        })
+      } 
+    )
     
     #################################
     button28 <- eventReactive(input$go28, {
       withProgress(message = 'Building heatmap', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         if(input$example_wf=="populus_emp"){
-          paste("data/populus/slurm-67440032.out")
-        } else if(input$example_wf=="populus_simu"){
-          paste("data/ig_populus_simu/depth20_pop50/slurm-67454631.out")
+          paste(system.file("ext","populus/maps_emp_populus.log", package = "OneMapWorkflowsApp"))
+        } else if(input$example_wf=="populus_simu_pop50_depth20"){
+          paste(system.file("ext","simulations/popsize50/slurm-67454631_depth20.out", package = "OneMapWorkflowsApp"))
+        } else if(input$example_wf=="populus_simu_pop150_depth10"){
+          paste(system.file("ext","simulations/popsize150/slurm-67465833_depth10.out", package = "OneMapWorkflowsApp"))
+        } else if(input$example_wf=="populus_simu_pop150_depth5"){
+          paste(system.file("ext","simulations/popsize150/slurm-67467383_depth5.out", package = "OneMapWorkflowsApp"))
         } else if(input$example_wf=="toy_sample_emp"){
           paste(system.file("ext","toy_sample_emp/toy_sample_emp.log", package = "OneMapWorkflowsApp"))
         } else if(toy_sample_simu == "toy_sample_simu"){
