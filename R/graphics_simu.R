@@ -129,3 +129,38 @@ filters_graph <- function(data){
     labs(x = "Genotyping method", y = "percent covered") +
     facet_wrap( ~SNPCall, ncol=1, scales = "free", strip.position = "right")
 }
+
+agree_coefs <- function(m, method= "all"){
+  
+  data1 <- data.frame(c("value", "p-value"))
+  
+  if(any(method %in% "kendall.concor") | all(method == "all")){
+    kendall.concor <- kendall(m)
+    data_temp <- data.frame(c(kendall.concor$value, kendall.concor$p.value))
+    colnames(data_temp) <- "Kendall's coefficient of concordance"
+    data1 <- cbind(data1, data_temp)
+  }
+  
+  if(any(method %in% "kendall.corr") | all(method == "all")){
+    kendall.corr <- cor.test(m[,1],m[,2], method="kendall", use="pairwise")
+    data_temp <- data.frame(c(kendall.corr$estimate, kendall.corr$p.value))
+    colnames(data_temp) <- "Kendall's correlation coefficient"
+    data1 <- cbind(data1, data_temp)
+  }
+  
+  if(any(method %in% "kappa") | all(method == "all")){
+    kappa <- kappa2(m)
+    data_temp <- data.frame(c(kappa$value, kappa$p.value))
+    colnames(data_temp) <- "Kappa statistics"
+    data1 <- cbind(data1, data_temp)
+  }
+  perc.agree <- agree(m)
+  
+  data_temp <- data.frame(c(round(perc.agree$value,2), "-"))
+  colnames(data_temp) <- "Percentage of agreement"
+  
+  data1 <- cbind(data1, data_temp)
+  colnames(data1)[1] <- ""
+  
+  return(data1)
+}

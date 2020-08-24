@@ -82,7 +82,7 @@ times_graph_emp <- function(data){
     scale_y_continuous(expand = c(.1,.1)) +
     scale_fill_manual(name="SNP call", values = colors) + 
     labs(x = "Genotyping method", y = "") +
-    facet_grid(key~.)
+    facet_grid(key~., scales = "free")
 }
 
 coverage_graph_emp <- function(data){

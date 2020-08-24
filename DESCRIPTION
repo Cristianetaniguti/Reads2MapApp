@@ -24,4 +24,6 @@ Imports:
     ggpubr,
     plotly,
     ggplot2,
-    pkgload
+    pkgload,
+    config,
+    irr
