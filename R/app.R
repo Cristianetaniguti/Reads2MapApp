@@ -13,6 +13,14 @@
 ##'@export
 OneMapWorkflowsApp <- function(...) {
   ## Permanently choices - If add more softwares in workflow comparision this part requires update
+  overview_emp_choices <- list("n_markers", "redundants", "n_markers_map", "filt_mks",
+                               "map_size", "time", "breakpoints", "mean_break", "se_break")
+  
+  names(overview_emp_choices) <- c("Informative markers in VCF", "Redundant markers", 
+                                   "Mapped markers", "Filtered markers", "Map size (cM)", 
+                                   "Time (s)","Total breakpoints", "Mean breakpoints", 
+                                   "Standard error breakpoints")
+  
   overview_choices <- list("geno", "phases", "marker", "noninfo", "mapsize",
                            "nmarker", "conco_break", "corr_break", "time")
   names(overview_choices) <- c("Kappa's coefficient for genotypes",
@@ -166,7 +174,8 @@ OneMapWorkflowsApp <- function(...) {
                                        choices = list("Populus chromosome 10 with contaminants" = "populus_cont",
                                                       "Populus chromosome 10 without contaminants" = "populus",
                                                       "Eucalyptus chromosome 10" = "eucalyptus",
-                                                      "Toy sample" = "toy_sample"), 
+                                                      "Toy sample" = "toy_sample",
+                                                      "Toy sample with multiallelics" = "toy_sample_multi"), 
                                        selected = "toy_sample"),
                          )
                      )
@@ -187,7 +196,7 @@ OneMapWorkflowsApp <- function(...) {
                          width = NULL,
                          plotOutput("disper_depth_out"),
                          hr(),
-                         dataTableOutput('disper_depth_cor_out'),
+                         tableOutput('disper_depth_cor_out'),
                          actionButton("go1", "Update",icon("refresh")),
                        ),
                        box(
@@ -249,7 +258,7 @@ OneMapWorkflowsApp <- function(...) {
                          width = NULL,
                          plotOutput("disper_depth2_out"), 
                          hr(),
-                         dataTableOutput('disper_depth2_cor_out'),
+                         tableOutput('disper_depth2_cor_out'),
                          actionButton("go2", "Update",icon("refresh")),
                        ),
                        
@@ -1014,8 +1023,23 @@ OneMapWorkflowsApp <- function(...) {
                                               choices = list("Coefficient value" = "value", "p-value" = "p-value"),
                                               selected = "value"),
                        ),  
+                       box(solidHeader = T,
+                           selectInput("overview_depth", label = p("Choose depth for the plot"),
+                                       choices = "This will be updated",
+                                       selected = "This will be updated")
+                       )
                 )
-              )
+              ),
+              fluidRow(
+                column(width = 12, 
+                       box(
+                         width = NULL,
+                         plotOutput("overview_plot_out"),
+                         hr(),
+                         div(downloadButton("overview_plot_down"),style="float:right")
+                       )
+                )
+              ),
       ),
       ##########################################################
       # Empirical
@@ -1631,6 +1655,13 @@ OneMapWorkflowsApp <- function(...) {
                          div(downloadButton("overview_emp_down"),style="float:right")
                        )
                 ),
+                column(width = 12,
+                       box(solidHeader = T,
+                           checkboxGroupInput("over_emp_columns", label = p("Table columns"),
+                                              choices = overview_emp_choices,
+                                              selected = c("n_markers", "redundants")),
+                       )
+                )
               )
       ),
       ##############################################################################
@@ -1684,13 +1715,15 @@ OneMapWorkflowsApp <- function(...) {
         if(!is.null(x)){
           data.gz <- x[,4]
           path = "data/"
-        } else { ######## Available examples
+        } else { ######## Only the toy_sample in the package - the rest in server
           if(input$example_simu == "populus_50"){
-            data.gz <- system.file("ext","simulations/popsize50/SimulatedReads_results_depth20.tar.gz", package = "OneMapWorkflowsApp")
+            data.gz <- "inst/ext/simulations/popsize50/SimulatedReads_results_depth20.tar.gz"
+          } else if(input$example_simu == "populus_200"){
+            
           } else if(input$example_simu == "populus_150"){
-            data.gz <- c(system.file("ext","simulations/popsize150/SimulatedReads_results_depth20.tar.gz", package = "OneMapWorkflowsApp"),
-                         system.file("ext","simulations/popsize150/SimulatedReads_results_depth10.tar.gz", package = "OneMapWorkflowsApp"),
-                         system.file("ext","simulations/popsize150/SimulatedReads_results_depth5.tar.gz", package = "OneMapWorkflowsApp"))
+            data.gz <- c("inst/ext/simulations/popsize150/SimulatedReads_results_depth20.tar.gz",
+                         "inst/ext/simulations/popsize150/SimulatedReads_results_depth10_tworep.tar.gz",
+                         "inst/ext/simulations/popsize150/SimulatedReads_results_depth5_joint2.tar.gz")
           } else if(input$example_simu == "toy_sample"){
             data.gz <- c(system.file("ext","toy_sample_simu/SimulatedReads_results_depth10.tar.gz", package = "OneMapWorkflowsApp"),
                          system.file("ext","toy_sample_simu/SimulatedReads_results_depth20.tar.gz", package = "OneMapWorkflowsApp"))
@@ -1861,6 +1894,11 @@ OneMapWorkflowsApp <- function(...) {
                         label="Depth",
                         choices = depth_choice,
                         selected=unlist(depth_choice)[1])
+      
+      updateSelectInput(session, "overview_depth",
+                        label="Choose depth for the plot",
+                        choices = depth_choice,
+                        selected=unlist(depth_choice)[1])
     })
     
     ####################################################################
@@ -1886,6 +1924,8 @@ OneMapWorkflowsApp <- function(...) {
             data.gz <- c("data/ig_acca_emp/EmpiricalReads_results.tar.gz")
           } else if(input$example_emp == "toy_sample"){
             data.gz <- system.file("ext","toy_sample_emp/EmpiricalReads_results.tar.gz", package = "OneMapWorkflowsApp")
+          } else if(input$example_emp == "toy_sample_multi"){
+            data.gz <- system.file("ext","toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "OneMapWorkflowsApp")
           }
         }
         
@@ -1996,7 +2036,7 @@ OneMapWorkflowsApp <- function(...) {
       errorProb_graph(button1()[[1]], input$real1)
     })
     
-    output$disper_depth_cor_out <- renderDataTable({
+    output$disper_depth_cor_out <- renderTable({
       button1()[[2]]
     })
     
@@ -2083,7 +2123,7 @@ OneMapWorkflowsApp <- function(...) {
       errorProb_graph(button2()[[1]], input$real2)
     })
     
-    output$disper_depth2_cor_out <- renderDataTable({
+    output$disper_depth2_cor_out <- renderTable({
       button2()[[2]]
     })
     
@@ -3176,7 +3216,7 @@ OneMapWorkflowsApp <- function(...) {
         df_breakpoints <- data.frame()
         z <- 1
         for(i in only_true){
-          incProgress(0.2+parts[z], detail = paste("Doing part", 4+z))
+          #incProgress(0.2+parts[z], detail = paste("Doing part", 4+z))
           z <- z + 1
           ID <- unlist(strsplit(datas_simu()[[8]][i], "_"))
           data <- readList(datas_simu()[[10]], index = i)
@@ -3210,6 +3250,10 @@ OneMapWorkflowsApp <- function(...) {
         colnames(df_breakpoints)[6:8] <- c("Value", "Kendall's coefficient of concordance for breakpoints",
                                            "Kendall's coefficient of correlation for breakpoints")
         
+        df_breakpoints$GenoCall <- as.character(df_breakpoints$GenoCall)
+        df_breakpoints$GenoCall[df_breakpoints$GenoCall == "default0.05"] <- "SNPCaller0.05"
+        df_breakpoints$GenoCall[df_breakpoints$GenoCall == "default"] <- "OneMap_version2"
+        
         df_overview <- merge(df_overview, df_breakpoints)
         
         
@@ -3220,6 +3264,26 @@ OneMapWorkflowsApp <- function(...) {
         df_overview
        })
     })
+    
+    output$overview_plot_out <- renderPlot({
+      df_overview <- button31()
+      overview_graph(df_overview, input$overview_depth)
+    }, width = 900, height = 550)
+    
+    
+    ## download
+    output$overview_plot_down <- downloadHandler(
+      filename =  function() {
+        paste("overview.eps")
+      },
+      # content is a function with argument file. content writes the plot to the device
+      content = function(file) {
+        df_overview <- button31()
+        p <- overview_graph(df_overview, input$overview_depth)
+        ggsave(p, filename = file, width = 1000, height = 650)
+      }
+    )    
+    
     
     output$overview_out <- renderDataTable({
       df_overview <- button31()
@@ -3286,7 +3350,7 @@ OneMapWorkflowsApp <- function(...) {
       idx <- c("value", "p-value") %in% input$value
       if(all(idx)){
         df_sele <- data_display
-      } else if (idx[1] == TRUE]){
+      } else if(idx[1] == TRUE){
         df_sele <- data_display %>% filter(Value == "value")
       } else {
         df_sele <- data_display %>% filter(Value == "p-value")
@@ -3314,7 +3378,7 @@ OneMapWorkflowsApp <- function(...) {
           
         } else {
           colnames(df_overview)[7:15] <-  c("geno", "phases", "marker", "noninfo", "mapsize",
-                                           "nmarker", "conco_break", "corr_break", "time")
+                                            "nmarker", "conco_break", "corr_break", "time")
           df_overview$time <- as.numeric(as.character(df_overview$time))
           # Include statistics 
           data_display <- df_overview %>% group_by(depth, SNPCall, GenoCall, CountsFrom, Value) %>%
@@ -3362,12 +3426,13 @@ OneMapWorkflowsApp <- function(...) {
           colnames(data_display)[2:4] <- c("SNP caller","Genotype caller","Read counts from")
         }
         
-        if(input$value == "p-value"){
-          df_sele <- data_display %>% filter(Value == "p-value")
-        } else if (input$value == "value"){
+        idx <- c("value", "p-value") %in% input$value
+        if(all(idx)){
+          df_sele <- data_display
+        } else if(idx[1] == TRUE){
           df_sele <- data_display %>% filter(Value == "value")
         } else {
-          df_sele <- data_display
+          df_sele <- data_display %>% filter(Value == "p-value")
         }
         saveRDS(df_sele, file = file)
       } 
@@ -3849,7 +3914,6 @@ OneMapWorkflowsApp <- function(...) {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0.75, detail = paste("Doing part", 4))
         rf_graph_table(button23(), inter = T, html.file = tempfile(patter="file", fileext = ".html"),display = F) 
-        incProgress(0.85, detail = paste("Almost there", 5))
       })
     })
     
@@ -4257,7 +4321,7 @@ OneMapWorkflowsApp <- function(...) {
         parts <- seq(0.1,0.8, part)[-1]
         
         for(i in 1:length(datas_emp()[[6]])){
-          incProgress(0.1+parts[i], detail = paste("Doing part", 2+i))
+          #incProgress(0.1+parts[i], detail = paste("Doing part", 2+i))
           ID <- gsub(pattern= ".RData", replacement = "", unlist(strsplit(datas_emp()[[6]][i], "_")))[-1]
           data <- readList(datas_emp()[[8]], index = i)
           data <- data[[1]]
@@ -4266,7 +4330,8 @@ OneMapWorkflowsApp <- function(...) {
           df <- progeny_haplotypes(data, ind = inds, most_likely = T)
           counts <- progeny_haplotypes_counts(df)
           
-          breakpoints <- data.frame(SNPCall = ID[1], CountsFrom = ID[2], GenoCall = ID[3], Total_break = sum(counts$counts), 
+          breakpoints <- data.frame(SNPCall = ID[1], CountsFrom = ID[2], GenoCall = ID[3], 
+                                    Total_break = sum(counts$counts), 
                                     mean_break = mean(counts$counts), 
                                     se = sd(counts$counts)/sqrt(length(counts$counts)))
           
@@ -4274,6 +4339,9 @@ OneMapWorkflowsApp <- function(...) {
         }
         
         incProgress(0.9, detail = paste("Doing last part"))
+        df_breakpoints$GenoCall <- as.character(df_breakpoints$GenoCall)
+        df_breakpoints$GenoCall[df_breakpoints$GenoCall == "default0.05"] <- "SNPCaller0.05" # Bug - fix in wdl
+        df_breakpoints$GenoCall[df_breakpoints$GenoCall == "default"] <- "OneMap_version2" # Bug - fix in wdl
         
         df_overview <- merge(df_overview, df_breakpoints)
         colnames(df_overview) <- c("Read counts from","SNP caller","Genotype caller",
@@ -4281,16 +4349,20 @@ OneMapWorkflowsApp <- function(...) {
                                    "Mapped markers", "Filtered markers", "Map size (cM)", 
                                    "Time (s)","Total breakpoints", "Mean breakpoints", 
                                    "Standard error breakpoints")
-        
-        
-        df_overview[,c(2,1,3,4,5,7,6,8,10,11,12,9)]
+        df_overview
       })
     })
     
-    output$overview_emp_out <- renderDataTable(
-      button30(), 
-      options = list(pageLength=5)
-    )
+    output$overview_emp_out <- renderDataTable({
+      data_display <- button30()
+      choices <- c("n_markers", "redundants", "n_markers_map", "filt_mks",
+                   "map_size", "time", "breakpoints", "mean_break", "se_break")
+
+      idx_columns <- choices %in% input$over_emp_columns
+      idx_columns <- c(T,T,T,idx_columns)
+      data_display1 <- data_display[,idx_columns, with=FALSE]
+      data_display1
+    })
     
     ## download
     output$overview_emp_down <- downloadHandler(
@@ -4299,8 +4371,14 @@ OneMapWorkflowsApp <- function(...) {
       },
       # content is a function with argument file. content writes the plot to the device
       content = function(file) {
-        df <- button30()
-        saveRDS(df, file = file)
+        data_display <- button30()
+        choices <- c("n_markers", "redundants", "n_markers_map", "filt_mks",
+                     "map_size", "time", "breakpoints", "mean_break", "se_break")
+        
+        idx_columns <- choices %in% input$over_emp_columns
+        idx_columns <- c(T,T,T,idx_columns)
+        data_display1 <- data_display[,idx_columns, with=FALSE]
+        saveRDS(data_display1, file = file)
       } 
     )    
     

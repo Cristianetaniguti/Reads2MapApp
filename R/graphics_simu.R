@@ -164,3 +164,91 @@ agree_coefs <- function(m, method= "all"){
   
   return(data1)
 }
+
+overview_graph <- function(df_overview, depth, reescale = 30){
+  
+  df_overview$`Number of non-informative markers in map`  <- df_overview$`Number markers in map`*((df_overview$`Percentage of non-informative markers`)/100)
+  df_overview$`Number of informative markers in map` <-  df_overview$`Number markers in map` - df_overview$`Number of non-informative markers in map`
+  
+  y_lim_nmks <- max(df_overview$`Number markers in map`)
+  mycolors <- brewer.pal(12, "Paired")
+  ps <- df_overview %>% filter(depth == depth) %>% filter(Value == "value") %>%
+    rename(., "Genotypes (kappa)" = "Kappa's coefficient for genotypes", 
+           "Phases (kappa)" = "Kappa's coefficient for phases",
+           "Marker types (kappa)" = "Kappa's coefficient for marker types", 
+           "Breakpoints (Kendall)" = "Kendall's coefficient of concordance for breakpoints") %>%
+    gather(key, value, - SNPCall, -GenoCall, -depth, -seed, -CountsFrom, -Value) %>%
+    filter(key %in% c("Genotypes (kappa)", "Phases (kappa)",
+                      "Marker types (kappa)", 
+                      "Breakpoints (Kendall)")) %>%
+    split(., list(.$CountsFrom,.$SNPCall)) %>% 
+    lapply(., function(x) ggplot(x, aes(x=GenoCall, y=as.numeric(value), fill=key)) + 
+             geom_boxplot()+
+             theme(axis.text.x = element_blank()) +
+             scale_fill_manual(values=mycolors[c(2,4,6,8)]) +
+             labs(title= paste(x$SNPCall[1], "-", x$CountsFrom[1]),
+                  x=element_blank(), y = "coef value", fill= "Coeficients") + 
+             # theme(plot.margin = margin(0.1,0.1,0.1,0.5, "cm"),
+             #       legend.key.size = unit(0.8, "cm"),
+             #       legend.key.width = unit(1,"cm")) +
+             scale_y_continuous(sec.axis = sec_axis(~., name = " ")) +
+             ylim(0,1)
+    )
+  
+  n_tot <-df_overview %>% filter(depth == depth) %>% filter(Value == "value") %>%
+    select(SNPCall, GenoCall, seed, CountsFrom, "Number markers in map", "Number of non-informative markers in map") %>%
+    rename(., "Non-informative" = "Number of non-informative markers in map") %>%
+    gather(key, value, - SNPCall, -GenoCall, -seed, -CountsFrom)  %>%
+    group_by(., SNPCall, GenoCall, CountsFrom, key) %>%
+    summarise(mean2 = mean(value),
+              se2 = sd(value)/sqrt(length(value))) %>% ungroup()
+  
+  n_tot$key[n_tot$key == "Number markers in map"] <- "Informative"
+  
+  map_size <- df_overview %>% filter(depth == depth) %>% filter(Value == "value") %>%
+    select(SNPCall, GenoCall, seed, CountsFrom, "Map size (cM)") %>%
+    gather(key3, value, - SNPCall, -GenoCall, -seed, -CountsFrom)  %>%
+    group_by(., SNPCall, GenoCall, CountsFrom, key3) %>%
+    summarise(mean3 = mean(value),
+              se3 = sd(value)/sqrt(length(value))) %>% ungroup() 
+  
+  y_lim_cm <- max(map_size$mean3)
+  
+  ps2 <- df_overview %>% filter(depth == depth) %>% filter(Value == "value") %>%
+    select(SNPCall, GenoCall, seed, CountsFrom,
+           "Number of non-informative markers in map", "Number of informative markers in map") %>%
+    rename(., "Non-informative" = "Number of non-informative markers in map",
+           "Informative"= "Number of informative markers in map") %>%
+    gather(key, value, - SNPCall, -GenoCall, -seed,    -CountsFrom)  %>%
+    group_by(., SNPCall, GenoCall, CountsFrom, key) %>%
+    summarise(mean = mean(value),
+              se = sd(value)/sqrt(length(value))) %>% ungroup() %>%
+    merge(., n_tot) %>%
+    merge(., map_size) %>%
+    split(., list(.$CountsFrom,.$SNPCall)) %>%
+    lapply(., function(z) ggplot(z, aes(x=GenoCall)) + 
+             geom_bar(aes(y= mean*reescale,fill=key),stat="identity", width = 0.8) +
+             ylim(0, y_lim_nmks*reescale) +
+             theme(axis.text.x = element_text(angle = 25, vjust = 1, hjust=1)) +
+             labs(x="Genotype method", y = "Map size (cM)", fill= "Number of markers") +
+             scale_fill_manual(values=mycolors[9:10]) +
+             geom_errorbar(aes(ymin=mean2*reescale-se2*reescale, ymax=mean2*reescale+se2*reescale), width=0.3) + 
+             geom_point(aes(y = mean3, shape= factor(key3), 
+                            colour = factor(key3)), size = 3, colour = mycolors[11]) +
+             labs(shape= "Mean map size") +
+             scale_y_continuous(sec.axis = sec_axis(~./reescale, name = "N markers"), limits = c(0, y_lim_cm)) 
+           # theme(plot.margin = margin(0.1,0.1,0.1,0.5, "cm"),
+           #       legend.key.size = unit(0.8, "cm"),
+           #       legend.key.width = unit(0.5,"cm"))
+    )
+  
+  p1 <- ggarrange(plotlist = list(ps[[1]], ps[[2]]), ncol = 2, common.legend = T, legend = "right")
+  p2 <- ggarrange(plotlist = list(ps2[[1]], ps2[[2]]), ncol = 2, common.legend = T, legend = "right")
+  p3 <- ggarrange(plotlist = list(ps[[3]], ps[[4]]), ncol = 2, common.legend = T, legend = "right")
+  p4 <- ggarrange(plotlist = list(ps2[[3]], ps2[[4]]), ncol = 2, common.legend = T, legend = "right")
+  
+  p_joint <- ggarrange(plotlist = list(p1,p2,p3,p4), ncol = 1)
+  return(p_joint)
+}
+
+
