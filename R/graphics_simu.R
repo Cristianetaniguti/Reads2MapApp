@@ -165,15 +165,14 @@ agree_coefs <- function(m, method= "all"){
   return(data1)
 }
 
-overview_graph <- function(df_overview, depth, reescale = 30){
-  
+overview_graph <- function(df_overview, depth_select, reescale = NULL){
   df_overview$`Number of non-informative markers in map`  <- df_overview$`Number markers in map`*((df_overview$`Percentage of non-informative markers`)/100)
   df_overview$`Number of informative markers in map` <-  df_overview$`Number markers in map` - df_overview$`Number of non-informative markers in map`
   
   y_lim_nmks <- max(df_overview$`Number markers in map`)
   mycolors <- brewer.pal(12, "Paired")
-  ps <- df_overview %>% filter(depth == depth) %>% filter(Value == "value") %>%
-    rename(., "Genotypes (kappa)" = "Kappa's coefficient for genotypes", 
+  ps <- df_overview %>% filter(depth == depth_select) %>% filter(Value == "value") %>%
+    dplyr::rename(., "Genotypes (kappa)" = "Kappa's coefficient for genotypes", 
            "Phases (kappa)" = "Kappa's coefficient for phases",
            "Marker types (kappa)" = "Kappa's coefficient for marker types", 
            "Breakpoints (Kendall)" = "Kendall's coefficient of concordance for breakpoints") %>%
@@ -182,12 +181,12 @@ overview_graph <- function(df_overview, depth, reescale = 30){
                       "Marker types (kappa)", 
                       "Breakpoints (Kendall)")) %>%
     split(., list(.$CountsFrom,.$SNPCall)) %>% 
-    lapply(., function(x) ggplot(x, aes(x=GenoCall, y=as.numeric(value), fill=key)) + 
+    lapply(., function(x) ggplot(x, aes(x=GenoCall, y=as.numeric(value), color = key)) + 
              geom_boxplot()+
              theme(axis.text.x = element_blank()) +
-             scale_fill_manual(values=mycolors[c(2,4,6,8)]) +
+             scale_color_manual(values=mycolors[c(2,4,6,8)]) +
              labs(title= paste(x$SNPCall[1], "-", x$CountsFrom[1]),
-                  x=element_blank(), y = "coef value", fill= "Coeficients") + 
+                  x=element_blank(), y = "coef value", color= "Coeficients") + 
              # theme(plot.margin = margin(0.1,0.1,0.1,0.5, "cm"),
              #       legend.key.size = unit(0.8, "cm"),
              #       legend.key.width = unit(1,"cm")) +
@@ -195,9 +194,9 @@ overview_graph <- function(df_overview, depth, reescale = 30){
              ylim(0,1)
     )
   
-  n_tot <-df_overview %>% filter(depth == depth) %>% filter(Value == "value") %>%
+  n_tot <-df_overview %>% filter(depth == depth_select) %>% filter(Value == "value") %>%
     select(SNPCall, GenoCall, seed, CountsFrom, "Number markers in map", "Number of non-informative markers in map") %>%
-    rename(., "Non-informative" = "Number of non-informative markers in map") %>%
+    dplyr::rename(., "Non-informative" = "Number of non-informative markers in map") %>%
     gather(key, value, - SNPCall, -GenoCall, -seed, -CountsFrom)  %>%
     group_by(., SNPCall, GenoCall, CountsFrom, key) %>%
     summarise(mean2 = mean(value),
@@ -205,7 +204,7 @@ overview_graph <- function(df_overview, depth, reescale = 30){
   
   n_tot$key[n_tot$key == "Number markers in map"] <- "Informative"
   
-  map_size <- df_overview %>% filter(depth == depth) %>% filter(Value == "value") %>%
+  map_size <- df_overview %>% filter(depth == depth_select) %>% filter(Value == "value") %>%
     select(SNPCall, GenoCall, seed, CountsFrom, "Map size (cM)") %>%
     gather(key3, value, - SNPCall, -GenoCall, -seed, -CountsFrom)  %>%
     group_by(., SNPCall, GenoCall, CountsFrom, key3) %>%
@@ -214,10 +213,12 @@ overview_graph <- function(df_overview, depth, reescale = 30){
   
   y_lim_cm <- max(map_size$mean3)
   
-  ps2 <- df_overview %>% filter(depth == depth) %>% filter(Value == "value") %>%
+  if(is.null(reescale)) reescale = y_lim_cm/y_lim_nmks
+  
+  ps2 <- df_overview %>% filter(depth == depth_select) %>% filter(Value == "value") %>%
     select(SNPCall, GenoCall, seed, CountsFrom,
            "Number of non-informative markers in map", "Number of informative markers in map") %>%
-    rename(., "Non-informative" = "Number of non-informative markers in map",
+    dplyr::rename(., "Non-informative" = "Number of non-informative markers in map",
            "Informative"= "Number of informative markers in map") %>%
     gather(key, value, - SNPCall, -GenoCall, -seed,    -CountsFrom)  %>%
     group_by(., SNPCall, GenoCall, CountsFrom, key) %>%

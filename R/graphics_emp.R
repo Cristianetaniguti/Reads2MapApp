@@ -112,3 +112,45 @@ filters_graph_emp <- function(data){
     facet_grid(SNPCall~., scales = "free") +
     theme(axis.text.x = element_text(angle = 35, hjust=1))
 }
+
+
+overview_graph_emp <- function(df_overview, reescale = NULL){
+  map_size <- df_overview %>% rename(., SNPCall = "SNP caller", GenoCall = "Genotype caller", 
+                                     CountsFrom= "Read counts from", 
+                                     map.size = "Map size (cM)") %>%
+    select(., SNPCall, GenoCall, CountsFrom, map.size) %>%
+  gather(key3, value3, - SNPCall, -GenoCall, -CountsFrom)  
+  
+  y_lim_nmks <- max(df_overview$`Mapped markers`)
+  y_lim_cm <- max(df_overview$`Map size (cM)`)
+  if(is.null(reescale)) reescale = y_lim_cm/y_lim_nmks
+  mycolors <- brewer.pal(12, "Paired")
+  
+  ps2 <- df_overview %>% rename(., SNPCall = "SNP caller", GenoCall = "Genotype caller", 
+                                CountsFrom= "Read counts from", 
+                                n.mk = "Mapped markers") %>%
+    select(., SNPCall, GenoCall, CountsFrom, n.mk) %>%
+    gather(key, value, - SNPCall, -GenoCall, -CountsFrom)  %>%
+    group_by(., SNPCall, GenoCall, CountsFrom, key) %>%
+    merge(., map_size) %>%
+    split(., list(.$CountsFrom,.$SNPCall)) %>%
+    lapply(., function(z) ggplot(z, aes(x=GenoCall)) + 
+             geom_bar(aes(y= value*reescale,fill=key),stat="identity", width = 0.8) +
+             ylim(0, y_lim_nmks*reescale) +
+             theme(axis.text.x = element_text(angle = 25, vjust = 1, hjust=1)) +
+             labs(x="Genotype method", y = "Map size (cM)", fill= "Number of markers",
+                  title= paste(z$SNPCall[1], "-", z$CountsFrom[1])) +
+             scale_fill_manual(values=mycolors[9:10]) +
+             geom_point(aes(y = value3, shape= factor(key3), 
+                            colour = factor(key3)), size = 3, colour = mycolors[11]) +
+             labs(shape= "Map size") +
+             scale_y_continuous(sec.axis = sec_axis(~./reescale, name = "N markers"), limits = c(0, y_lim_cm)) 
+           # theme(plot.margin = margin(0.1,0.1,0.1,0.5, "cm"),
+           #       legend.key.size = unit(0.8, "cm"),
+           #       legend.key.width = unit(0.5,"cm"))
+    )
+  
+  p1 <- ggarrange(plotlist = ps2, ncol = 2, nrow = 2, common.legend = T, legend = "right")
+
+  return(p1)
+}
