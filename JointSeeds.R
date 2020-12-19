@@ -10,15 +10,17 @@ source("/home/cristiane/github/errors_workflow/.dockerfiles/onemap/functions_sim
 # From reads_simu
 
 datas <- list()
-datas[[1]] <- c("data1_depths_geno_prob.rds", "")
-datas[[2]] <- c("data2_maps.rds")
-datas[[3]] <- c("data3_filters.rds")
-datas[[4]] <- c("data4_times.rds")
-datas[[5]] <- c("data5_SNPcall_efficiency.rds")
-datas[[6]] <- c("data6_RDatas.llo")
-datas[[7]] <- c("gusmap_RDatas.RData")
-datas[[8]] <- c("names.rds")
-datas[[9]] <- c("67_20_haplo_simu.rds")
+datas[[1]] <- c(paste0("part", 1:3, "/data1_depths_geno_prob.rds"))
+datas[[2]] <- c(paste0("part", 1:3, "/data2_maps.rds"))
+datas[[3]] <- c(paste0("part", 1:3, "/data3_filters.rds"))
+datas[[4]] <- c(paste0("part", 1:3, "/data4_times.rds"))
+datas[[5]] <- c(paste0("part", 1:3, "/data5_SNPcall_efficiency.rds"))
+datas[[6]] <- c(paste0("part", 1:3, "/data6_RDatas.llo"))
+datas[[7]] <- c(paste0("part", 1:3, "/gusmap_RDatas.RData"))
+datas[[8]] <- c(paste0("part", 1:3, "/names.rds"))
+datas[[9]] <- c("part1/29_5_haplo_simu.rds",
+                       "part2/87_5_haplo_simu.rds",
+                       "part3/64_5_haplo_simu.rds")
 
 
 Rdata_lst <- data_lst <- datas_up <- list()
@@ -63,16 +65,16 @@ choices <- result_list[[6]]
 save(choices, file = "choices.RData")
 saveRDS(datas_up[[8]], file = "names.rds")
 
-system("mkdir SimulatedReads_results_depth20")
-system("mv gusmap_RDatas.RData sequences.llo data1.rds data2.rds data3.rds data4.rds data5.rds simu_haplo.rds choices.RData names.rds SimulatedReads_results_depth20")
-system("tar -czvf SimulatedReads_results_depth20.tar.gz SimulatedReads_results_depth20")
+system("mkdir SimulatedReads_results_depth5_multi")
+system("mv gusmap_RDatas.RData sequences.llo data1.rds data2.rds data3.rds data4.rds data5.rds simu_haplo.rds choices.RData names.rds SimulatedReads_results_depth5_multi")
+system("tar -czvf SimulatedReads_results_depth5_multi3rep.tar.gz SimulatedReads_results_depth5_multi")
 
 
 # from SimulationReads
 
-path <- "SimulatedReads_results_depth5_joint"
-path1 <- "part3"
-path_joint <- "SimulatedReads_results_depth5_joint2"
+path <- "SimulatedReads_results_depth5_multi"
+path1 <- "part4"
+path_joint <- "SimulatedReads_results_depth5_multi4rep"
 
 system(paste0("mkdir ", path_joint))
 

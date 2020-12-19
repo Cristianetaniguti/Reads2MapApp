@@ -27,4 +27,5 @@ Imports:
     pkgload,
     config,
     irr,
-    RColorBrewer
+    RColorBrewer,
+    htmlwidgets

@@ -26,73 +26,103 @@ errorProb_graph <- function(data, genotypes){
   }
 }
 
-ind_size_graph <- function(data){
+ind_size_graph <- function(data, data_n){
+  colors_dots <- c("blue", "red", "green")
+  names(colors_dots) <- c( "true markers", "false positives", "multiallelic")
   
-  # colors <- c("#55DDE0", "#33658A", "#006D68", "#F6AE2D", "#F26419")
-  # names(colors) <- levels(data$ErrorProb)
-  
-  colors_dots <- c("blue", "red")
-  names(colors_dots) <- c( "true markers", "false positives")
-  
-  data %>% ggplot(aes(x=GenoCall, y=value)) +
-    geom_boxplot(alpha = 0.6) + 
-    geom_point(position=position_jitterdodge(jitter.width=0.5, dodge.width = 0.5),aes(color = factor(real.mks))) +
-    facet_wrap( SNPCall~key, ncol=1, scales = "free", strip.position = "right") +
+  p1 <- data %>% ggplot() +
+    geom_boxplot(aes(x=GenoCall, y = `diff (cM)`, fill=GenoCall), alpha = 0.6) +
+    geom_point(aes(x=GenoCall, y = `diff (cM)`,color = factor(real.mks)), 
+               position=position_jitterdodge(jitter.width=0.5, dodge.width = 0.5)) +
+    scale_fill_viridis_d() +
+    facet_wrap(SNPCall~., ncol=2, scales = "fixed", strip.position = "top") +
     scale_color_manual("Markers", values = colors_dots) +    
-    labs(x = "Genotyping method", y = "") 
+    guides(fill=FALSE) +
+    theme(
+      axis.title.x = element_blank(),
+      legend.position = "top"
+    )
+  
+  p2 <- data_n %>% ggplot()+
+    geom_bar(aes(x=GenoCall, y=`n markers`, fill=GenoCall), stat = "identity") + 
+    scale_fill_viridis_d() +
+    facet_wrap(.~SNPCall, ncol=2, scales = "fixed", strip.position = "bottom") +
+    labs(x = "Genotyping method") +
+    theme(
+      strip.background = element_blank(),
+      strip.text.x = element_blank(),
+      legend.position = "none",
+    )
+  
+  p1 / p2
 }
 
-all_size_graph <- function(data, stat){
+all_size_graph <- function(data, data_n){
   
-  colors <- rainbow(length(levels(data$SNPCall)))
-  names(colors) <- levels(data$SNPCall)
+  p1 <- data %>% ggplot(aes(x=GenoCall, y=.[[dim(data)[2]]], fill=SNPCall)) +
+    scale_fill_viridis_d(name="SNP call")  +
+    labs(y = colnames(data)[dim(data)[2]]) + 
+    facet_wrap(depth~., ncol=2, scales = "fixed", strip.position = "top") +
+    theme(
+      axis.title.x = element_blank(),
+      legend.position = "top"
+    )
   
-  data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
-    geom_boxplot() + 
-    scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = " ") + 
-    facet_wrap(depth~key, ncol=1, scales = "free", strip.position = "right")
+  p2 <- data_n %>% ggplot(aes(x=GenoCall, y=`n markers`, fill=SNPCall)) +
+    scale_fill_viridis_d(name="SNP call")  +
+    labs(x = "Genotyping method") + 
+    facet_wrap(depth~., ncol=2, scales = "fixed", strip.position = "bottom") +
+    theme(
+      strip.background = element_blank(),
+      strip.text.x = element_blank(),
+      legend.position = "none")
+  
+  n_fam <- length(unique(paste0(data$seed,data$depth)))
+  
+  if(n_fam ==1) {
+    p1 <- p1 + geom_bar(stat="identity", position = "dodge")  
+    p2 <- p2 + geom_bar(stat="identity", position = "dodge")
+  } else {
+    p1 <- p1 + geom_boxplot()
+    p2 <- p2 + geom_boxplot()
+  }
+  
+  p1 / p2  
 }
 
 marker_type_graph <- function(data){
-  
-  colors <- rainbow(4)
-  names(colors) <- levels(data$type)
-  
-  data %>% ggplot(aes(x=GenoCall, y = n, fill=value)) +
-    geom_bar(stat="identity", position=position_dodge())  +
-    scale_fill_manual(name="Marker type", values = colors) + 
-    labs(x = "Genotyping method", y = "Number of markers") +
-    facet_grid(key~SNPCall) 
+  data %>% ggplot(aes(x=real.mks, y = n, fill=value)) +
+    geom_bar(stat="identity")  +
+    scale_fill_viridis_d(name="Marker type") + 
+    labs(x = NULL, y = "Number of markers") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    facet_grid(SNPCall+key~GenoCall) 
 }
 
-
 phases_graph <- function(data){
-  
-  colors <- rainbow(length(levels(data$SNPCall)))
-  names(colors) <- levels(data$SNPCall)
-  
-  data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
-    geom_boxplot()  +
-    scale_fill_manual(name="SNP call", values = colors) + 
+  p <- data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
+    scale_fill_viridis_d(name="SNP call") + 
     labs(x = "Genotyping method", y = "percent of corrected phases") +
     facet_wrap(depth~key, ncol=1, scales = "free", strip.position = "right")
+  
+  n_fam <- length(unique(paste0(data$seed,data$depth)))
+  if(n_fam ==1)   p + geom_bar(stat="identity", position = "dodge")  
+  else p + geom_boxplot()
 }
 
 times_graph <- function(data){
-  
-  colors <- rainbow(length(levels(data$SNPCall)))
-  names(colors) <- levels(data$SNPCall)
   data$value <- as.numeric(data$value)
-  data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
-    geom_boxplot(position=position_dodge())  +
-    scale_fill_manual(name="SNP call", values = colors) + 
+  p <- data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
+    scale_fill_viridis_d(name="SNP call") + 
     labs(x = "Genotyping method", y = "") +
     facet_wrap(depth~key, ncol=1, scales = "free", strip.position = "right")
+  
+  n_fam <- length(unique(paste0(data$seed,data$depth)))
+  if(n_fam ==1)   p + geom_bar(stat="identity", position = "dodge")  
+  else p + geom_boxplot(position=position_dodge())
 }
 
 coverage_graph <- function(data){
-  
   colors <- rainbow(length(levels(data$SNPCall)))
   names(colors) <- levels(data$SNPCall)
   
@@ -104,30 +134,25 @@ coverage_graph <- function(data){
 }
 
 avalSNPs_graph <- function(data){
-  
-  colors <- rainbow(length(levels(data$SNPCall)))
-  names(colors) <- levels(data$SNPCall)
-  
-  data %>% ggplot(aes(x=key, y=value, fill= SNPCall)) +
-    geom_boxplot(position=position_dodge())  +
-    scale_fill_manual(name="SNP call", values = colors) + 
+  p <- data %>% ggplot(aes(x=key, y=value, fill= SNPCall)) +
+    scale_fill_viridis_d(name="SNP call") + 
     labs(x = "Genotyping method", y = "number of markers") + 
     facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right")
+  
+  n_fam <- length(unique(paste0(data$seed,data$depth)))
+  if(n_fam ==1)   p + geom_bar(stat="identity", position = "dodge")  
+  else p + geom_boxplot(position=position_dodge())
 }
 
 filters_graph <- function(data){
+  p <- data %>% ggplot(aes(x= key, y=value, fill= GenoCall)) +
+    scale_fill_viridis_d(name="SNP call") + 
+    labs(x = "Genotyping method", y = "number of markers") +
+    facet_wrap(SNPCall~., ncol=2, scales = "fixed", strip.position = "top")+
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) 
   
-  colors <- rainbow(length(levels(data$GenoCall)))
-  names(colors) <- levels(data$GenoCall)
-  
-  levels(data$GenoCall) <- c(levels(data$GenoCall), "SNP caller genotype")
-  data$GenoCall[data$GenoCall == 'df'] <- 'SNP caller genotype'
-  
-  data %>% ggplot(aes(x= key, y=value, fill= GenoCall)) +
-    geom_boxplot()  +
-    scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = "percent covered") +
-    facet_wrap( ~SNPCall, ncol=1, scales = "free", strip.position = "right")
+  n_fam <- length(unique(paste0(data$seed,data$depth)))
+  if(n_fam ==1)   p + geom_bar(stat="identity", position = "dodge")  else p + geom_boxplot()
 }
 
 agree_coefs <- function(m, method= "all"){
@@ -172,7 +197,7 @@ overview_graph <- function(df_overview, depth_select, reescale = NULL){
   y_lim_nmks <- max(df_overview$`Number markers in map`)
   mycolors <- brewer.pal(12, "Paired")
   ps <- df_overview %>% filter(depth == depth_select) %>% filter(Value == "value") %>%
-    dplyr::rename(., "Genotypes (kappa)" = "Kappa's coefficient for genotypes", 
+    rename(., "Genotypes (kappa)" = "Kappa's coefficient for genotypes", 
            "Phases (kappa)" = "Kappa's coefficient for phases",
            "Marker types (kappa)" = "Kappa's coefficient for marker types", 
            "Breakpoints (Kendall)" = "Kendall's coefficient of concordance for breakpoints") %>%
@@ -196,7 +221,7 @@ overview_graph <- function(df_overview, depth_select, reescale = NULL){
   
   n_tot <-df_overview %>% filter(depth == depth_select) %>% filter(Value == "value") %>%
     select(SNPCall, GenoCall, seed, CountsFrom, "Number markers in map", "Number of non-informative markers in map") %>%
-    dplyr::rename(., "Non-informative" = "Number of non-informative markers in map") %>%
+    rename(., "Non-informative" = "Number of non-informative markers in map") %>%
     gather(key, value, - SNPCall, -GenoCall, -seed, -CountsFrom)  %>%
     group_by(., SNPCall, GenoCall, CountsFrom, key) %>%
     summarise(mean2 = mean(value),
@@ -218,8 +243,8 @@ overview_graph <- function(df_overview, depth_select, reescale = NULL){
   ps2 <- df_overview %>% filter(depth == depth_select) %>% filter(Value == "value") %>%
     select(SNPCall, GenoCall, seed, CountsFrom,
            "Number of non-informative markers in map", "Number of informative markers in map") %>%
-    dplyr::rename(., "Non-informative" = "Number of non-informative markers in map",
-           "Informative"= "Number of informative markers in map") %>%
+    rename(., "Non-informative" = "Number of non-informative markers in map",
+                  "Informative"= "Number of informative markers in map") %>%
     gather(key, value, - SNPCall, -GenoCall, -seed,    -CountsFrom)  %>%
     group_by(., SNPCall, GenoCall, CountsFrom, key) %>%
     summarise(mean = mean(value),
@@ -243,10 +268,22 @@ overview_graph <- function(df_overview, depth_select, reescale = NULL){
            #       legend.key.width = unit(0.5,"cm"))
     )
   
-  p1 <- ggarrange(plotlist = list(ps[[1]], ps[[2]]), ncol = 2, common.legend = T, legend = "right")
-  p2 <- ggarrange(plotlist = list(ps2[[1]], ps2[[2]]), ncol = 2, common.legend = T, legend = "right")
-  p3 <- ggarrange(plotlist = list(ps[[3]], ps[[4]]), ncol = 2, common.legend = T, legend = "right")
-  p4 <- ggarrange(plotlist = list(ps2[[3]], ps2[[4]]), ncol = 2, common.legend = T, legend = "right")
+  ps[[1]] <- ps[[1]] + theme(legend.position = "none")
+  ps[[2]] <- ps[[2]] + theme(legend.position = "none", axis.title.y = element_blank())
+  
+  ps2[[1]] <- ps2[[1]] + theme(legend.position = "none", axis.title.y.right = element_blank(), axis.title.x =  element_blank())
+  ps2[[2]] <- ps2[[2]] + theme(legend.position = "none", axis.title.y.left =  element_blank(), axis.title.x =  element_blank())
+  
+  ps[[3]] <- ps[[3]] + theme(legend.position = "none")
+  ps[[4]] <- ps[[4]] + theme(legend.position = "none", axis.title.y = element_blank())
+  
+  ps2[[3]] <- ps2[[3]] + theme(legend.position = "none", axis.title.y.right = element_blank())
+  ps2[[4]] <- ps2[[4]] + theme(legend.position = "none", axis.title.y.left =  element_blank()) 
+  
+  p1 <- ggarrange(plotlist = list(ps[[1]], ps[[2]]), ncol = 2, common.legend = T, legend = "top")
+  p2 <- ggarrange(plotlist = list(ps2[[1]], ps2[[2]]), ncol = 2)
+  p3 <- ggarrange(plotlist = list(ps[[3]], ps[[4]]), ncol = 2)
+  p4 <- ggarrange(plotlist = list(ps2[[3]], ps2[[4]]), ncol = 2, common.legend = T, legend = "bottom")
   
   p_joint <- ggarrange(plotlist = list(p1,p2,p3,p4), ncol = 1)
   return(p_joint)
