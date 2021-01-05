@@ -97,6 +97,7 @@ OneMapWorkflowsApp <- function(...) {
                menuSubItem("Maps", icon = icon("circle"), tabName = "map"),
                menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo"),
                menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts"),
+               menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb"),
                menuSubItem("Overview", icon = icon("circle"), tabName = "overview")),
       
       menuItem("Empirical data results", icon = icon("dot-circle" ), tabName = "empirical",
@@ -318,6 +319,75 @@ OneMapWorkflowsApp <- function(...) {
                            hr()
                            # ),
                          )
+                       )
+                )
+              )
+      ),
+      ##########################################################
+      tabItem(tabName = "cmxmb",
+              "The scatter plots show the relation between genetic (cM) and physical (MB) distance.",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(
+                         width = NULL,
+                         plotOutput("cmbymb_out"),
+                         actionButton("go_cmbymb", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width=6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb_cmbymb", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05_cmbymb", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ),
+                         #helpText("Select the SNP calling method"),
+                         fluidPage(
+                           checkboxGroupInput("SNPCall_cmbymb", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = unlist(SNPCall_choice)),
+                           hr()
+                         )
+                       )
+                ),
+                column(width=6,
+                       box(width = NULL, solidHeader = TRUE,
+                           #helpText("Select the family seed"),
+                           fluidPage(
+                             selectInput("seed_cmbymb", label = p("Seed"),
+                                         choices = "It will be updated",
+                                         selected = "It will be updated"),
+                             hr()
+                           ),
+                           
+                           #helpText("Read counts from:"),
+                           fluidPage(
+                             
+                             radioButtons("CountsFrom_cmbymb", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr()
+                           ),
+                           
+                           fluidPage(
+                             
+                             radioButtons("fake_cmbymb", label = p("Allow false positives?"),
+                                          choices = fake_choices,
+                                          selected = "without-false"),
+                             hr(),
+                             div(downloadButton("cmbymb_out_down"),style="float:right")
+                             # ),
+                           )
                        )
                 )
               )
@@ -1745,11 +1815,13 @@ OneMapWorkflowsApp <- function(...) {
           } else if(input$example_simu == "populus_200"){
             
           } else if(input$example_simu == "populus_150"){
-            data.gz <- c("inst/ext/simulations/popsize150/biallelics/SimulatedReads_results_depth20.tar.gz",
+            data.gz <- c("inst/ext/simulations/popsize150/biallelics/SimulatedReads_results_depth10.tar.gz",
                          #"inst/ext/simulations/popsize150/biallelics/SimulatedReads_results_depth10_tworep.tar.gz",
                          "inst/ext/simulations/popsize150/biallelics/SimulatedReads_results_depth5_joint2.tar.gz")
           } else if(input$example_simu == "populus_150_multi"){
-            data.gz <- c("inst/ext/simulations/popsize150/multiallelics/SimulatedReads_results_depth5_multi4rep.tar.gz")
+            data.gz <- c("inst/ext/simulations/popsize150/multiallelics/SimulatedReads_results_depth10.tar.gz",
+                         "inst/ext/simulations/popsize150/multiallelics/SimulatedReads_results_depth20.tar.gz")
+            #"inst/ext/simulations/popsize150/multiallelics/SimulatedReads_results_depth5_multi4rep.tar.gz")
           } else if(input$example_simu == "toy_sample"){
             data.gz <- c(#"inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz",
               "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10_cmbymb5.3rate.tar.gz")
@@ -1885,6 +1957,10 @@ OneMapWorkflowsApp <- function(...) {
                         choices = seeds_choice,
                         selected=unlist(seeds_choice)[1])
       
+      updateSelectInput(session, "seed_cmbymb",
+                        label="Seed",
+                        choices = seeds_choice,
+                        selected=unlist(seeds_choice)[1])
       
       updateSelectInput(session, "seed11",
                         label="Seed",
@@ -2039,6 +2115,38 @@ OneMapWorkflowsApp <- function(...) {
     ##################################################################
     # Simulations
     ##################################################################
+    
+    #######################
+    # cM by MB
+    ######################
+    button_cmbymb <- eventReactive(input$go_cmbymb, {
+      withProgress(message = 'Building left graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        if(input$Global0.05_cmbymb){
+          geno <- paste0(input$ErrorProb_cmbymb, 0.05)
+          if(any(input$ErrorProb_cmbymb %in% "OneMap_version2"))
+            geno[which(input$ErrorProb_cmbymb == "OneMap_version2")] <- "SNPCaller0.05"
+          if(any(input$ErrorProb_cmbymb %in% "gusmap"))
+            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+        } else {
+          geno <- input$ErrorProb_cmbymb
+        }
+        datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+          filter(SNPCall %in% input$SNPCall_cmbymb) %>%
+          filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed_cmbymb)]) %>%
+          filter(CountsFrom == input$CountsFrom_cmbymb | 
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed_cmbymb)]) %>%
+          filter(fake == input$fake_cmbymb)  %>% 
+          select(pos, rf, poscM.norm, real.mks, SNPCall, GenoCall) %>%
+          gather(key, value, -pos, -real.mks, -SNPCall, -GenoCall)
+        
+      })
+    })
+    
+    output$cmbymb_out <- renderPlot({
+      cmbymb(button_cmbymb())
+    })
     
     #######################
     # Depth and genotyping

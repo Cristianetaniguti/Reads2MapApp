@@ -289,4 +289,16 @@ overview_graph <- function(df_overview, depth_select, reescale = NULL){
   return(p_joint)
 }
 
+cmbymb <- function(data){
+  data$key <- gsub("poscM.norm", "simulated",data$key)
+  data$key <- gsub("rf", "estimated",data$key)
+  
+  ggplot(data, aes(x=pos/1000000, y=value, color=real.mks)) +
+    geom_point() + 
+    xlab("position (MB)") +
+    ylab("position (cM)") + 
+    guides(color=guide_legend(title="Markers")) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    facet_grid(key~SNPCall+GenoCall, scales = "fixed")
+}
 
