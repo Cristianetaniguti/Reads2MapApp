@@ -14,10 +14,10 @@
 #'@import dplyr
 #'
 #'@examples
-#'
-#' joint_same_depth("depth10_file1/SimulatedReads_results_depth10.tar.gz", 
-#'                  "depth10_file2/SimulatedReads_results_depth10.tar.gz", 
-#'                  out_name = "SimulatedReads_results_depth10_joint")
+#' 
+# joint_same_depth("depth10_file1/SimulatedReads_results_depth10.tar.gz",
+#                  "depth10_file2/SimulatedReads_results_depth10.tar.gz",
+#                  out_name = "SimulatedReads_results_depth10_joint")
 #'
 #'@export
 joint_same_depth <- function(..., out_name = "SimulatedReads_results_joint"){
@@ -47,7 +47,7 @@ joint_same_depth <- function(..., out_name = "SimulatedReads_results_joint"){
   rdatas <- list()
   mk <- 1
   for(j in c(1,7,8)){
-    rdatas[[mk]] <- get(load(datas[[j]][1]))
+    rdatas[[mk]] <- base::get(load(datas[[j]][1]))
     mk <- mk + 1
   }
   
@@ -66,17 +66,17 @@ joint_same_depth <- function(..., out_name = "SimulatedReads_results_joint"){
   
   for(i in 2:unique(lengths(datas))){
     # choices
-    temp <- get(load(datas[[1]][i]))
+    temp <- base::get(load(datas[[1]][i]))
     rdatas[[1]][[2]] <- c(rdatas[[1]][[2]], temp[[2]])
     temp[[3]][1] <- i
     rdatas[[1]][[3]] <- c(rdatas[[1]][[3]], temp[[3]])
     
     # gusmaps
-    temp <- get(load(datas[[7]][i]))
+    temp <- base::get(load(datas[[7]][i]))
     rdatas[[2]] <- c(rdatas[[2]], temp)
     
     # multi_names
-    temp <- get(load(datas[[8]][i]))
+    temp <- base::get(load(datas[[8]][i]))
     rdatas[[3]] <- c(rdatas[[3]], temp)
     
     # datas rds
@@ -92,14 +92,15 @@ joint_same_depth <- function(..., out_name = "SimulatedReads_results_joint"){
   }
   
   # save
-  names <- c("choices.RData", "gusmap_RDatas.RData", "multi_names.RData")
+  names_file <- c("choices.RData", "gusmap_RDatas.RData", "multi_names.RData")
   for(mk in 1:3){
     temp <- rdatas[[mk]]
-    save(temp, file = paste0(out_name, "/",names[mk]))
+    save(temp, file = paste0(out_name, "/",names_file[mk]))
   }
   
+  names_files <- c(paste0("data",1:5, ".rds"), "names.rds","simu_haplo.rds")
   for(mk in 1:7){
-    saveRDS(datas_rds[[mk]], file = paste0(out_name,"/data", mk, ".rds"))
+    saveRDS(datas_rds[[mk]], file = paste0(out_name,"/",names_files[mk]))
   }
   
   system(paste0("tar -czvf ", out_name,".tar.gz ", out_name))

@@ -204,7 +204,6 @@ OneMapWorkflowsApp <- function(...) {
                          width = NULL,
                          plotOutput("disper_depth_out"),
                          hr(),
-                         tableOutput('disper_depth_cor_out'),
                          actionButton("go1", "Update",icon("refresh")),
                        ),
                        box(
@@ -1543,7 +1542,8 @@ OneMapWorkflowsApp <- function(...) {
       tabItem(tabName = "map_emp",
               "On the left, it is plotted the heatmap graphic with recombination fraction varying in color according with the 
             intensity of the linkage. Higher is the recombination fraction hottest is the color. Markers ordered by genome positions are represented in x 
-            and y axis. On the right, the linkage group is plotted with distances between markers proportional to the genetic distances.",
+            and y axis. On the right, the linkage group is plotted with distances between markers proportional to the genetic distances. Pressing the 
+            'Download' button, it will download the RData sequenced resulted from the selected 'Genotype method', 'SNP calling method', 'Error rate' and 'Counts from'.",
               fluidRow(
                 column(width = 8,
                        box(solidHeader = T,
@@ -1827,6 +1827,7 @@ OneMapWorkflowsApp <- function(...) {
               "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10_cmbymb5.3rate.tar.gz")
           } else if(input$example_simu == "toy_sample_multi"){
             data.gz <- c("inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz")
+                         #"inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz")
           }
         }
         path_dir <- tempdir()
@@ -1859,35 +1860,35 @@ OneMapWorkflowsApp <- function(...) {
         for(i in 1:length(datas)){
           for(j in 1:length(datas[[i]])){
             if(all(grepl("gusmap_RDatas.RData", datas[[i]]))){
-              temp <- load(datas[[i]][[j]])
-              temp <- base::get(temp)
-              data6 <- c(data6, temp)
+              temp1 <- load(datas[[i]][[j]])
+              temp1 <- base::get(temp1)
+              data6 <- c(data6, temp1)
             } else if(all(grepl("sequences.llo", datas[[i]]))){
-              temp <- readList(datas[[i]][[j]])
+              temp1 <- readList(datas[[i]][[j]])
               if(j == 1){
-                saveList(temp, file = temp_name, append = F, compress = T)
-                inds <- rownames(temp[[1]]$data.name$geno)
+                saveList(temp1, file = temp_name, append = F, compress = T)
+                inds <- rownames(temp1[[1]]$data.name$geno)
               } else {
-                saveList(temp, file = temp_name, append = T, compress = T)
+                saveList(temp1, file = temp_name, append = T, compress = T)
               }
             } else if(all(grepl("choices.RData", datas[[i]]))){
-              temp <- load(datas[[i]][[j]])
-              temp <- base::get(temp)
-              depths <- c(depths, temp[[1]])
-              seeds <- c(seeds, temp[[2]])
-              seeds_choices <- c(seeds_choices, temp[[3]])
-              depths_choices <- c(depths_choices, temp[[4]])
+              temp1 <- load(datas[[i]][[j]])
+              temp1 <- base::get(temp1)
+              depths <- c(depths, temp1[[1]])
+              seeds <- c(seeds, temp1[[2]])
+              seeds_choices <- c(seeds_choices, temp1[[3]])
+              depths_choices <- c(depths_choices, temp1[[4]])
             } else if(all(grepl("names.rds", datas[[i]]))){
-              temp <-  readRDS(datas[[i]][[j]])
-              names_rdatas <- c(names_rdatas, temp)
+              temp1 <-  readRDS(datas[[i]][[j]])
+              names_rdatas <- c(names_rdatas, temp1)
             } else if(all(grepl("multi_names.RData", datas[[i]]))){
-              temp <- load(datas[[i]][[j]])
-              multi_names <- c(multi_names,base::get(temp))
+              temp1 <- load(datas[[i]][[j]])
+              multi_names <- c(multi_names,base::get(temp1))
             } else {
-              temp <-  readRDS(datas[[i]][[j]])
+              temp1 <-  readRDS(datas[[i]][[j]])
               name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
               name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
-              assign(name_temp, rbind(base::get(name_temp), temp))
+              assign(name_temp, rbind(base::get(name_temp), temp1))
             }
           }
         }
@@ -2176,33 +2177,21 @@ OneMapWorkflowsApp <- function(...) {
           filter(CountsFrom == input$CountsFrom1) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
         data[,8:9] <- apply(data[,8:9], 2, as.character)
-        
-        data$gabGT[which(data$gabGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        data$gabGT[which(data$gabGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
-        data$methGT[which(data$methGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        data$methGT[which(data$methGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
-        
+
         # Why are there NAs in ref and alt of polyrad?
         if(length(which(is.na(data$ref))) > 0)
           data <- data[-which(is.na(data$ref)),]
         
-        gab <- as.numeric(factor(data$gabGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt"))) 
-        est <- as.numeric(factor(data$methGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt", "missing")))
+        # m <- cbind(gab, est) 
+        # 
+        # data1 <- agree_coefs(m, method = "kappa")
         
-        m <- cbind(gab, est) 
-        
-        data1 <- agree_coefs(m, method = "kappa")
-        
-        list(data, data1)
+        list(data)
       })
     })
     
     output$disper_depth_out <- renderPlot({
       errorProb_graph(button1()[[1]], input$real1)
-    })
-    
-    output$disper_depth_cor_out <- renderTable({
-      button1()[[2]]
     })
     
     ## download
@@ -2264,10 +2253,10 @@ OneMapWorkflowsApp <- function(...) {
           filter(CountsFrom == input$CountsFrom2) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed2)])
         data[,8:9] <- apply(data[,8:9], 2, as.character)
-        data$gabGT[which(data$gabGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        data$gabGT[which(data$gabGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
-        data$methGT[which(data$methGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        data$methGT[which(data$methGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
+        # data$gabGT[which(data$gabGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
+        # data$gabGT[which(data$gabGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
+        # data$methGT[which(data$methGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
+        # data$methGT[which(data$methGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
         
         # Why are there NAs in ref and alt of polyrad?
         if(length(which(is.na(data$ref))) > 0)
@@ -3373,10 +3362,10 @@ OneMapWorkflowsApp <- function(...) {
         data <- datas_simu()[[1]]
         data[,8:9] <- apply(datas_simu()[[1]][,8:9], 2, as.character)
         incProgress(0.1, detail = paste("Doing part", 2))
-        data$gabGT[which(data$gabGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        data$gabGT[which(data$gabGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
-        data$methGT[which(data$methGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        data$methGT[which(data$methGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
+        # data$gabGT[which(data$gabGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
+        # data$gabGT[which(data$gabGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
+        # data$methGT[which(data$methGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
+        # data$methGT[which(data$methGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
         
         # Why are there NAs in ref and alt of polyrad?
         if(length(which(is.na(data$ref))) > 0)
@@ -3649,6 +3638,10 @@ OneMapWorkflowsApp <- function(...) {
     ##################################################################
     # Empirical 
     ##################################################################
+    
+    ################
+    # disper_depth
+    ################
     button16 <- eventReactive(input$go16, {
       withProgress(message = 'Building left graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
@@ -3753,6 +3746,10 @@ OneMapWorkflowsApp <- function(...) {
     })
     
     ##################################################################
+    
+    ###########
+    # ind_size
+    ###########
     button18 <- eventReactive(input$go18, {
       
       withProgress(message = 'Building graphic', value = 0, {
@@ -3844,6 +3841,10 @@ OneMapWorkflowsApp <- function(...) {
       } 
     )
     #######################################################################
+    
+    #############
+    # marker_type
+    #############
     button19 <- eventReactive(input$go19, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
@@ -3890,6 +3891,10 @@ OneMapWorkflowsApp <- function(...) {
     )
     
     #######################################################################
+    
+    #########
+    # times
+    #########
     button20 <- eventReactive(input$go20, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
@@ -3980,6 +3985,10 @@ OneMapWorkflowsApp <- function(...) {
       } 
     )
     ####################################################################### 
+    
+    ###########
+    # coverage
+    ###########
     button21 <- eventReactive(input$go21, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
@@ -4029,6 +4038,10 @@ OneMapWorkflowsApp <- function(...) {
       } 
     )
     ##################################################################
+    
+    ##########
+    # filters
+    ##########
     button22 <- eventReactive(input$go22, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
@@ -4102,6 +4115,10 @@ OneMapWorkflowsApp <- function(...) {
       } 
     )
     ##################################################################
+    
+    ###########
+    # heatmaps
+    ###########
     button23 <- eventReactive(input$go23, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
@@ -4175,6 +4192,10 @@ OneMapWorkflowsApp <- function(...) {
     )
     
     ################################################################# 
+    
+    ############
+    # Maps
+    ############
     button24 <- eventReactive(input$go24, {
       withProgress(message = 'Building draw', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
@@ -4220,7 +4241,7 @@ OneMapWorkflowsApp <- function(...) {
       withProgress(message = 'Building heatmap', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         if(input$Global0.05.11_emp){
-          if( input$ErrorProb11_emp == "OneMap_version2"){
+          if(input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller"){
             geno <- paste0("default", 0.05)
           } else if (input$ErrorProb11_emp == "gusmap"){
             stop("Gusmap do not allow to change the error rate. Please, select other option.")
@@ -4228,7 +4249,7 @@ OneMapWorkflowsApp <- function(...) {
             geno <- paste0(input$ErrorProb11_emp, 0.05)
           }
         } else {
-          if( input$ErrorProb11_emp == "OneMap_version2"){
+          if(input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller"){
             geno <- "default"
           } else {
             geno <- input$ErrorProb11_emp
