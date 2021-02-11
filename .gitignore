@@ -2,10 +2,8 @@
 .Rproj.user
 *~
 .Rhistory
-inst/ext/populus
-inst/ext/eucalyptus
+inst/ext/empirical
+inst/ext/pirs_simulations
 inst/ext/simulations
 inst/ext/toy_sample_simu
-inst/ext/simulations_pirs.tar.gz
-Simulations_parts
 for_tests.R

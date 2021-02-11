@@ -3,24 +3,30 @@
 errorProb_graph <- function(data, genotypes){
   
   colors <- c("black", "blue", "red", "green")
-  names(colors) <-  c("missing", "homozygote-alt","homozygote-ref", "heterozygote")
+  names(colors) <-  c("missing", "homozygous-alt","homozygous-ref", "heterozygous")
+  
+  data$pop <- "progeny"
+  data$pop[data$ind %in% c("P1", "P2")] <- "parents"
   
   if(genotypes == "simulated_genotypes"){
     data %>% ggplot(aes(x=ref, y=alt, color=gabGT)) + 
-      geom_point(alpha = 0.3) +
+      geom_point(alpha = 0.3, aes(shape=pop)) +
+      scale_shape_manual(values=c(3, 19))+
       labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
-      scale_colour_manual(name="Genotypes", values = colors) +
+      scale_color_viridis_d() +
       guides(colour = guide_legend(override.aes = list(alpha = 1)))
   }else if(genotypes == "estimated_genotypes"){
     data %>% ggplot(aes(x=ref, y=alt, color=methGT)) + 
-      geom_point(alpha = 0.3) +
+      geom_point(alpha = 0.3, aes(shape=pop)) +
+      scale_shape_manual(values=c(3, 19))+
       labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
-      scale_colour_manual(name="Genotypes", values = colors)+
+      scale_color_viridis_d() +
       guides(colour = guide_legend(override.aes = list(alpha = 1)))
   } else if(genotypes == "estimated_errors"){
     data %>% ggplot(aes(x=ref, y=alt, color=errors)) + 
-      geom_point(alpha = 0.3) +
-      labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
+      geom_point(alpha = 0.3, aes(shape=pop)) +
+      scale_shape_manual(values=c(3, 19))+
+      labs(title= "Depths",x="ref", y = "alt", color="Error rate") +
       scale_colour_gradient(low = "#70ED57", high = "#F62A2C") +
       guides(colour = guide_legend(override.aes = list(alpha = 1)))
   }

@@ -75,7 +75,7 @@ OneMapWorkflowsApp <- function(...) {
   
   ## Header
   header <- dashboardHeader(
-    title = "OneMap Workflows",
+    title = "Reads2Map App",
     titleWidth = 250)
   
   sidebar <- dashboardSidebar(
@@ -132,32 +132,32 @@ OneMapWorkflowsApp <- function(...) {
       # Upload data
       ##########################################################
       tabItem(tabName = "upload",
-              "This shiny app build several graphics using results from OneMap workflows. 
-            If you run the", tags$b("SimulatedReads.wdl"),"and/or EmpiricalReads.wdl workflows you 
-            can upload the outputted data in", tags$b("Upload SimulatedReads outputs"), "and/or",
+              "This shiny app build several graphics using results from Reads2Map workflows. 
+            If you run the", tags$b("SimulatedReads2Map.wdl"),"and/or", tags$b("EmpiricalReads2Map.wdl"), 
+            "workflows you can upload the outputted data in", tags$b("Upload SimulatedReads outputs"), "and/or",
               tags$b("Upload EmpiricalReads outputs"), "sections. If you don't have your own results yet,
-            you can explore the generate to populus dataset (Bioproject PRJNA395), eucalyptus and acca
-            all these results is better explained in the paper. Select the available 
-            example results in", tags$b("SimulatedReads.wdl example results"),"and/or", 
-              tags$b("EmpiricalReads.wdl example results"),".",
+            you can explore the ones generated to populus dataset (Bioproject PRJNA395).
+            Select the available example results in", tags$b("SimulatedReads2Map.wdl example results"),"and/or", 
+              tags$b("EmpiricalReads2Map.wdl example results"),".",
               hr(),
               column(width = 6,
                      box(width = 12,
                          fluidPage(
                            tags$h4(tags$b("Upload SimulatesReads results:")),
-                           "If you have more than one depth value, submit all files in the same window.", br(),
+                           "If you have more than one depth value, submit all them together.", br(),
                            # Copy the line below to make a file upload manager
-                           fileInput("simulatedreads", label = h6("SimulatedReads_<depth>.tar.gz"), multiple = T),
+                           fileInput("simulatedreads", label = h6("SimulatedReads2Map_<depth>.tar.gz"), multiple = T),
                            #tags$strong("This option is not avaible in this server. Please use:"), br(),
                            #tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
                          ),
                          
                          fluidPage(
                            # Copy the line below to make a select box 
-                           selectInput("example_simu", label = h4(tags$b("SimulatedReads.wdl example results")), 
-                                       choices = list("Populus chromosome 10 pop size 50" = "populus_50",
-                                                      "Populus chromosome 10 pop size 150" = "populus_150",
-                                                      "Populus chromosome 10 pop size 150 with multiallelics" = "populus_150_multi",
+                           selectInput("example_simu", label = h4(tags$b("SimulatedReads2Map.wdl example results")), 
+                                       choices = list("Populus 30% of chromosome 10 pop size 200 (RADinitio)" = "populus_200_radinitio",
+                                                      "Populus chromosome 10 pop size 50 (pirs)" = "populus_50_pirs",
+                                                      "Populus chromosome 10 pop size 150 (pirs)" = "populus_150_pirs",
+                                                      "Populus chromosome 10 pop size 150 with multiallelics (pirs)" = "populus_150_multi_pirs",
                                                       "Toy sample" = "toy_sample",
                                                       "Toy sample with multiallelics" = "toy_sample_multi"), 
                                        selected = "toy_sample"),
@@ -168,16 +168,16 @@ OneMapWorkflowsApp <- function(...) {
                      box(width = 12,
                          fluidPage(
                            
-                           tags$h4(tags$b("Upload EmpiricalReads results:")),
-                           "If you have more than one depth value, submit all files in the same window.", br(),
+                           tags$h4(tags$b("Upload EmpiricalReads2Map results:")),
+                           "If you have more than one depth value, submit all them together.", br(),
                            # Copy the line below to make a file upload manager
-                           fileInput("empiricalreads", label = h6("EmpiricalReads_<depth>.tar.gz"), multiple = T),
+                           fileInput("empiricalreads", label = h6("EmpiricalReads2Map_<depth>.tar.gz"), multiple = T),
                            #tags$strong("This option is not avaible in this server. Please use:"), br(),
                            #tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
                          ),
                          fluidPage(
                            # Copy the line below to make a select box 
-                           selectInput("example_emp", label = h4(tags$b("EmpiricalReads.wdl example results")), 
+                           selectInput("example_emp", label = h4(tags$b("EmpiricalReads2Map.wdl example results")), 
                                        choices = list("Populus chromosome 10 with contaminants" = "populus_cont",
                                                       "Populus chromosome 10 " = "populus",
                                                       "Populus chromosome 10 with multiallics" = "populus_multi",
@@ -1810,21 +1810,27 @@ OneMapWorkflowsApp <- function(...) {
           data.gz <- x[,4]
           path = "data/"
         } else { ######## Only the toy_sample in the package - the rest in server
-          if(input$example_simu == "populus_50"){
+          if(input$example_simu == "populus_200_radinitio"){
+            data.gz <- c("inst/ext/simulations/SimulatedReads_results_depth10pop200_joint.tar.gz")
+                         #"inst/ext/simulations/SimulatedReads_results_depth20pop200_joint.tar.gz")
+          } else if(input$example_simu == "populus_200_radinitio_bi"){
+            data.gz <- c("inst/ext/simulations/SimulatedReads_results_depth10pop200_bi_joint.tar.gz",
+                         "inst/ext/simulations/SimulatedReads_results_depth20pop200_bi_joint.tar.gz")
+          } else if(input$example_simu == "populus_50_pirs"){
             data.gz <- "inst/ext/simulations/popsize50/biallelics/SimulatedReads_results_depth20.tar.gz"
-          } else if(input$example_simu == "populus_200"){
+          } else if(input$example_simu == "populus_200_pirs"){
             
-          } else if(input$example_simu == "populus_150"){
-            data.gz <- c("inst/ext/simulations/popsize150/biallelics/SimulatedReads_results_depth10.tar.gz",
+          } else if(input$example_simu == "populus_150_pirs"){
+            data.gz <- c("inst/ext/pirs_simulations/biallelics/SimulatedReads_results_depth10.tar.gz",
                          #"inst/ext/simulations/popsize150/biallelics/SimulatedReads_results_depth10_tworep.tar.gz",
                          "inst/ext/simulations/popsize150/biallelics/SimulatedReads_results_depth5_joint2.tar.gz")
-          } else if(input$example_simu == "populus_150_multi"){
-            data.gz <- c("inst/ext/simulations/popsize150/multiallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/simulations/popsize150/multiallelics/SimulatedReads_results_depth20.tar.gz")
+          } else if(input$example_simu == "populus_150_multi_pirs"){
+            data.gz <- c("inst/ext/pirs_simulations/multiallelics/SimulatedReads_results_depth10.tar.gz",
+                         "inst/ext/pirs_simulations/multiallelics/SimulatedReads_results_depth20.tar.gz")
             #"inst/ext/simulations/popsize150/multiallelics/SimulatedReads_results_depth5_multi4rep.tar.gz")
           } else if(input$example_simu == "toy_sample"){
             data.gz <- c(#"inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz",
-              "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10_cmbymb5.3rate.tar.gz")
+              "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz")
           } else if(input$example_simu == "toy_sample_multi"){
             data.gz <- c("inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz")
                          #"inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz")
@@ -2038,7 +2044,7 @@ OneMapWorkflowsApp <- function(...) {
           path = "data/"
         } else { ######## Available examples
           if(input$example_emp == "populus"){
-            data.gz <- "inst/ext/populus/biallelics/without_contaminants/EmpiricalReads_results.tar.gz"
+            data.gz <- "inst/ext/empirical/populus/multiallelics/EmpiricalReads_results.tar.gz"
           } else  if(input$example_emp == "populus_multi"){
             data.gz <- "inst/ext/populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz"
           } else  if(input$example_emp == "populus_cont"){
@@ -2178,7 +2184,6 @@ OneMapWorkflowsApp <- function(...) {
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
         data[,8:9] <- apply(data[,8:9], 2, as.character)
 
-        # Why are there NAs in ref and alt of polyrad?
         if(length(which(is.na(data$ref))) > 0)
           data <- data[-which(is.na(data$ref)),]
         
@@ -2238,6 +2243,7 @@ OneMapWorkflowsApp <- function(...) {
     button2 <- eventReactive(input$go2, {
       withProgress(message = 'Building right graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
+        
         if(input$Global0.05.2){
           if( input$ErrorProb2 == "OneMap_version2"){
             geno <- paste0("SNPCaller", 0.05)
@@ -2247,29 +2253,33 @@ OneMapWorkflowsApp <- function(...) {
         } else {
           geno <- input$ErrorProb2
         }
+        
+        # The plot with depths does not differentiate fake markers, 
+        # they receive NA value in the simulated genotype field 
+        data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
+          filter(SNPCall == input$SNPCall1) %>%
+          filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
+          filter(CountsFrom == input$CountsFrom1) %>%
+          filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
+        data[,8:9] <- apply(data[,8:9], 2, as.character)
+        
+        if(length(which(is.na(data$ref))) > 0)
+          data <- data[-which(is.na(data$ref)),]
+        
+        
         data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
           filter(SNPCall == input$SNPCall2) %>%
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed2)]) %>%
           filter(CountsFrom == input$CountsFrom2) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed2)])
         data[,8:9] <- apply(data[,8:9], 2, as.character)
-        # data$gabGT[which(data$gabGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        # data$gabGT[which(data$gabGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
-        # data$methGT[which(data$methGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        # data$methGT[which(data$methGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
-        
-        # Why are there NAs in ref and alt of polyrad?
+
         if(length(which(is.na(data$ref))) > 0)
           data <- data[-which(is.na(data$ref)),]
         
-        gab <- as.numeric(factor(data$gabGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt"))) 
-        est <- as.numeric(factor(data$methGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt", "missing")))
+        #data1 <- agree_coefs(m, method = "kappa")
         
-        m <- cbind(gab, est) 
-        
-        data1 <- agree_coefs(m, method = "kappa")
-        
-        list(data, data1)
+        list(data)
       })
     })
     
@@ -2277,9 +2287,9 @@ OneMapWorkflowsApp <- function(...) {
       errorProb_graph(button2()[[1]], input$real2)
     })
     
-    output$disper_depth2_cor_out <- renderTable({
-      button2()[[2]]
-    })
+    # output$disper_depth2_cor_out <- renderTable({
+    #   button2()[[2]]
+    # })
     
     #######################
     # Map size each family
@@ -2973,7 +2983,7 @@ OneMapWorkflowsApp <- function(...) {
     button11 <- eventReactive(input$go11, {
       withProgress(message = 'Building draw', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        
+
         if(input$Global0.05.11){
           if(input$ErrorProb11 == "OneMap_version2"){
             geno <- paste0("SNPCaller", 0.05)
@@ -2986,23 +2996,32 @@ OneMapWorkflowsApp <- function(...) {
           geno <- input$ErrorProb11
         }
         incProgress(0.25, detail = paste("Doing part", 2))
-        data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+        
+        # Bugfix 
+        data <- datas_simu()[[2]]
+        data$fake[which(is.na(data$diff))] <- "with-false"
+        data$fake[which(!is.na(data$diff))] <- "without-false"
+
+        data$real.mks[which(data$real.mks == TRUE)] <- "true markers"
+
+        data <- data %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall11) %>%
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed11)]) %>%
           filter(CountsFrom == input$CountsFrom11) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed11)]) %>%
           filter(fake == input$fake11)
         
+        filename <- paste0(data$SNPCall, "_", data$CountsFrom, "_", data$GenoCall, ".png")
+        filename <- unique(filename)
+        
         incProgress(0.5, detail = paste("Doing part", 3))
         if(input$fake11 == "with-false"){
           false_mks <- as.character(data$mk.name[data$real.mks == "false positives"])
           data <-   data.frame(data$mk.name, data$rf)
-          outfile <- tempfile(pattern="file", fileext = ".png")
         } else {
           data <-   data.frame(data$mk.name, data$rf)
-          outfile <- tempfile(pattern="file", fileext = ".png")
         }
-        list(data,outfile)
+        list(data,filename)
       })
     })
     
@@ -3010,6 +3029,7 @@ OneMapWorkflowsApp <- function(...) {
       if(input$fake11 == "with-false"){
         draw_map2(button11()[[1]], output = button11()[[2]], tag = false_mks, col.tag = "darkblue", pos = T, id = F)  
       } else {
+        cat(button11()[[2]])
         draw_map2(button11()[[1]], output = button11()[[2]])
       }
       
@@ -3017,7 +3037,7 @@ OneMapWorkflowsApp <- function(...) {
            contentType = 'image/png',
            width = 400,
            height = 900)
-    }, deleteFile = TRUE)
+    }, deleteFile = TRUE) # change here
     
     button11.1 <- eventReactive(input$go11.1, {
       withProgress(message = 'Building heatmap', value = 0, {
@@ -3042,20 +3062,21 @@ OneMapWorkflowsApp <- function(...) {
           stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
         }
         
-        temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
+        temp_n <- paste0(result_list[[7]][[1]][as.numeric(input$seed11)])
         if(input$fake11 == "with-false") fake <- T else fake <- F
-        temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
+        temp_n <- paste0(result_list[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
                          "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
-          data <- datas_simu()[[6]][[temp_n]]
+          data <- result_list[[6]][[temp_n]]
           data$rf_2pt()
           incProgress(0.5, detail = paste("Doing part", 3))
         } else {
-          idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList(datas_simu()[[10]], index = idx)
+          idx <- which(result_list[[8]] == temp_n)
+          data <- readList(result_list[[10]], index = idx)
           data <- data[[1]]
+          data <- data[[1]] # Bugfix
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
         }
