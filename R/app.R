@@ -15,7 +15,7 @@
 ##'@importFrom irr kappa2 kendall agree
 ##'
 ##'@export
-OneMapWorkflowsApp <- function(...) {
+Reads2MapApp <- function(...) {
   ## Permanently choices - If add more softwares in workflow comparision this part requires update
   overview_emp_choices <- list("n_markers", "redundants", "n_markers_map", "filt_mks",
                                "map_size", "time", "breakpoints", "mean_break", "se_break")
@@ -75,7 +75,7 @@ OneMapWorkflowsApp <- function(...) {
   
   ## Header
   header <- dashboardHeader(
-    title = "Reads2Map App",
+    title = "Reads2MapApp",
     titleWidth = 250)
   
   sidebar <- dashboardSidebar(
@@ -121,7 +121,7 @@ OneMapWorkflowsApp <- function(...) {
     tabItems(
       ##########################################################
       tabItem(tabName = "about",
-              includeMarkdown(system.file("vignettes", "about.Rmd", package = "OneMapWorkflowsApp"))
+              includeMarkdown(system.file("vignettes", "about.Rmd", package = "Reads2MapApp"))
       ),
       ####################################################################################
       # tabItem(tabName = "parallel", # Se eu deixo isso funcional o menu deixa de ser dinamico
@@ -134,21 +134,22 @@ OneMapWorkflowsApp <- function(...) {
       tabItem(tabName = "upload",
               "This shiny app build several graphics using results from Reads2Map workflows. 
             If you run the", tags$b("SimulatedReads2Map.wdl"),"and/or", tags$b("EmpiricalReads2Map.wdl"), 
-            "workflows you can upload the outputted data in", tags$b("Upload SimulatedReads outputs"), "and/or",
-              tags$b("Upload EmpiricalReads outputs"), "sections. If you don't have your own results yet,
-            you can explore the ones generated to populus dataset (Bioproject PRJNA395).
+            "workflows you can upload the outputted data in", tags$b("Upload SimulatedReads2Map outputs"), "and/or",
+              tags$b("Upload EmpiricalReads2Map outputs"), "sections. If you don't have your own results yet,
+            you can explore the ones generated with populus dataset (Bioproject PRJNA395).
             Select the available example results in", tags$b("SimulatedReads2Map.wdl example results"),"and/or", 
               tags$b("EmpiricalReads2Map.wdl example results"),".",
               hr(),
               column(width = 6,
                      box(width = 12,
                          fluidPage(
-                           tags$h4(tags$b("Upload SimulatesReads results:")),
+                           tags$h4(tags$b("Upload SimulatesReads2Map results:")),
                            "If you have more than one depth value, submit all them together.", br(),
                            # Copy the line below to make a file upload manager
                            fileInput("simulatedreads", label = h6("SimulatedReads2Map_<depth>.tar.gz"), multiple = T),
-                           #tags$strong("This option is not avaible in this server. Please use:"), br(),
-                           #tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
+                           tags$strong("To not overload our server, we limited the upload size to 500MB."), br(), 
+                           "If your results have larger size, please run the app locally using:", br(),
+                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')")
                          ),
                          
                          fluidPage(
@@ -171,9 +172,10 @@ OneMapWorkflowsApp <- function(...) {
                            tags$h4(tags$b("Upload EmpiricalReads2Map results:")),
                            "If you have more than one depth value, submit all them together.", br(),
                            # Copy the line below to make a file upload manager
-                           fileInput("empiricalreads", label = h6("EmpiricalReads2Map_<depth>.tar.gz"), multiple = T),
-                           #tags$strong("This option is not avaible in this server. Please use:"), br(),
-                           #tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
+                           fileInput("empiricalreads", label = h6("EmpiricalReads2Map_<depth>.tar.gz"), multiple = T, accept = ".tar.gz"),
+                           tags$strong("To not overload our server, we limited the upload size to 500MB."), br(), 
+                           "If your results have larger size, please run the app locally using:", br(),
+                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')")
                          ),
                          fluidPage(
                            # Copy the line below to make a select box 
@@ -1768,7 +1770,7 @@ OneMapWorkflowsApp <- function(...) {
                         # Copy the line below to make a file upload manager
                         # fileInput("wflog", label = h6("slurm_<depth>.out"), multiple = T),
                         tags$strong("This option is not avaible in this server. Please use:"), br(),
-                        tags$code("runGitHub('Cristianetaniguti/OneMapWorkflowsApp')")
+                        tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')")
                     ),
                     box(solidHeader = T,
                         # Copy the line below to make a select box 
@@ -1799,6 +1801,7 @@ OneMapWorkflowsApp <- function(...) {
   
   ## Define server logic required to draw a histogram ----
   server <- function(input, output,session) {
+    options(shiny.maxRequestSize=500*1024^2)
     ##################################################
     # Simulations - rearranging data
     ##################################################
@@ -1833,7 +1836,7 @@ OneMapWorkflowsApp <- function(...) {
               "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz")
           } else if(input$example_simu == "toy_sample_multi"){
             data.gz <- c("inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz")
-                         #"inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz")
+                         "inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz")
           }
         }
         path_dir <- tempdir()
@@ -4667,34 +4670,34 @@ OneMapWorkflowsApp <- function(...) {
         # Empiricals
         ## Populus snpcalling
         if(input$example_wf=="populus_map"){
-          paste(system.file("ext","populus/biallelics/slurm-67440032_snpcalling_popu.log", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","populus/biallelics/slurm-67440032_snpcalling_popu.log", package = "Reads2MapApp"))
           
           ## Populus maps
         } else if(input$example_wf=="populus_emp_cont"){
-          paste(system.file("ext","populus/biallelics/with_contaminants/maps_emp_populus.log", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","populus/biallelics/with_contaminants/maps_emp_populus.log", package = "Reads2MapApp"))
         } else if(input$example_wf=="populus_emp"){
-          paste(system.file("ext","populus/biallelics/without_contaminants/populus_rmind.log", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","populus/biallelics/without_contaminants/populus_rmind.log", package = "Reads2MapApp"))
           
           ## Eucalyptus snpcalling
         } else if(input$example_wf=="eucalyptus_snpcalling"){
-          paste(system.file("ext","populus/biallelics/slurm-67472436_snpcalling_euc.log", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","populus/biallelics/slurm-67472436_snpcalling_euc.log", package = "Reads2MapApp"))
           
           ## Eucalyptus maps
         } else if(input$example_wf=="eucalyptus_map"){
-          paste(system.file("ext","eucalyptus/biallelics/euc.log", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","eucalyptus/biallelics/euc.log", package = "Reads2MapApp"))
           
           # Simulations
           ## pop size 50
         } else if(input$example_wf=="populus_simu_pop50_depth20"){
-          paste(system.file("ext","simulations/popsize50/biallelics/slurm-67454631_depth20.out", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","simulations/popsize50/biallelics/slurm-67454631_depth20.out", package = "Reads2MapApp"))
         } else if(input$example_wf=="populus_simu_pop150_depth10"){
-          paste(system.file("ext","simulations/popsize150/biallelics/slurm-67465833_depth10.out", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","simulations/popsize150/biallelics/slurm-67465833_depth10.out", package = "Reads2MapApp"))
         } else if(input$example_wf=="populus_simu_pop150_depth5"){
-          paste(system.file("ext","simulations/popsize150/biallelics/slurm-67467383_depth5.out", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","simulations/popsize150/biallelics/slurm-67467383_depth5.out", package = "Reads2MapApp"))
         } else if(input$example_wf=="toy_sample_emp"){
-          paste(system.file("ext","toy_sample_emp/biallelics/toy_sample_emp.log", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","toy_sample_emp/biallelics/toy_sample_emp.log", package = "Reads2MapApp"))
         } else if(toy_sample_simu == "toy_sample_simu"){
-          paste(system.file("ext","toy_sample_simu/biallelics/toy_sample_simu20.log", package = "OneMapWorkflowsApp"))
+          paste(system.file("ext","toy_sample_simu/biallelics/toy_sample_simu20.log", package = "Reads2MapApp"))
         }
       })
     })
@@ -4713,34 +4716,34 @@ OneMapWorkflowsApp <- function(...) {
         withProgress(message = 'Building graphic', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
           if(input$example_wf=="populus_map"){
-            sele_file <- paste(system.file("ext","populus/biallelics/slurm-67440032_snpcalling_popu.log", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","populus/biallelics/slurm-67440032_snpcalling_popu.log", package = "Reads2MapApp"))
             
             ## Populus maps
           } else if(input$example_wf=="populus_emp_cont"){
-            sele_file <- paste(system.file("ext","populus/biallelics/with_contaminants/maps_emp_populus.log", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","populus/biallelics/with_contaminants/maps_emp_populus.log", package = "Reads2MapApp"))
           } else if(input$example_wf=="populus_emp"){
-            sele_file <- paste(system.file("ext","populus/biallelics/without_contaminants/populus_rmind.log", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","populus/biallelics/without_contaminants/populus_rmind.log", package = "Reads2MapApp"))
             
             ## Eucalyptus snpcalling
           } else if(input$example_wf=="eucalyptus_snpcalling"){
-            sele_file <- paste(system.file("ext","populus/biallelics/slurm-67472436_snpcalling_euc.log", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","populus/biallelics/slurm-67472436_snpcalling_euc.log", package = "Reads2MapApp"))
             
             ## Eucalyptus maps
           } else if(input$example_wf=="eucalyptus_map"){
-            sele_file <- paste(system.file("ext","eucalyptus/biallelics/euc.log", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","eucalyptus/biallelics/euc.log", package = "Reads2MapApp"))
             
             # Simulations
             ## pop size 50
           } else if(input$example_wf=="populus_simu_pop50_depth20"){
-            sele_file <- paste(system.file("ext","simulations/popsize50/biallelics/slurm-67454631_depth20.out", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","simulations/popsize50/biallelics/slurm-67454631_depth20.out", package = "Reads2MapApp"))
           } else if(input$example_wf=="populus_simu_pop150_depth10"){
-            sele_file <- paste(system.file("ext","simulations/popsize150/biallelics/slurm-67465833_depth10.out", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","simulations/popsize150/biallelics/slurm-67465833_depth10.out", package = "Reads2MapApp"))
           } else if(input$example_wf=="populus_simu_pop150_depth5"){
-            sele_file <- paste(system.file("ext","simulations/popsize150/biallelics/slurm-67467383_depth5.out", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","simulations/popsize150/biallelics/slurm-67467383_depth5.out", package = "Reads2MapApp"))
           } else if(input$example_wf=="toy_sample_emp"){
-            sele_file <- paste(system.file("ext","toy_sample_emp/biallelics/toy_sample_emp.log", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","toy_sample_emp/biallelics/toy_sample_emp.log", package = "Reads2MapApp"))
           } else if(toy_sample_simu == "toy_sample_simu"){
-            sele_file <- paste(system.file("ext","toy_sample_simu/biallelics/toy_sample_simu20.log", package = "OneMapWorkflowsApp"))
+            sele_file <- paste(system.file("ext","toy_sample_simu/biallelics/toy_sample_simu20.log", package = "Reads2MapApp"))
           }
           p <-workflow_times(sele_file, interactive = T)
           saveWidget(p, file = file)

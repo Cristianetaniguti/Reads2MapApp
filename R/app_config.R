@@ -5,7 +5,7 @@
 #' 
 #' @noRd
 app_sys <- function(...){
-  system.file(..., package = "OneMapWorkflowsApp")
+  system.file(..., package = "Reads2MapApp")
 }
 
 

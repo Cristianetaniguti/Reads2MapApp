@@ -19,4 +19,4 @@ ADD . /build_zone
 WORKDIR /build_zone
 RUN R -e 'remotes::install_local(upgrade="never")'
 EXPOSE 80
-CMD R -e "options('shiny.port'=80,shiny.host='0.0.0.0');OneMapWorkflowsApp::run_app()"
+CMD R -e "options('shiny.port'=80,shiny.host='0.0.0.0');Reads2MapApp::run_app()"

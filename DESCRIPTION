@@ -1,5 +1,5 @@
-Package: OneMapWorkflowsApp
-Title: OneMao Workflows App
+Package: Reads2Map
+Title: Reads2Map Workflows App
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Cristiane Hayumi",
@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "chtaniguti@usp.br",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: Build graphics for OneMap Workflows results.
+Description: Build graphics for Reads2Map results.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -26,6 +26,6 @@ Imports:
     ggplot2,
     pkgload,
     config,
-    irr,
+    vroom,
     RColorBrewer,
     htmlwidgets

@@ -1,6 +1,6 @@
-# OneMap Workflows App
+# Reads2Map App
 
-Shiny app to present OneMap Workflows results in graphics. Here you can see:
+Shiny app to present Reads2Map Workflows results in graphics. Here you can see:
 
 ## SimulatedReads results
 
@@ -34,7 +34,7 @@ You can run the shiny app with:
 
 ```
 library(shiny)
-runGitHub("Cristianetaniguti/OneMapWorkflowsApp)
+runGitHub("Cristianetaniguti/Reads2MapApp)
 ```
 
 Acess [here]() to see examples with populus, eucalyptus and acca maps.
