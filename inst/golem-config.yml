@@ -1,5 +1,5 @@
 default:
-  golem_name: Reads2Map
+  golem_name: Reads2MapApp
   golem_version: 0.0.0.9000
   app_prod: no
 production:

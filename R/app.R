@@ -11,6 +11,7 @@
 ##'@import ggplot2
 ##'@import ggpubr
 ##'@import RColorBrewer
+##'@import vroom
 ##'@importFrom htmlwidgets saveWidget
 ##'@importFrom irr kappa2 kendall agree
 ##'
@@ -57,14 +58,9 @@ Reads2MapApp <- function(...) {
   CountsFrom_choice <- list("bam"="bam",
                             "vcf"="vcf")
   
-  stats_choice <- list("mean", "median", "var", "total", "total_size")
+  stats_choice <- list("euclidean_dist", "mean", "median", "var", "total", "total_size")
   names(stats_choice) <- c("mean", "median", "var", "total", "total size")
-  avalSNPs_choice <- list("(1)", "(2)", "(3)", "(4)", "(5)")
-  names(avalSNPs_choice) <- c("number of simulated SNPs (1)", 
-                              "number of SNPs identified (2)", 
-                              "number of correctly identified SNPs (3)",
-                              "number of correctly identified reference allele (4)",
-                              "number of correctly identified alternative allele (5)")
+  
   fake_choices <- list("with-false", "without-false")
   names(fake_choices) <- c("yes", "no")
   
@@ -134,7 +130,7 @@ Reads2MapApp <- function(...) {
       tabItem(tabName = "upload",
               "This shiny app build several graphics using results from Reads2Map workflows. 
             If you run the", tags$b("SimulatedReads2Map.wdl"),"and/or", tags$b("EmpiricalReads2Map.wdl"), 
-            "workflows you can upload the outputted data in", tags$b("Upload SimulatedReads2Map outputs"), "and/or",
+              "workflows you can upload the outputted data in", tags$b("Upload SimulatedReads2Map outputs"), "and/or",
               tags$b("Upload EmpiricalReads2Map outputs"), "sections. If you don't have your own results yet,
             you can explore the ones generated with populus dataset (Bioproject PRJNA395).
             Select the available example results in", tags$b("SimulatedReads2Map.wdl example results"),"and/or", 
@@ -544,8 +540,6 @@ Reads2MapApp <- function(...) {
                          width = NULL,
                          plotOutput("marker_type_out"),
                          hr(),
-                         dataTableOutput("marker_type_df_out"),
-                         hr(),
                          actionButton("go5", "Update",icon("refresh")),
                        )
                 ),
@@ -589,6 +583,19 @@ Reads2MapApp <- function(...) {
                              hr(),
                              div(downloadButton("marker_type_out_down"),style="float:right")
                            )
+                       )
+                ),
+                column(width = 12,
+                       "Biallelic markers", hr(),
+                       box(
+                         width = NULL,
+                         plotOutput("type_prob_bi_out"),
+                         hr(),
+                       ),
+                       "Multiallelic markers",hr(),
+                       box(
+                         width = NULL,
+                         plotOutput("type_prob_multi_out"),
                        )
                 )
               )
@@ -800,18 +807,6 @@ Reads2MapApp <- function(...) {
                          width = NULL,
                          plotOutput("snpcall_out"),    
                          actionButton("go9", "Update",icon("refresh")),
-                       )
-                ),
-                
-                column(width = 6,
-                       box(
-                         width = NULL, solidHeader = TRUE,
-                         fluidPage(
-                           checkboxGroupInput("avalSNPs1", label = p("Options"),
-                                              choices = avalSNPs_choice,
-                                              selected = unlist(avalSNPs_choice)),
-                           hr()
-                         )
                        )
                 ),
                 column(width = 6,
@@ -1813,29 +1808,17 @@ Reads2MapApp <- function(...) {
           data.gz <- x[,4]
           path = "data/"
         } else { ######## Only the toy_sample in the package - the rest in server
-          if(input$example_simu == "populus_200_radinitio"){
-            data.gz <- c("inst/ext/simulations/SimulatedReads_results_depth10pop200_joint.tar.gz")
-                         #"inst/ext/simulations/SimulatedReads_results_depth20pop200_joint.tar.gz")
-          } else if(input$example_simu == "populus_200_radinitio_bi"){
-            data.gz <- c("inst/ext/simulations/SimulatedReads_results_depth10pop200_bi_joint.tar.gz",
-                         "inst/ext/simulations/SimulatedReads_results_depth20pop200_bi_joint.tar.gz")
-          } else if(input$example_simu == "populus_50_pirs"){
-            data.gz <- "inst/ext/simulations/popsize50/biallelics/SimulatedReads_results_depth20.tar.gz"
-          } else if(input$example_simu == "populus_200_pirs"){
-            
-          } else if(input$example_simu == "populus_150_pirs"){
-            data.gz <- c("inst/ext/pirs_simulations/biallelics/SimulatedReads_results_depth10.tar.gz",
-                         #"inst/ext/simulations/popsize150/biallelics/SimulatedReads_results_depth10_tworep.tar.gz",
-                         "inst/ext/simulations/popsize150/biallelics/SimulatedReads_results_depth5_joint2.tar.gz")
-          } else if(input$example_simu == "populus_150_multi_pirs"){
-            data.gz <- c("inst/ext/pirs_simulations/multiallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/pirs_simulations/multiallelics/SimulatedReads_results_depth20.tar.gz")
-            #"inst/ext/simulations/popsize150/multiallelics/SimulatedReads_results_depth5_multi4rep.tar.gz")
+          if(input$example_simu == "populus_200_bi_radinitio"){
+            data.gz <- c("inst/ext/simulations/SimulatedReads_results_depth10pop200_bi_up.tar.gz",
+                         "inst/ext/simulations/SimulatedReads_results_depth20pop200_bi_up.tar.gz")
+          } else if(input$example_simu == "populus_200_multi_radinitio"){
+            data.gz <- c("inst/ext/simulations/SimulatedReads_results_depth10pop200_multi_up.tar.gz",
+                         "inst/ext/simulations/SimulatedReads_results_depth20pop200_multi_up.tar.gz")
           } else if(input$example_simu == "toy_sample"){
             data.gz <- c(#"inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz",
               "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz")
           } else if(input$example_simu == "toy_sample_multi"){
-            data.gz <- c("inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz")
+            data.gz <- c("inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz",
                          "inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz")
           }
         }
@@ -1860,9 +1843,10 @@ Reads2MapApp <- function(...) {
         }
         
         ## Tables
-        data1 <- data2 <- data3 <- data4 <- data5 <- simu_haplo <- vector()
-        data6 <- names_rdatas <- multi_names <- list()
-        seeds <- depths <- seeds_choices <- depths_choices <- vector()
+        data1_depths_geno_prob <- data2_maps <- data3_filters <- vector()
+        data4_times <- data5_SNPCall_efficiency <- simu_haplo <- vector()
+        data6 <- names_rdatas  <- list()
+        #seeds <- depths <- seeds_choices <- depths_choices <- vector()
         
         temp_name <- tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".llo")
         incProgress(0.5, detail = paste("Doing part", 3))
@@ -1880,21 +1864,11 @@ Reads2MapApp <- function(...) {
               } else {
                 saveList(temp1, file = temp_name, append = T, compress = T)
               }
-            } else if(all(grepl("choices.RData", datas[[i]]))){
-              temp1 <- load(datas[[i]][[j]])
-              temp1 <- base::get(temp1)
-              depths <- c(depths, temp1[[1]])
-              seeds <- c(seeds, temp1[[2]])
-              seeds_choices <- c(seeds_choices, temp1[[3]])
-              depths_choices <- c(depths_choices, temp1[[4]])
-            } else if(all(grepl("names.rds", datas[[i]]))){
-              temp1 <-  readRDS(datas[[i]][[j]])
+            } else if(all(grepl("names.tsv.gz", datas[[i]]))){
+              temp1 <-  vroom(datas[[i]][[j]])
               names_rdatas <- c(names_rdatas, temp1)
-            } else if(all(grepl("multi_names.RData", datas[[i]]))){
-              temp1 <- load(datas[[i]][[j]])
-              multi_names <- c(multi_names,base::get(temp1))
             } else {
-              temp1 <-  readRDS(datas[[i]][[j]])
+              temp1 <-  vroom(datas[[i]][[j]])
               name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
               name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
               assign(name_temp, rbind(base::get(name_temp), temp1))
@@ -1903,39 +1877,35 @@ Reads2MapApp <- function(...) {
         }
         
         incProgress(0.75, detail = paste("Doing part", 4))
-        temp_names <- names(seeds_choices)
-        seeds_choices <- as.list(1:length(seeds_choices))
+        seeds <- unique(data2_maps$seed)
+        depths <- unique(data2_maps$depth)
+        depths_choices <- as.list(1:length(depths))
+        names(depths_choices) <- depths
+        seed_depth <- unique(paste("Depth",data2_maps$depth, "seed", data2_maps$seed))
+        temp_names <- seed_depth
+        seeds_choices <- as.list(1:length(seed_depth))
         names(seeds_choices) <- temp_names
         inds_choices <- sort(inds)
         names(inds_choices) <- sort(inds)
         names_rdatas <- unlist(names_rdatas)
         names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
         
-        # If multiallelics
-        # The multiallelics are not simulated as multiallelics, they are defined later, 
-        # then we do not have some of the simulated value for them
-        multis <- c("A.1", "A.2", "D1.9", "D2.14")
-        if(any(data2$type %in% multis)){
-          # Including NA in all simulated data
-          #data2$real.type[which(data2$type %in% multis)] <- NA
-          #data2$real.phases[which(data2$type %in% multis)] <- NA
-          data2$real.mks[which(data2$type %in% multis)] <- "multiallelic"
-          mks_multi <- data2$mk.name[which(data2$type %in% multis)]
-          # The measure in data1 if about the VCF file, when multiallelic markers is not yet defined
-          #data1$gabGT[which(data1$mks %in% mks_multi)] <- NA 
-        }
+        data2_maps$fake[data2_maps$fake == "TRUE"] <- "with-false"
+        data2_maps$fake[data2_maps$fake == "FALSE"] <- "without-false"
         
-        result_list <- list("data1"=data1, 
-                            "data2"=data2, 
-                            "data3"=data3, 
-                            "data4"=data4, 
-                            "data5"=data5, 
+        data4_times$fake[data4_times$fake == "TRUE"] <- "with-false"
+        data4_times$fake[data4_times$fake == "FALSE"] <- "without-false"
+        
+        result_list <- list("data1"=data1_depths_geno_prob, 
+                            "data2"=data2_maps, 
+                            "data3"=data3_filters, 
+                            "data4"=data4_times, 
+                            "data5"=data5_SNPCall_efficiency, 
                             "data6"=data6, 
                             "choices"=list(depths, seeds, seeds_choices, depths_choices, inds_choices),
                             "names"=names_rdatas, 
                             "haplo"=simu_haplo,
-                            "sequence.llo"=temp_name,
-                            "multi_names"=multi_names)
+                            "sequence.llo"=temp_name)
         
         system(paste("rm -r", paste(for_rm, collapse = " ")))
       })
@@ -1944,7 +1914,7 @@ Reads2MapApp <- function(...) {
     
     datas_simu <- reactive({prepare_datas_simu(input$simulatedreads)})
     
-    # Update choices of seed and depth according with the dateset choosed
+    # Update choices of seed and depth according with the dataset chosen
     observe({
       seeds_choice <- datas_simu()[[7]][[3]] 
       depth_choice <- datas_simu()[[7]][[4]]
@@ -2132,16 +2102,9 @@ Reads2MapApp <- function(...) {
     button_cmbymb <- eventReactive(input$go_cmbymb, {
       withProgress(message = 'Building left graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05_cmbymb){
-          geno <- paste0(input$ErrorProb_cmbymb, 0.05)
-          if(any(input$ErrorProb_cmbymb %in% "OneMap_version2"))
-            geno[which(input$ErrorProb_cmbymb == "OneMap_version2")] <- "SNPCaller0.05"
-          if(any(input$ErrorProb_cmbymb %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- input$ErrorProb_cmbymb
-        }
-        datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
+        geno <- test_geno(input$Global0.05_cmbymb, input$ErrorProb_cmbymb)
+        
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall_cmbymb) %>%
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed_cmbymb)]) %>%
           filter(CountsFrom == input$CountsFrom_cmbymb | 
@@ -2151,6 +2114,9 @@ Reads2MapApp <- function(...) {
           select(pos, rf, poscM.norm, real.mks, SNPCall, GenoCall) %>%
           gather(key, value, -pos, -real.mks, -SNPCall, -GenoCall)
         
+        data <- perfumaria(data)
+        
+        data
       })
     })
     
@@ -2164,19 +2130,10 @@ Reads2MapApp <- function(...) {
     button1 <- eventReactive(input$go1, {
       withProgress(message = 'Building left graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.1){
-          if( input$ErrorProb1 == "OneMap_version2"){
-            geno <- paste0("SNPCaller", 0.05)
-          } else {
-            geno <- paste0(input$ErrorProb1, 0.05)
-          }
-        } else {
-          geno <- input$ErrorProb1
-        }
         
-        if(input$CountsFrom1 == "bam" & (input$ErrorProb1 == "OneMap_version2" | input$ErrorProb1 == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
-        }
+        #see utils.R
+        geno <- test_geno_with_gus(input$Global0.05.1, input$ErrorProb1)
+        stop_bam(input$CountsFrom1, input$ErrorProb1)
         
         # The plot with depths does not differentiate fake markers, 
         # they receive NA value in the simulated genotype field 
@@ -2186,15 +2143,13 @@ Reads2MapApp <- function(...) {
           filter(CountsFrom == input$CountsFrom1) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
         data[,8:9] <- apply(data[,8:9], 2, as.character)
-
+        
+        data <- perfumaria(data)
+        
         if(length(which(is.na(data$ref))) > 0)
           data <- data[-which(is.na(data$ref)),]
         
-        # m <- cbind(gab, est) 
-        # 
-        # data1 <- agree_coefs(m, method = "kappa")
-        
-        list(data)
+        data
       })
     })
     
@@ -2211,25 +2166,24 @@ Reads2MapApp <- function(...) {
       content = function(file) {
         withProgress(message = 'Building left graphic', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
-          if(input$Global0.05.1){
-            if( input$ErrorProb1 == "OneMap_version2"){
-              geno <- paste0("SNPCaller", 0.05)
-            } else {
-              geno <- paste0(input$ErrorProb1, 0.05)
-            }
-          } else {
-            geno <- input$ErrorProb1
-          }
+          #see utils.R
+          geno <- test_geno_with_gus(input$Global0.05.1, input$ErrorProb1)
+          stop_bam(input$CountsFrom1, input$ErrorProb1)
           
-          if(input$CountsFrom1 == "bam" & (input$ErrorProb1 == "OneMap_version2" | input$ErrorProb1 == "SNPCaller")){
-            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
-          }
-          
+          # The plot with depths does not differentiate fake markers, 
+          # they receive NA value in the simulated genotype field 
           data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
             filter(SNPCall == input$SNPCall1) %>%
             filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
             filter(CountsFrom == input$CountsFrom1) %>%
             filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
+          data[,8:9] <- apply(data[,8:9], 2, as.character)
+          
+          data <- perfumaria(data)
+          
+          if(length(which(is.na(data$ref))) > 0)
+            data <- data[-which(is.na(data$ref)),]
+          
           incProgress(0.5, detail = paste("Doing part", 2))
           p <- errorProb_graph(data, input$real1)
           p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
@@ -2246,43 +2200,25 @@ Reads2MapApp <- function(...) {
     button2 <- eventReactive(input$go2, {
       withProgress(message = 'Building right graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        
-        if(input$Global0.05.2){
-          if( input$ErrorProb2 == "OneMap_version2"){
-            geno <- paste0("SNPCaller", 0.05)
-          } else {
-            geno <- paste0(input$ErrorProb2, 0.05)
-          }
-        } else {
-          geno <- input$ErrorProb2
-        }
+        #see utils.R
+        geno <- test_geno_with_gus(input$Global0.05.2, input$ErrorProb2)
+        stop_bam(input$CountsFrom2, input$ErrorProb2)
         
         # The plot with depths does not differentiate fake markers, 
         # they receive NA value in the simulated genotype field 
-        data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
-          filter(SNPCall == input$SNPCall1) %>%
-          filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
-          filter(CountsFrom == input$CountsFrom1) %>%
-          filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
-        data[,8:9] <- apply(data[,8:9], 2, as.character)
-        
-        if(length(which(is.na(data$ref))) > 0)
-          data <- data[-which(is.na(data$ref)),]
-        
-        
         data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
           filter(SNPCall == input$SNPCall2) %>%
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed2)]) %>%
           filter(CountsFrom == input$CountsFrom2) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed2)])
         data[,8:9] <- apply(data[,8:9], 2, as.character)
-
+        
+        data <- perfumaria(data)
+        
         if(length(which(is.na(data$ref))) > 0)
           data <- data[-which(is.na(data$ref)),]
         
-        #data1 <- agree_coefs(m, method = "kappa")
-        
-        list(data)
+        data
       })
     })
     
@@ -2290,25 +2226,15 @@ Reads2MapApp <- function(...) {
       errorProb_graph(button2()[[1]], input$real2)
     })
     
-    # output$disper_depth2_cor_out <- renderTable({
-    #   button2()[[2]]
-    # })
-    
     #######################
     # Map size each family
     #######################
     button3 <- eventReactive(input$go3, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.3){
-          geno <- paste0(input$ErrorProb3, 0.05)
-          if(any(input$ErrorProb3 %in% "OneMap_version2"))
-            geno[which(input$ErrorProb3 == "OneMap_version2")] <- "SNPCaller0.05"
-          if(any(input$ErrorProb3 %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- input$ErrorProb3
-        }
+        # see utils.R
+        geno <- test_geno(input$Global0.05.3, input$ErrorProb3)
+        
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall3) %>%
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed3)]) %>%
@@ -2316,6 +2242,8 @@ Reads2MapApp <- function(...) {
                    (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
           filter(fake == input$fake1) 
+        
+        data <- perfumaria(data)
         
         # If there are fake markers the interval distances are plotted
         # If there are no fake markers the difference between estimated and simulated distances are plotted 
@@ -2329,7 +2257,7 @@ Reads2MapApp <- function(...) {
         data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
           summarise("n markers" = n()) 
         
-        data<- merge(data, data_n) 
+        data <- merge(data, data_n) 
         
         list(data, data_n)
       })
@@ -2348,15 +2276,9 @@ Reads2MapApp <- function(...) {
       content = function(file) {
         withProgress(message = 'Building graphic', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
-          if(input$Global0.05.3){
-            geno <- paste0(input$ErrorProb3, 0.05)
-            if(any(input$ErrorProb3 %in% "OneMap_version2"))
-              geno[which(input$ErrorProb3 == "OneMap_version2")] <- "SNPCaller0.05"
-            if(any(input$ErrorProb3 %in% "gusmap"))
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } else {
-            geno <- input$ErrorProb3
-          }
+          # see utils.R
+          geno <- test_geno(input$Global0.05.3, input$ErrorProb3)
+          
           data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
             filter(SNPCall %in% input$SNPCall3) %>%
             filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed3)]) %>%
@@ -2365,19 +2287,18 @@ Reads2MapApp <- function(...) {
             filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
             filter(fake == input$fake1) 
           
+          data <- perfumaria(data)
+          
           # If there are fake markers the interval distances are plotted
           # If there are no fake markers the difference between estimated and simulated distances are plotted 
-          if(input$fake1 == "without-false"){
-            data <- data %>% mutate("diff (cM)" = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
-                                                           (rf[-1] - rf[-length(rf)]))^2))
-          } else {
-            data <- data %>% mutate("diff (cM)" = sqrt(c(0, (rf[-1] - rf[-length(rf)]))^2))
+          if(input$fake1 == "with-false"){
+            data <- data %>% mutate("diff" = sqrt(c(0, (rf[-1] - rf[-length(rf)]))^2))
           }
           
           data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
             summarise("n markers" = n()) 
           
-          data<- merge(data, data_n) 
+          data <- merge(data, data_n) 
           
           incProgress(0.5, detail = paste("Doing part", 2))
           p <- ind_size_graph(data, data_n)
@@ -2397,15 +2318,9 @@ Reads2MapApp <- function(...) {
     button4 <- eventReactive(input$go4, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.4){
-          geno <- paste0(input$ErrorProb4, 0.05)
-          if(any(input$ErrorProb4 %in% "OneMap_version2"))
-            geno[which(input$ErrorProb4 == "OneMap_version2")] <- "SNPCaller0.05"
-          if(any(input$ErrorProb4 %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- input$ErrorProb4
-        }
+        
+        geno <- test_geno(input$Global0.05.4, input$ErrorProb4)
+        
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall4) %>%
           filter(CountsFrom == input$CountsFrom4 | 
@@ -2414,20 +2329,21 @@ Reads2MapApp <- function(...) {
           filter(fake == input$fake2) %>%
           group_by(seed,GenoCall, SNPCall, CountsFrom, depth) 
         
-        if(input$fake2 == "without-false"){
-          data <- data %>% mutate("diff (cM)" = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
-                                                         (rf[-1] - rf[-length(rf)]))^2))
-        } else {
-          data <- data %>% mutate("diff (cM)" = sqrt(c(0, (rf[-1] - rf[-length(rf)]))^2))
+        data <- perfumaria(data)
+        
+        # difference between markers
+        if(input$fake2 == "with-false"){
+          data <- data %>% mutate("diff" = sqrt(c(0, (rf[-1] - rf[-length(rf)]))^2))
         }
         
         data_n <- data %>%  summarise(`n markers` = n()) 
         
         data <- switch(input$stats1,
-                       "mean" = summarise(data, `mean (cM)` = mean(`diff (cM)`, na.rm=T)),
-                       "median" = summarise(data, `median (cM)` = median(`diff (cM)`, na.rm=T)),
-                       "var" = summarise(data, `var (cM)` = var(`diff (cM)`, na.rm=T)),
-                       "total" = summarise(data, `sum (cM)` = sum(`diff (cM)`, na.rm=T)),
+                       "euclidean_dist" = summarise(data, D = as.vector((((length(rf)-1)^(-1))*(t(rf-poscM.norm)%*%(rf-poscM.norm)))^{1/2})),
+                       "mean" = summarise(data, `mean (cM)` = mean(diff, na.rm=T)),
+                       "median" = summarise(data, `median (cM)` = median(diff, na.rm=T)),
+                       "var" = summarise(data, `var (cM)` = var(diff, na.rm=T)),
+                       "total" = summarise(data, `sum (cM)` = sum(diff, na.rm=T)),
                        "total_size" = summarise(data, `cumsum (cM)` = rf[length(rf)]))
         
         incProgress(0.5, detail = paste("Doing part", 2))
@@ -2436,11 +2352,7 @@ Reads2MapApp <- function(...) {
     })
     
     output$all_size_out <- renderPlot({
-      all_size_graph(button4()[[1]],button4()[[2]])
-    })
-    
-    output$all_size_df_out <- renderDataTable({
-      merge(button4()[[1]], button4()[[2]])
+      all_size_graph(button4()[[1]],button4()[[2]],input$stats1, input$fake2)
     })
     
     ## download
@@ -2452,15 +2364,8 @@ Reads2MapApp <- function(...) {
       content = function(file) {
         withProgress(message = 'Building graphic', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
-          if(input$Global0.05.4){
-            geno <- paste0(input$ErrorProb4, 0.05)
-            if(any(input$ErrorProb4 %in% "OneMap_version2"))
-              geno[which(input$ErrorProb4 == "OneMap_version2")] <- "SNPCaller0.05"
-            if(any(input$ErrorProb4 %in% "gusmap"))
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } else {
-            geno <- input$ErrorProb4
-          }
+          geno <- test_geno(input$Global0.05.4, input$ErrorProb4)
+          
           data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
             filter(SNPCall %in% input$SNPCall4) %>%
             filter(CountsFrom == input$CountsFrom4 | 
@@ -2469,20 +2374,21 @@ Reads2MapApp <- function(...) {
             filter(fake == input$fake2) %>%
             group_by(seed,GenoCall, SNPCall, CountsFrom, depth) 
           
-          if(input$fake2 == "without-false"){
-            data <- data %>% mutate("diff (cM)" = sqrt(c(0,(poscM.norm[-1] - poscM.norm[-length(poscM.norm)]) -
-                                                           (rf[-1] - rf[-length(rf)]))^2))
-          } else {
-            data <- data %>% mutate("diff (cM)" = sqrt(c(0, (rf[-1] - rf[-length(rf)]))^2))
+          data <- perfumaria(data)
+          
+          # difference between markers
+          if(input$fake2 == "with-false"){
+            data <- data %>% mutate("diff" = sqrt(c(0, (rf[-1] - rf[-length(rf)]))^2))
           }
           
           data_n <- data %>%  summarise(`n markers` = n()) 
           
           data <- switch(input$stats1,
-                         "mean" = summarise(data, `mean (cM)` = mean(`diff (cM)`, na.rm=T)),
-                         "median" = summarise(data, `median (cM)` = median(`diff (cM)`, na.rm=T)),
-                         "var" = summarise(data, `var (cM)` = var(`diff (cM)`, na.rm=T)),
-                         "total" = summarise(data, `sum (cM)` = sum(`diff (cM)`, na.rm=T)),
+                         "euclidean_dist" = summarise(data, D = as.vector((((length(rf)-1)^(-1))*(t(rf-poscM.norm)%*%(rf-poscM.norm)))^{1/2})),
+                         "mean" = summarise(data, `mean (cM)` = mean(diff, na.rm=T)),
+                         "median" = summarise(data, `median (cM)` = median(diff, na.rm=T)),
+                         "var" = summarise(data, `var (cM)` = var(diff, na.rm=T)),
+                         "total" = summarise(data, `sum (cM)` = sum(diff, na.rm=T)),
                          "total_size" = summarise(data, `cumsum (cM)` = rf[length(rf)]))
           
           p <- all_size_graph(data, data_n)
@@ -2495,38 +2401,71 @@ Reads2MapApp <- function(...) {
         })
       } 
     )
+    
     #######################
     # Marker types
     #######################
     button5 <- eventReactive(input$go5, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
+        
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
           filter(SNPCall %in% input$SNPCall10) %>%
           filter(CountsFrom == input$CountsFrom10) %>%
           filter(depth == input$depth10) %>%
           filter(fake == input$fake3)
         
+        data <- perfumaria(data)
+        
+        # Frequencies
+        incProgress(0.5, detail = paste("Doing part", 2))
         data1 <- data %>%  group_by(type, real.type, GenoCall, SNPCall, CountsFrom, depth, real.mks) %>%
           summarise(n = n()) %>%
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -depth,-n, -real.mks)
         
-        n <- c(estimated="type", simulated="real.type")
+        n <- c(estimated="type", real="real.type")
         data1$key <- names(n)[match(data1$key, n)]
         
         if(input$fake3 == "with-false"){
           data1 <- data1[which(data1$key == "estimated"),]
-          data_df <- NULL
-        } else {
-          data_df <- data %>% group_by(GenoCall, SNPCall, CountsFrom, depth, seed) %>%
-            summarise(value= agree_coefs(cbind(type, real.type), method = "kappa")) %>% 
-            ungroup()
-          data_df <- cbind(data_df[1:5], data_df$value)
-          colnames(data_df)[6] <- " "
         }
         
-        incProgress(0.5, detail = paste("Doing part", 2))
-        list(data1, data_df)
+        # Probabilities
+        probs_plot <- list()
+        if(input$fake3 == "without-false"){
+          data$method <- paste0(data$seed,"_", data$depth,"_", 
+                            data$SNPCall, "_",data$CountsFrom,"_",
+                            data$GenoCall)
+          
+          data <- mutate_if(data, is.character, as.factor)
+          
+          real.mks.sele <-c("true marker", "multiallelic")
+          for(i in 1:2){
+            data_prob <- data %>% filter(real.mks == real.mks.sele[i])
+            if(dim(data_prob)[1] == 0){
+              probs_plot[[i]] <- 0
+            } else {
+              probs <- prob_f(data=data_prob, method = "method", estimate = "type", gabarito = "real.type")
+              
+              probs_df <- plyr::adply(probs, c(1,2,3))
+              probs_df$X3 <- as.character(probs_df$X3)
+              
+              split_meth <- strsplit(probs_df$X3, "_")
+              
+              probs_plot[[i]] <- data.frame(est = probs_df$X1, simu = probs_df$X2, 
+                                            seed = sapply(split_meth, "[",1),
+                                            depth = sapply(split_meth, "[",2),
+                                            SNPCall = sapply(split_meth, "[",3),
+                                            CountsFrom = sapply(split_meth, "[",4),
+                                            GenoCall = sapply(split_meth, "[",5),
+                                            prob = probs_df$V1)
+            }
+          }
+        } else {
+          probs_plot[[1]] <- probs_plot[[2]] <- 0
+        }
+        
+        list(data1, probs_plot[[1]], probs_plot[[2]])
       })
     })
     
@@ -2534,9 +2473,12 @@ Reads2MapApp <- function(...) {
       marker_type_graph(button5()[[1]])
     })
     
-    output$marker_type_df_out <- renderDataTable({
-      if(is.null(button5()[[2]])) stop("Concordance estimators are only measured if there are no false positives markers.\n")
-      else button5()[[2]]
+    output$type_prob_bi_out <- renderPlot({
+      marker_type_probs(button5()[[2]])
+    })
+    
+    output$type_prob_multi_out <- renderPlot({
+      marker_type_probs(button5()[[3]])
     })
     
     ## download
@@ -2554,16 +2496,20 @@ Reads2MapApp <- function(...) {
             filter(depth == input$depth10) %>%
             filter(fake == input$fake3)
           
+          data <- perfumaria(data)
+          
+          # Frequencies
+          incProgress(0.5, detail = paste("Doing part", 2))
           data1 <- data %>%  group_by(type, real.type, GenoCall, SNPCall, CountsFrom, depth, real.mks) %>%
             summarise(n = n()) %>%
             gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -depth,-n, -real.mks)
           
-          n <- c(estimated="type", simulated="real.type")
+          n <- c(estimated="type", real="real.type")
           data1$key <- names(n)[match(data1$key, n)]
           
           if(input$fake3 == "with-false"){
             data1 <- data1[which(data1$key == "estimated"),]
-          } 
+          }
           
           p <- marker_type_graph(data1)
           p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
@@ -2581,22 +2527,15 @@ Reads2MapApp <- function(...) {
     button6 <- eventReactive(input$go6, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.8){
-          geno <- paste0(input$ErrorProb8, 0.05)
-          if(any(input$ErrorProb8 %in% "OneMap_version2"))
-            geno[which(input$ErrorProb8 == "OneMap_version2")] <- "SNPCaller0.05"
-          if(any(input$ErrorProb8 %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- input$ErrorProb8
-        }
+        geno <- test_geno(input$Global0.05.8, input$ErrorProb8)
+        
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall8) %>%
           filter(CountsFrom == input$CountsFrom8 | 
                    (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
           filter(depth == input$depth8) %>%
           filter(fake == "without-false") %>%
-          filter(real.mks == "true markers") # This graphic do not consider multiallelic markers because their were not simulated
+          filter(real.mks == "true marker") # This graphic do not consider multiallelic markers because their were not simulated
         
         data_n <- data %>%  group_by(GenoCall, SNPCall, seed, depth) %>%
           summarise(`n markers` = n()) 
@@ -2604,30 +2543,19 @@ Reads2MapApp <- function(...) {
         data1 <- data %>% group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
           summarise(`% correct`= 100*sum(est.phases == real.phases)/length(real.phases))
         
-        data_df <- data %>% group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
-          summarise(`% correct`= agree_coefs(cbind(est.phases, real.phases), method = "kappa")) %>% ungroup()
         
-        data_df <- cbind(data_df[1:5], data_df$`% correct`)
-        colnames(data_df)[6] <- " "
-        
-        data<- merge(data1, data_n) %>%
+        data <- merge(data1, data_n) %>%
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -seed, -depth)
         
-        data$depth <- paste0("depth ", as.character(data$depth))
         incProgress(0.5, detail = paste("Doing part", 2))
-        
-        list(data, data_df)
+        perfumaria(data)
       })
     })
     
     output$phases_out <- renderPlot({
       phases_graph(button6()[[1]])
     })
-    
-    output$phases_df_out <- renderDataTable({
-      button6()[[2]]
-    })
-    
+
     ## download
     output$phases_out_down <- downloadHandler(
       filename =  function() {
@@ -2637,22 +2565,15 @@ Reads2MapApp <- function(...) {
       content = function(file) {
         withProgress(message = 'Building graphic', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
-          if(input$Global0.05.8){
-            geno <- paste0(input$ErrorProb8, 0.05)
-            if(any(input$ErrorProb8 %in% "OneMap_version2"))
-              geno[which(input$ErrorProb8 == "OneMap_version2")] <- "SNPCaller0.05"
-            if(any(input$ErrorProb8 %in% "gusmap"))
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } else {
-            geno <- input$ErrorProb8
-          }
+          geno <- test_geno(input$Global0.05.8, input$ErrorProb8)
+          
           data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
             filter(SNPCall %in% input$SNPCall8) %>%
             filter(CountsFrom == input$CountsFrom8 | 
                      (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
             filter(depth == input$depth8) %>%
             filter(fake == "without-false") %>%
-            filter(real.mks == "true markers") # This graphic do not consider multiallelic markers because their were not simulated
+            filter(real.mks == "true marker") # This graphic do not consider multiallelic markers because their were not simulated
           
           data_n <- data %>%  group_by(GenoCall, SNPCall, seed, depth) %>%
             summarise(`n markers` = n()) 
@@ -2660,17 +2581,12 @@ Reads2MapApp <- function(...) {
           data1 <- data %>% group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
             summarise(`% correct`= 100*sum(est.phases == real.phases)/length(real.phases))
           
-          data_df <- data %>% group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
-            summarise(`% correct`= agree_coefs(cbind(est.phases, real.phases), method = "kappa")) %>% ungroup()
-          
-          data_df <- cbind(data_df[1:5], data_df$`% correct`)
-          colnames(data_df)[6] <- " "
-          
-          data<- merge(data1, data_n) %>%
+          data <- merge(data1, data_n) %>%
             gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -seed, -depth)
           
           data$depth <- paste0("depth ", as.character(data$depth))
           incProgress(0.5, detail = paste("Doing part", 2))
+          data <- perfumaria(data)
           
           p <- phases_graph(data)
           p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
@@ -2682,21 +2598,14 @@ Reads2MapApp <- function(...) {
         })
       } 
     )
-    #######################
+    ####################### 
     # Times
     #######################
     button7 <- eventReactive(input$go7, {
       withProgress(message = 'Times graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.9){
-          geno <- paste0(input$ErrorProb9, 0.05)
-          if(any(input$ErrorProb9 %in% "OneMap_version2"))
-            geno[which(input$ErrorProb9 == "OneMap_version2")] <- "SNPCaller0.05"
-          if(any(input$ErrorProb9 %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- input$ErrorProb9
-        }
+
+        geno <- test_geno(input$Global0.05.9, input$ErrorProb9)
         
         data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall9) %>%
@@ -2719,21 +2628,16 @@ Reads2MapApp <- function(...) {
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
         
         data$key <- gsub("time", "seconds", data$key)
-        data$depth <- paste0("depth ", as.character(data$depth))
-        
+
         incProgress(0.5, detail = paste("Doing part", 2))
-        list(data, data_df)
+        perfumaria(data)
       })
     })
     
     output$times_out <- renderPlot({
       times_graph(button7()[[1]])
     })
-    
-    output$times_df_out <- renderDataTable({
-      button7()[[2]]
-    })
-    
+
     ## download
     output$times_out_down <- downloadHandler(
       filename =  function() {
@@ -2742,15 +2646,7 @@ Reads2MapApp <- function(...) {
       # content is a function with argument file. content writes the plot to the device
       content = function(file) {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.9){
-          geno <- paste0(input$ErrorProb9, 0.05)
-          if(any(input$ErrorProb9 %in% "OneMap_version2"))
-            geno[which(input$ErrorProb9 == "OneMap_version2")] <- "SNPCaller0.05"
-          if(any(input$ErrorProb9 %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- input$ErrorProb9
-        }
+        geno <- test_geno(input$Global0.05.9, input$ErrorProb9)
         
         data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall9) %>%
@@ -2764,13 +2660,17 @@ Reads2MapApp <- function(...) {
           filter(SNPCall %in% input$SNPCall9) %>%
           filter(fake == input$fake5) %>%
           filter(CountsFrom == input$CountsFrom9 | 
-                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(depth %in% input$depth9)  
         
-        data<- merge(data, data_n) %>%
+        data_df <- merge(data, data_n) 
+        
+        data <- data_df %>%
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
         
         data$key <- gsub("time", "seconds", data$key)
-        data$depth <- paste0("depth ", as.character(data$depth))
+
+        perfumaria(data)
         
         incProgress(0.5, detail = paste("Doing part", 2))
         
@@ -2783,95 +2683,29 @@ Reads2MapApp <- function(...) {
         ggsave(file, p, width = 400, height = 200, units="mm")
       } 
     )
-    #######################
-    # Coverage
-    #######################
-    button8 <- eventReactive(input$go8, {
-      withProgress(message = 'Building graphic', value = 0, {
-        incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.5){
-          geno <- paste0(input$ErrorProb5, 0.05)
-          if(any(input$ErrorProb5 %in% "OneMap_version2"))
-            geno[which(input$ErrorProb5 == "OneMap_version2")] <- "SNPCaller0.05"
-          if(any(input$ErrorProb5 %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-        } else {
-          geno <- input$ErrorProb5
-        }
-        data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
-          filter(SNPCall %in% input$SNPCall5) %>%
-          filter(fake == input$fake6) %>%
-          filter(depth == input$depth5) %>%
-          filter(CountsFrom == input$CountsFrom5 | 
-                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
-          group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
-          summarise(max = max(pos), min = min(pos))
-        
-        data$coverage <- ((data$max - data$min)/input$chr_size1)*100
-        data$depth <- paste0("depth ", as.character(data$depth))
-        incProgress(0, detail = paste("Doing part", 1))
-        data
-      })
-    })
-    
-    output$coverage_out <- renderPlot({
-      coverage_graph(button8())
-    })
-    
-    ## download
-    output$coverage_out_down <- downloadHandler(
-      filename =  function() {
-        paste("coverage_size.eps")
-      },
-      # content is a function with argument file. content writes the plot to the device
-      content = function(file) {
-        withProgress(message = 'Building graphic', value = 0, {
-          incProgress(0, detail = paste("Doing part", 1))
-          if(input$Global0.05.5){
-            geno <- paste0(input$ErrorProb5, 0.05)
-            if(any(input$ErrorProb5 %in% "OneMap_version2"))
-              geno[which(input$ErrorProb5 == "OneMap_version2")] <- "SNPCaller0.05"
-            if(any(input$ErrorProb5 %in% "gusmap"))
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } else {
-            geno <- input$ErrorProb5
-          }
-          data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
-            filter(SNPCall %in% input$SNPCall5) %>%
-            filter(fake == input$fake6) %>%
-            filter(depth == input$depth5) %>%
-            filter(CountsFrom == input$CountsFrom5 | 
-                     (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
-            group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
-            summarise(max = max(pos), min = min(pos))
-          
-          data$coverage <- ((data$max - data$min)/input$chr_size1)*100
-          incProgress(0, detail = paste("Doing part", 1))
-          data$depth <- paste0("depth ", as.character(data$depth))
-          p <- coverage_graph(data)
-          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
-                         legend.text = element_text(size=17),
-                         axis.title=element_text(size=17),
-                         axis.text = element_text(size=17), 
-                         strip.text = element_text(size=17))
-          
-          ggsave(file, p, width = 400, height = 200, units="mm")
-          
-        })
-      } 
-    )
     ########################
     # SNP calling efficiency
     ########################
     button9 <- eventReactive(input$go9, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        data <- datas_simu()[[5]] %>% filter(key %in% input$avalSNPs1) %>%
-          filter(SNPCall %in% input$SNPCall6) %>%
-          filter(depth %in% input$depth6)
         
-        data$depth <- paste0("depth ", as.character(data$depth))
+        data <- datas_simu()[[5]][,-c(8,9)]  %>%
+          filter(SNPCall %in% input$SNPCall6) %>%
+          filter(depth %in% input$depth6)  
+        
+        colnames(data)[4:7] <- c("real", "estimated", "true positives", "false positives")
+        data$`false negatives` <- data$real - data$`true positives`
+        
+        data <- data  %>% pivot_longer(cols=c(4:8))
+
         incProgress(0.5, detail = paste("Doing part", 2))
+        # perfurmaria
+        snpcall <- c(GATK = "gatk", freebayes = "freebayes")
+        data$SNPCall <- names(snpcall)[match(data$SNPCall, snpcall)]
+        
+        data$name <- factor(data$name, levels = c("real", "estimated", "true positives", "false positives", "false negatives"))
+        
         data
       })
     })
@@ -2887,10 +2721,22 @@ Reads2MapApp <- function(...) {
       },
       # content is a function with argument file. content writes the plot to the device
       content = function(file) {
-        data <- datas_simu()[[5]] %>% filter(key %in% input$avalSNPs1) %>%
+        data <- datas_simu()[[5]][,-c(8,9)]  %>%
           filter(SNPCall %in% input$SNPCall6) %>%
-          filter(depth %in% input$depth6)
-        data$depth <- paste0("depth ", as.character(data$depth))
+          filter(depth %in% input$depth6)  
+        
+        colnames(data)[4:7] <- c("real", "estimated", "true positives", "false positives")
+        data$`false negatives` <- data$real - data$`true positives`
+        
+        data <- data  %>% pivot_longer(cols=c(4:8))
+        
+        incProgress(0.5, detail = paste("Doing part", 2))
+        # perfurmaria
+        snpcall <- c(GATK = "gatk", freebayes = "freebayes")
+        data$SNPCall <- names(snpcall)[match(data$SNPCall, snpcall)]
+        
+        data$name <- factor(data$name, levels = c("real", "estimated", "true positives", "false positives", "false negatives"))
+        
         p <- avalSNPs_graph(data)
         p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
                        legend.text = element_text(size=17),
@@ -2906,31 +2752,30 @@ Reads2MapApp <- function(...) {
     button10 <- eventReactive(input$go10, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        choosed <- input$ErrorProb7
-        if(input$Global0.05.7){
-          geno <- paste0(choosed, 0.05)
-          if(any(choosed %in% "OneMap_version2") & !any(choosed %in% "SNPCaller") ){
-            geno[which(choosed %in% "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-          } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
-            geno <- geno[-which(choosed %in% "OneMap_version2")]
-          } else if (any(choosed %in% "gusmap")){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } 
-        } else {
-          geno <- choosed
-        }
+
+        geno <- test_geno(input$Global0.05.7, input$ErrorProb7)
+  
         data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall7) %>%
           filter(depth == input$depth7) %>%
           filter(CountsFrom == input$CountsFrom7 | 
-                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
+                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          pivot_longer(cols=1:5)
         
-        n <- c(`Missing data`= "mis_markers", `Without filters`="n_markers", `Segregation test`="distorted_markers",
-               `Redundants`="redundant_markers")
-        data$key <- names(n)[match(data$key, n)]
+        n <- c(`Without filters`="n_markers",
+               `Missing data`= "higher.than.25..missing",
+               `Segregation test`="distorted_markers",
+               `Redundants`="redundant_markers",
+               `After all filters` = "after_filters")
         
+        data$name <- names(n)[match(data$name, n)]
+        data$name <- factor(data$name, levels = c("Without filters",
+                                                  "Missing data",
+                                                  "Segregation test",
+                                                  "Redundants",
+                                                  "After all filters"))
         incProgress(0.5, detail = paste("Doing part", 2))
-        data
+        perfumaria(data)
       })
     })
     
@@ -2947,29 +2792,29 @@ Reads2MapApp <- function(...) {
       content = function(file) {
         withProgress(message = 'Building graphic', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
-          choosed <- input$ErrorProb7
-          if(input$Global0.05.7){
-            geno <- paste0(choosed, 0.05)
-            if(any(choosed %in% "OneMap_version2") & !any(choosed %in% "SNPCaller") ){
-              geno[which(choosed %in% "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-            } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
-              geno <- geno[-which(choosed %in% "OneMap_version2")]
-            } else if (any(choosed %in% "gusmap")){
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
-            } 
-          } else {
-            geno <- choosed
-          }
+          geno <- test_geno(input$Global0.05.7, input$ErrorProb7)
+          
           data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
             filter(SNPCall %in% input$SNPCall7) %>%
             filter(depth == input$depth7) %>%
             filter(CountsFrom == input$CountsFrom7 | 
-                     (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05")))
+                     (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+            pivot_longer(cols=1:5)
           
-          n <- c(`Missing data`= "mis_markers", `Without filters`="n_markers", `Segregation test`="distorted_markers",
-                 `Redundants`="redundant_markers")
-          data$key <- names(n)[match(data$key, n)]
-          incProgress(0.5, detail = paste("Doing part", 2))     
+          n <- c(`Without filters`="n_markers",
+                 `Missing data`= "higher.than.25..missing",
+                 `Segregation test`="distorted_markers",
+                 `Redundants`="redundant_markers",
+                 `After all filters` = "after_filters")
+          
+          data$name <- names(n)[match(data$name, n)]
+          data$name <- factor(data$name, levels = c("Without filters",
+                                                    "Missing data",
+                                                    "Segregation test",
+                                                    "Redundants",
+                                                    "After all filters"))
+          incProgress(0.5, detail = paste("Doing part", 2))
+          data <- perfumaria(data)
           p <- filters_graph(data)
           p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
                          legend.text = element_text(size=17),
@@ -2986,28 +2831,12 @@ Reads2MapApp <- function(...) {
     button11 <- eventReactive(input$go11, {
       withProgress(message = 'Building draw', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-
-        if(input$Global0.05.11){
-          if(input$ErrorProb11 == "OneMap_version2"){
-            geno <- paste0("SNPCaller", 0.05)
-          } else if (input$ErrorProb11 == "gusmap"){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } else {
-            geno <- paste0(input$ErrorProb11, 0.05)
-          }
-        } else {
-          geno <- input$ErrorProb11
-        }
+        
+        geno <- test_geno(input$Global0.05.11, input$ErrorProb11)
+        
         incProgress(0.25, detail = paste("Doing part", 2))
         
-        # Bugfix 
-        data <- datas_simu()[[2]]
-        data$fake[which(is.na(data$diff))] <- "with-false"
-        data$fake[which(!is.na(data$diff))] <- "without-false"
-
-        data$real.mks[which(data$real.mks == TRUE)] <- "true markers"
-
-        data <- data %>% filter(GenoCall %in% geno) %>%
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall11) %>%
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed11)]) %>%
           filter(CountsFrom == input$CountsFrom11) %>%
@@ -3019,10 +2848,10 @@ Reads2MapApp <- function(...) {
         
         incProgress(0.5, detail = paste("Doing part", 3))
         if(input$fake11 == "with-false"){
-          false_mks <- as.character(data$mk.name[data$real.mks == "false positives"])
-          data <-   data.frame(data$mk.name, data$rf)
+          false_mks <- as.character(data$mk.name[data$real.mks == "false positive"])
+          data <- data.frame(data$mk.name, data$rf)
         } else {
-          data <-   data.frame(data$mk.name, data$rf)
+          data <- data.frame(data$mk.name, data$rf)
         }
         list(data,filename)
       })
@@ -3030,7 +2859,9 @@ Reads2MapApp <- function(...) {
     
     output$map1_out <- renderImage({
       if(input$fake11 == "with-false"){
-        draw_map2(button11()[[1]], output = button11()[[2]], tag = false_mks, col.tag = "darkblue", pos = T, id = F)  
+        draw_map2(button11()[[1]], output = button11()[[2]], 
+                  tag = false_mks, col.tag = "darkblue", 
+                  pos = T, id = F)  
       } else {
         cat(button11()[[2]])
         draw_map2(button11()[[1]], output = button11()[[2]])
@@ -3045,41 +2876,28 @@ Reads2MapApp <- function(...) {
     button11.1 <- eventReactive(input$go11.1, {
       withProgress(message = 'Building heatmap', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.11){
-          if( input$ErrorProb11 == "OneMap_version2"){
-            geno <- paste0("default", 0.05)
-          } else if (input$ErrorProb11 == "gusmap"){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } else {
-            geno <- paste0(input$ErrorProb11, 0.05)
-          }
-        } else {
-          if( input$ErrorProb11 == "OneMap_version2"){
-            geno <- "default"
-          } else {
-            geno <- input$ErrorProb11
-          }
-        }
+
+        geno <- test_geno(input$Global0.05.11, input$ErrorProb11)
         
         if(input$CountsFrom11 == "bam" & (input$ErrorProb11 == "OneMap_version2" | input$ErrorProb11 == "SNPCaller")){
           stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
         }
         
-        temp_n <- paste0(result_list[[7]][[1]][as.numeric(input$seed11)])
+        depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
+        seed <- datas_simu()[[7]][[2]][as.numeric(input$seed11)]
         if(input$fake11 == "with-false") fake <- T else fake <- F
-        temp_n <- paste0(result_list[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
-                         "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
+        temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall11, "_", 
+                         input$CountsFrom11, "_", geno, "_", fake)
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
-          data <- result_list[[6]][[temp_n]]
+          data <- datas_simu()[[6]][[temp_n]]
           data$rf_2pt()
           incProgress(0.5, detail = paste("Doing part", 3))
         } else {
-          idx <- which(result_list[[8]] == temp_n)
-          data <- readList(result_list[[10]], index = idx)
+          idx <- which(datas_simu()[[8]] == temp_n)
+          data <- readList(datas_simu()[[10]], index = idx)
           data <- data[[1]]
-          data <- data[[1]] # Bugfix
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
         }
@@ -3104,21 +2922,17 @@ Reads2MapApp <- function(...) {
       content = function(file) {
         withProgress(message = 'Loading data', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
-          if(input$Global0.05.11){
-            if( input$ErrorProb11 == "OneMap_version2"){
-              geno <- paste0("SNPCaller", 0.05)
-            } else if (input$ErrorProb11 == "gusmap"){
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
-            } else {
-              geno <- paste0(input$ErrorProb11, 0.05)
-            }
-          } else {
-            geno <- input$ErrorProb11
+          geno <- test_geno(input$Global0.05.11, input$ErrorProb11)
+          
+          if(input$CountsFrom11 == "bam" & (input$ErrorProb11 == "OneMap_version2" | input$ErrorProb11 == "SNPCaller")){
+            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
           }
-          temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
+          
+          depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
+          seed <- datas_simu()[[7]][[2]][as.numeric(input$seed11)]
           if(input$fake11 == "with-false") fake <- T else fake <- F
-          temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed11)], "_",temp_n, 
-                           "_map_",input$SNPCall11, "_", input$CountsFrom11, "_", geno, "_", fake)
+          temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall11, "_", 
+                           input$CountsFrom11, "_", geno, "_", fake)
           
           if(geno == "gusmap"){
             data <- datas_simu()[[6]][[temp_n]]
@@ -3133,44 +2947,33 @@ Reads2MapApp <- function(...) {
         })
       } 
     )
+    
     #######################
     # Progeny haplotypes
     #######################
     button12 <- eventReactive(input$go12, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.12){
-          if( input$ErrorProb12 == "OneMap_version2"){
-            geno <- paste0("default", 0.05)
-          } else if (input$ErrorProb12 == "gusmap"){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } else {
-            geno <- paste0(input$ErrorProb12, 0.05)
-          }
-        } else {
-          if( input$ErrorProb12 == "OneMap_version2"){
-            geno <- "default"
-          } else {
-            geno <- input$ErrorProb12
-          }
-        }
+
+        geno <- test_geno(input$Global0.05.12, input$ErrorProb12)
         
         if(input$CountsFrom12 == "bam" & (input$ErrorProb12 == "OneMap_version2" | input$ErrorProb12 == "SNPCaller")){
           stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
         }
         
-        temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
+        depth <- paste0(result_list[[7]][[1]][as.numeric(input$seed12)])
+        seed <- result_list[[7]][[2]][as.numeric(input$seed12)]
         if(input$fake12 == "with-false") fake <- T else fake <- F
-        temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
-                         "_map_",input$SNPCall12, "_", input$CountsFrom12, "_", geno, "_", fake)
+        temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall12, "_", 
+                         input$CountsFrom12, "_", geno, "_", fake)
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
           stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
         } else {
-          idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList(datas_simu()[[10]], index = idx)
-          data <- data[[1]]
+          idx <- which(result_list[[8]] == temp_n)
+          data <- readList(result_list[[10]], index = idx)
+          data <- data[[1]][[1]]
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
           idx <- which(rownames(data$data.name$geno) %in% input$inds12)
@@ -3185,9 +2988,9 @@ Reads2MapApp <- function(...) {
     
     button12.1 <- eventReactive(input$go12.1, {
       withProgress(message = 'Building graphic', value = 0, {
-        sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed12)] & 
-                            datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed12)] &
-                            datas_simu()[[9]][[3]] %in% input$inds12)
+        sub_dat <- subset(result_list[[9]], result_laist[[9]][[2]] == result_list[[7]][[1]][as.numeric(input$seed12)] & 
+                            result_list[[9]][[1]] == result_list[[7]][[2]][as.numeric(input$seed12)] &
+                            result_list[[9]][[3]] %in% input$inds12)
         
         sub_dat <- sub_dat[,-c(1,2)]
         class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
@@ -3208,30 +3011,17 @@ Reads2MapApp <- function(...) {
       content = function(file) {
         withProgress(message = 'Building graphic', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
-          if(input$Global0.05.12){
-            if( input$ErrorProb12 == "OneMap_version2"){
-              geno <- paste0("default", 0.05)
-            } else if (input$ErrorProb12 == "gusmap"){
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
-            } else {
-              geno <- paste0(input$ErrorProb12, 0.05)
-            }
-          } else {
-            if( input$ErrorProb12 == "OneMap_version2"){
-              geno <- "default"
-            } else {
-              geno <- input$ErrorProb12
-            }
-          }
+          geno <- test_geno(input$Global0.05.12, input$ErrorProb12)
           
           if(input$CountsFrom12 == "bam" & (input$ErrorProb12 == "OneMap_version2" | input$ErrorProb12 == "SNPCaller")){
             stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
           }
           
-          temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
+          depth <- paste0(result_list[[7]][[1]][as.numeric(input$seed12)])
+          seed <- result_list[[7]][[2]][as.numeric(input$seed12)]
           if(input$fake12 == "with-false") fake <- T else fake <- F
-          temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed12)], "_",temp_n, 
-                           "_map_",input$SNPCall12, "_", input$CountsFrom12, "_", geno, "_", fake)
+          temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall12, "_", 
+                           input$CountsFrom12, "_", geno, "_", fake)
           
           incProgress(0.25, detail = paste("Doing part", 2))
           if(geno == "gusmap"){
@@ -3249,7 +3039,7 @@ Reads2MapApp <- function(...) {
       } 
     )
     #######################
-    # Breakpoints count
+    # Breakpoints count parei aqui!
     #######################
     button13 <- eventReactive(input$go13, {
       withProgress(message = 'Building graphic', value = 0, {
