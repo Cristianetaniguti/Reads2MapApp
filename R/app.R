@@ -39,24 +39,24 @@ Reads2MapApp <- function(...) {
                                "Time spent (s)")
   
   ErrorProb_choice <- list("OneMap_version2" = "OneMap_version2",
-                           "polyrad"="polyrad",
-                           "SNPCaller"="SNPCaller",
-                           "supermassa"="supermassa",
+                           "polyRAD"="polyrad",
+                           "freebayes/GATK"="SNPCaller",
+                           "SuperMASSA"="supermassa",
                            "updog"="updog")
   
   global0.05_choices <- list("global error of 0.05"=TRUE,
                              "variable error" = FALSE)
   
-  maps_choice <- list("gusmap" = "gusmap",
+  maps_choice <- list("GUSMap" = "gusmap",
                       "OneMap_version2" = "OneMap_version2",
-                      "polyrad"="polyrad",
-                      "SNPCaller"="SNPCaller",
-                      "supermassa"="supermassa",
+                      "polyRAD"="polyrad",
+                      "freebayes/GATK"="SNPCaller",
+                      "SuperMASSA"="supermassa",
                       "updog"="updog")
   SNPCall_choice <- list("freebayes"="freebayes",
-                         "gatk" = "gatk")
-  CountsFrom_choice <- list("bam"="bam",
-                            "vcf"="vcf")
+                         "GATK" = "gatk")
+  CountsFrom_choice <- list("BAM"="bam",
+                            "VCF"="vcf")
   
   stats_choice <- list("euclidean_dist", "mean", "median", "var", "total", "total_size")
   names(stats_choice) <- c("mean", "median", "var", "total", "total size")
@@ -93,8 +93,8 @@ Reads2MapApp <- function(...) {
                menuSubItem("Maps", icon = icon("circle"), tabName = "map"),
                menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo"),
                menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts"),
-               menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb"),
-               menuSubItem("Overview", icon = icon("circle"), tabName = "overview")),
+               menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb")),
+      #menuSubItem("Overview", icon = icon("circle"), tabName = "overview")),
       
       menuItem("Empirical data results", icon = icon("dot-circle" ), tabName = "empirical",
                #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
@@ -141,11 +141,11 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            tags$h4(tags$b("Upload SimulatesReads2Map results:")),
                            "If you have more than one depth value, submit all them together.", br(),
-                           # Copy the line below to make a file upload manager
-                           fileInput("simulatedreads", label = h6("SimulatedReads2Map_<depth>.tar.gz"), multiple = T),
                            tags$strong("To not overload our server, we limited the upload size to 500MB."), br(), 
                            "If your results have larger size, please run the app locally using:", br(),
-                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')")
+                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(),
+                           # Copy the line below to make a file upload manager
+                           fileInput("simulatedreads", label = h6("SimulatedReads2Map_<depth>.tar.gz"), multiple = T),
                          ),
                          
                          fluidPage(
@@ -157,7 +157,7 @@ Reads2MapApp <- function(...) {
                                                       "Populus chromosome 10 pop size 150 with multiallelics (pirs)" = "populus_150_multi_pirs",
                                                       "Toy sample" = "toy_sample",
                                                       "Toy sample with multiallelics" = "toy_sample_multi"), 
-                                       selected = "toy_sample"),
+                                       selected = "toy_sample_multi"),
                          )
                      )
               ),
@@ -167,11 +167,11 @@ Reads2MapApp <- function(...) {
                            
                            tags$h4(tags$b("Upload EmpiricalReads2Map results:")),
                            "If you have more than one depth value, submit all them together.", br(),
-                           # Copy the line below to make a file upload manager
-                           fileInput("empiricalreads", label = h6("EmpiricalReads2Map_<depth>.tar.gz"), multiple = T, accept = ".tar.gz"),
                            tags$strong("To not overload our server, we limited the upload size to 500MB."), br(), 
                            "If your results have larger size, please run the app locally using:", br(),
-                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')")
+                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(),
+                           # Copy the line below to make a file upload manager
+                           fileInput("empiricalreads", label = h6("EmpiricalReads2Map_<depth>.tar.gz"), multiple = T, accept = ".tar.gz"),
                          ),
                          fluidPage(
                            # Copy the line below to make a select box 
@@ -586,16 +586,28 @@ Reads2MapApp <- function(...) {
                        )
                 ),
                 column(width = 12,
-                       "Biallelic markers", hr(),
-                       box(
-                         width = NULL,
-                         plotOutput("type_prob_bi_out"),
-                         hr(),
+                       "The plot bellow shows the conditional probability of a marker type be estimated 
+                       given a real marker type and the method applied.", br(),
+                  box(width = NULL,
+                      fluidPage(
+                        radioButtons("SNPCall_mk_type", label = p("Here we plot a SNP call method at a time:"),
+                                     choices = SNPCall_choice,
+                                     selected = names(SNPCall_choice)[1]),
+                      ),
+                  )
+                ),
+                
+                column(width = 12,                       
+                       box(width = NULL,
+                           "Biallelic markers", hr(),
+                           plotOutput("type_prob_bi_out", width = "100%", height = "100%"),
+                           hr(),
                        ),
-                       "Multiallelic markers",hr(),
+                       
                        box(
                          width = NULL,
-                         plotOutput("type_prob_multi_out"),
+                         "Multiallelic markers",hr(),
+                         plotOutput("type_prob_multi_out", width = "100%", height = "100%"),
                        )
                 )
               )
@@ -1865,10 +1877,10 @@ Reads2MapApp <- function(...) {
                 saveList(temp1, file = temp_name, append = T, compress = T)
               }
             } else if(all(grepl("names.tsv.gz", datas[[i]]))){
-              temp1 <-  vroom(datas[[i]][[j]])
+              temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
               names_rdatas <- c(names_rdatas, temp1)
             } else {
-              temp1 <-  vroom(datas[[i]][[j]])
+              temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
               name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
               name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
               assign(name_temp, rbind(base::get(name_temp), temp1))
@@ -1879,7 +1891,7 @@ Reads2MapApp <- function(...) {
         incProgress(0.75, detail = paste("Doing part", 4))
         seeds <- unique(data2_maps$seed)
         depths <- unique(data2_maps$depth)
-        depths_choices <- as.list(1:length(depths))
+        depths_choices <- as.list(depths)
         names(depths_choices) <- depths
         seed_depth <- unique(paste("Depth",data2_maps$depth, "seed", data2_maps$seed))
         temp_names <- seed_depth
@@ -2154,7 +2166,7 @@ Reads2MapApp <- function(...) {
     })
     
     output$disper_depth_out <- renderPlot({
-      errorProb_graph(button1()[[1]], input$real1)
+      errorProb_graph(button1(), input$real1)
     })
     
     ## download
@@ -2223,7 +2235,7 @@ Reads2MapApp <- function(...) {
     })
     
     output$disper_depth2_out <- renderPlot({
-      errorProb_graph(button2()[[1]], input$real2)
+      errorProb_graph(button2(), input$real2)
     })
     
     #######################
@@ -2431,11 +2443,14 @@ Reads2MapApp <- function(...) {
         }
         
         # Probabilities
+        if(input$SNPCall_mk_type == "gatk") snpcall = "GATK" else snpcall = "freebayes"
+        data <- data %>% filter(SNPCall == snpcall)
+        
         probs_plot <- list()
         if(input$fake3 == "without-false"){
           data$method <- paste0(data$seed,"_", data$depth,"_", 
-                            data$SNPCall, "_",data$CountsFrom,"_",
-                            data$GenoCall)
+                                data$SNPCall, "_",data$CountsFrom,"_",
+                                data$GenoCall)
           
           data <- mutate_if(data, is.character, as.factor)
           
@@ -2475,11 +2490,11 @@ Reads2MapApp <- function(...) {
     
     output$type_prob_bi_out <- renderPlot({
       marker_type_probs(button5()[[2]])
-    })
+    }, width = 1152, height = 1152)
     
     output$type_prob_multi_out <- renderPlot({
       marker_type_probs(button5()[[3]])
-    })
+    }, width = 1152, height = 1152)
     
     ## download
     output$marker_type_out_down <- downloadHandler(
@@ -2553,9 +2568,9 @@ Reads2MapApp <- function(...) {
     })
     
     output$phases_out <- renderPlot({
-      phases_graph(button6()[[1]])
+      phases_graph(button6())
     })
-
+    
     ## download
     output$phases_out_down <- downloadHandler(
       filename =  function() {
@@ -2604,7 +2619,7 @@ Reads2MapApp <- function(...) {
     button7 <- eventReactive(input$go7, {
       withProgress(message = 'Times graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-
+        
         geno <- test_geno(input$Global0.05.9, input$ErrorProb9)
         
         data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
@@ -2628,16 +2643,18 @@ Reads2MapApp <- function(...) {
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
         
         data$key <- gsub("time", "seconds", data$key)
-
+        
         incProgress(0.5, detail = paste("Doing part", 2))
-        perfumaria(data)
+        data <- perfumaria(data)
+        
+        data
       })
     })
     
     output$times_out <- renderPlot({
-      times_graph(button7()[[1]])
+      times_graph(button7())
     })
-
+    
     ## download
     output$times_out_down <- downloadHandler(
       filename =  function() {
@@ -2669,7 +2686,7 @@ Reads2MapApp <- function(...) {
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
         
         data$key <- gsub("time", "seconds", data$key)
-
+        
         perfumaria(data)
         
         incProgress(0.5, detail = paste("Doing part", 2))
@@ -2698,7 +2715,7 @@ Reads2MapApp <- function(...) {
         data$`false negatives` <- data$real - data$`true positives`
         
         data <- data  %>% pivot_longer(cols=c(4:8))
-
+        
         incProgress(0.5, detail = paste("Doing part", 2))
         # perfurmaria
         snpcall <- c(GATK = "gatk", freebayes = "freebayes")
@@ -2752,9 +2769,9 @@ Reads2MapApp <- function(...) {
     button10 <- eventReactive(input$go10, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-
+        
         geno <- test_geno(input$Global0.05.7, input$ErrorProb7)
-  
+        
         data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall7) %>%
           filter(depth == input$depth7) %>%
@@ -2876,7 +2893,7 @@ Reads2MapApp <- function(...) {
     button11.1 <- eventReactive(input$go11.1, {
       withProgress(message = 'Building heatmap', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-
+        
         geno <- test_geno(input$Global0.05.11, input$ErrorProb11)
         
         if(input$CountsFrom11 == "bam" & (input$ErrorProb11 == "OneMap_version2" | input$ErrorProb11 == "SNPCaller")){
@@ -2954,15 +2971,15 @@ Reads2MapApp <- function(...) {
     button12 <- eventReactive(input$go12, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-
+        
         geno <- test_geno(input$Global0.05.12, input$ErrorProb12)
         
         if(input$CountsFrom12 == "bam" & (input$ErrorProb12 == "OneMap_version2" | input$ErrorProb12 == "SNPCaller")){
           stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
         }
         
-        depth <- paste0(result_list[[7]][[1]][as.numeric(input$seed12)])
-        seed <- result_list[[7]][[2]][as.numeric(input$seed12)]
+        depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
+        seed <- datas_simu()[[7]][[2]][as.numeric(input$seed12)]
         if(input$fake12 == "with-false") fake <- T else fake <- F
         temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall12, "_", 
                          input$CountsFrom12, "_", geno, "_", fake)
@@ -2971,8 +2988,8 @@ Reads2MapApp <- function(...) {
         if(geno == "gusmap"){
           stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
         } else {
-          idx <- which(result_list[[8]] == temp_n)
-          data <- readList(result_list[[10]], index = idx)
+          idx <- which(datas_simu()[[8]] == temp_n)
+          data <- readList(datas_simu()[[10]], index = idx)
           data <- data[[1]][[1]]
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
@@ -2988,9 +3005,9 @@ Reads2MapApp <- function(...) {
     
     button12.1 <- eventReactive(input$go12.1, {
       withProgress(message = 'Building graphic', value = 0, {
-        sub_dat <- subset(result_list[[9]], result_laist[[9]][[2]] == result_list[[7]][[1]][as.numeric(input$seed12)] & 
-                            result_list[[9]][[1]] == result_list[[7]][[2]][as.numeric(input$seed12)] &
-                            result_list[[9]][[3]] %in% input$inds12)
+        sub_dat <- subset(datas_simu()[[9]], datas_simu()[[9]][[2]] == datas_simu()[[7]][[1]][as.numeric(input$seed12)] & 
+                            datas_simu()[[9]][[1]] == datas_simu()[[7]][[2]][as.numeric(input$seed12)] &
+                            datas_simu()[[9]][[3]] %in% input$inds12)
         
         sub_dat <- sub_dat[,-c(1,2)]
         class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
@@ -3017,8 +3034,8 @@ Reads2MapApp <- function(...) {
             stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
           }
           
-          depth <- paste0(result_list[[7]][[1]][as.numeric(input$seed12)])
-          seed <- result_list[[7]][[2]][as.numeric(input$seed12)]
+          depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
+          seed <- datas_simu()[[7]][[2]][as.numeric(input$seed12)]
           if(input$fake12 == "with-false") fake <- T else fake <- F
           temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall12, "_", 
                            input$CountsFrom12, "_", geno, "_", fake)
@@ -3039,35 +3056,21 @@ Reads2MapApp <- function(...) {
       } 
     )
     #######################
-    # Breakpoints count parei aqui!
+    # Breakpoints count 
     #######################
     button13 <- eventReactive(input$go13, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.13){
-          if(input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller"){
-            geno <- paste0("default", 0.05)
-          } else if (input$ErrorProb13 == "gusmap"){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
-          } else {
-            geno <- paste0(input$ErrorProb13, 0.05)
-          }
-        } else {
-          if( input$ErrorProb13 == "OneMap_version2"){
-            geno <- "default"
-          } else {
-            geno <- input$ErrorProb13
-          }
-        }
         
-        if(input$CountsFrom13 == "bam" & (input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
-        }
+        geno <- test_geno(input$Global0.05.13, input$ErrorProb13)
         
-        temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
+        stop_bam(input$CountsFrom13, input$ErrorProb13)
+        
+        depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
+        seed <- datas_simu()[[7]][[2]][as.numeric(input$seed13)]
         if(input$fake13 == "with-false") fake <- T else fake <- F
-        temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
-                         "_map_",input$SNPCall13, "_", input$CountsFrom13, "_", geno, "_", fake)
+        temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall13, "_", 
+                         input$CountsFrom13, "_", geno, "_", fake)
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
@@ -3075,8 +3078,7 @@ Reads2MapApp <- function(...) {
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
           data <- readList(datas_simu()[[10]], index = idx)
-          data <- data[[1]]
-          class(data) <- "sequence"
+          data <- data[[1]][[1]]
           incProgress(0.5, detail = paste("Doing part", 3))
           inds <- 1:data$data.name$n.ind
           df <- progeny_haplotypes(data, ind = inds, most_likely = T)
@@ -3091,13 +3093,8 @@ Reads2MapApp <- function(...) {
           data2 <- progeny_haplotypes_counts(x = sub_dat)
           
           data1$grp <- unique(data2$grp)
-          temp_list <- merge(data2, data1, by = c("ind", "grp", "homologs"))
           
-          m <- cbind(temp_list[,4], temp_list[,5])
-          
-          data3 <- agree_coefs(m, method = c("kendall.concor","kendall.corr"))
-          
-          list(data1, data2, data3)
+          list(data1, data2)
         }
       })
     })
@@ -3110,10 +3107,6 @@ Reads2MapApp <- function(...) {
       plot(button13()[[2]])
     })
     
-    output$wrong_haplotypes <- renderDataTable({
-      button13()[[3]]
-    })
-    
     ## download
     output$counts_out_down <- downloadHandler(
       filename =  function() {
@@ -3123,30 +3116,15 @@ Reads2MapApp <- function(...) {
       content = function(file) {
         withProgress(message = 'Building graphic', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
-          if(input$Global0.05.13){
-            if( input$ErrorProb13 == "OneMap_version2"){
-              geno <- paste0("default", 0.05)
-            } else if (input$ErrorProb13 == "gusmap"){
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
-            } else {
-              geno <- paste0(input$ErrorProb13, 0.05)
-            }
-          } else {
-            if( input$ErrorProb13 == "OneMap_version2"){
-              geno <- "default"
-            } else {
-              geno <- input$ErrorProb13
-            }
-          }
+          geno <- test_geno(input$Global0.05.13, input$ErrorProb13)
           
-          if(input$CountsFrom13 == "bam" & (input$ErrorProb13 == "OneMap_version2" | input$ErrorProb13 == "SNPCaller")){
-            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
-          }
+          stop_bam(input$CountsFrom13, input$ErrorProb13)
           
-          temp_n <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
+          depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
+          seed <- datas_simu()[[7]][[2]][as.numeric(input$seed13)]
           if(input$fake13 == "with-false") fake <- T else fake <- F
-          temp_n <- paste0(datas_simu()[[7]][[2]][as.numeric(input$seed13)], "_",temp_n, 
-                           "_map_",input$SNPCall13, "_", input$CountsFrom13, "_", geno, "_", fake)
+          temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall13, "_", 
+                           input$CountsFrom13, "_", geno, "_", fake)
           
           incProgress(0.25, detail = paste("Doing part", 2))
           if(geno == "gusmap"){
@@ -3154,8 +3132,7 @@ Reads2MapApp <- function(...) {
           } else {
             idx <- which(datas_simu()[[8]] == temp_n)
             data <- readList(datas_simu()[[10]], index = idx)
-            data <- data[[1]]
-            class(data) <- "sequence"
+            data <- data[[1]][[1]]
             incProgress(0.5, detail = paste("Doing part", 3))
             inds <- 1:data$data.name$n.ind
             df <- progeny_haplotypes(data, ind = inds, most_likely = T)
@@ -3168,286 +3145,282 @@ Reads2MapApp <- function(...) {
     #######################
     # Overview
     #######################
-    button31 <- eventReactive(input$go31, {
-      
-      withProgress(message = 'Building graphic', value = 0, {
-        incProgress(0, detail = paste("Doing part", 1))
-        
-        data <- datas_simu()[[1]]
-        data[,8:9] <- apply(datas_simu()[[1]][,8:9], 2, as.character)
-        incProgress(0.1, detail = paste("Doing part", 2))
-        # data$gabGT[which(data$gabGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        # data$gabGT[which(data$gabGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
-        # data$methGT[which(data$methGT == "homozygous" & data$ref >= data$alt)] <- "homozygote-ref"
-        # data$methGT[which(data$methGT == "homozygous" & data$ref < data$alt)] <- "homozygote-alt"
-        
-        # Why are there NAs in ref and alt of polyrad?
-        if(length(which(is.na(data$ref))) > 0)
-          data <- data[-which(is.na(data$ref)),]
-        incProgress(0.15, detail = paste("Doing part", 3))
-        data$gab <- as.numeric(factor(data$gabGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt"))) 
-        data$est <- as.numeric(factor(data$methGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt", "missing")))
-        
-        data <- data %>% group_by(SNPCall, GenoCall, CountsFrom, depth, seed) %>%
-          summarise(kappa_phases = agree_coefs(cbind(gab,est), method = "kappa")) %>% ungroup()
-        
-        genotype <- cbind(data[,1:5], data$kappa_phases[,1:2])
-        colnames(genotype)[6:7] <- c("Value", "Kappa's coefficient for genotypes")
-        
-        data <- datas_simu()[[2]][-which(datas_simu()[[2]]$fake =="with-false"),]
-        data1 <- data %>% group_by(GenoCall, SNPCall, CountsFrom, depth, seed) %>%
-          summarise(kappa_phases= agree_coefs(cbind(est.phases, real.phases), method = "kappa"),
-                    kappa_markers= agree_coefs(cbind(type, real.type), method = "kappa"),
-                    non_informative = (sum(real.type=="non-informative")/length(real.type))*100,
-                    map_size = rf[length(rf)],
-                    n_markers = n()) %>% 
-          ungroup()
-        incProgress(0.2, detail = paste("Doing part", 4))
-        data1 <- cbind(data1[,1:5], 
-                       data1$kappa_phases[,1:2], 
-                       data1$kappa_markers[,2], 
-                       data1$non_informative,
-                       data1$map_size,
-                       data1$n_markers)
-        
-        colnames(data1)[6:11] <- c("Value", "Kappa's coefficient for phases",
-                                   "Kappa's coefficient for marker types",
-                                   "Percentage of non-informative markers", 
-                                   "Map size (cM)",
-                                   "Number markers in map")
-        
-        df_overview <- merge(genotype, data1)
-        
-        only_true <- seq(1,length(datas_simu()[[8]]),2)
-        part<-0.7/length(datas_simu()[[8]][only_true])
-        parts <- seq(0.2,0.9, part)[-1]
-        
-        df_breakpoints <- data.frame()
-        z <- 1
-        for(i in only_true){
-          #incProgress(0.2+parts[z], detail = paste("Doing part", 4+z))
-          z <- z + 1
-          ID <- unlist(strsplit(datas_simu()[[8]][i], "_"))
-          data <- readList(datas_simu()[[10]], index = i)
-          data <- data[[1]]
-          class(data) <- "sequence"
-          inds <- 1:data$data.name$n.ind
-          df <- progeny_haplotypes(data, ind = inds, most_likely = T)
-          counts <- progeny_haplotypes_counts(df)
-          
-          df_correct <- datas_simu()[[9]] %>% filter(seed == ID[1]) %>%
-            filter(depth == ID[2]) 
-          
-          sub_dat <- df_correct[,-c(1,2)]
-          class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
-          data2 <- progeny_haplotypes_counts(x = sub_dat)
-          
-          counts$grp <- unique(data2$grp)
-          temp_list <- merge(counts, data2, by = c("ind", "grp", "homologs"))
-          
-          m <- cbind(est = temp_list[,4], gab = temp_list[,5])
-          
-          data3 <- agree_coefs(m, method = c("kendall.concor","kendall.corr"))
-          
-          breakpoints <- data.frame(seed = ID[1], depth = ID[2], SNPCall = ID[4], 
-                                    CountsFrom = ID[5], GenoCall = ID[6], data3[,c(1,2,3)])
-          
-          df_breakpoints <- rbind(df_breakpoints, breakpoints)
-        }
-        
-        incProgress(0.95, detail = paste("Doing last part"))
-        colnames(df_breakpoints)[6:8] <- c("Value", "Kendall's coefficient of concordance for breakpoints",
-                                           "Kendall's coefficient of correlation for breakpoints")
-        
-        df_breakpoints$GenoCall <- as.character(df_breakpoints$GenoCall)
-        df_breakpoints$GenoCall[df_breakpoints$GenoCall == "default0.05"] <- "SNPCaller0.05"
-        df_breakpoints$GenoCall[df_breakpoints$GenoCall == "default"] <- "OneMap_version2"
-        
-        df_overview <- merge(df_overview, df_breakpoints)
-        
-        
-        time <- datas_simu()[[4]] %>% filter(fake == "without-false")
-        time <- time[,-6] 
-        
-        df_overview <- merge(df_overview, time)
-        df_overview
-      })
-    })
-    
-    output$overview_plot_out <- renderPlot({
-      df_overview <- button31()
-      over_graph <- overview_graph(df_overview, input$overview_depth)
-      annotate_figure(over_graph,
-                      top = text_grob("Overview", face = "bold", size = 14))
-    }, width = 1000, height = 670)
-    
-    
-    ## download
-    output$overview_plot_down <- downloadHandler(
-      filename =  function() {
-        paste("overview.eps")
-      },
-      # content is a function with argument file. content writes the plot to the device
-      content = function(file) {
-        df_overview <- button31()
-        p <- overview_graph(df_overview, depth = input$overview_depth)
-        ggsave(p, filename = file, width = 220, height = 220, units = "mm")
-      }
-    )    
-    
-    
-    output$overview_out <- renderDataTable({
-      df_overview <- button31()
-      choices <- c("geno", "phases", "marker", "noninfo", "mapsize",
-                   "nmarker", "conco_break", "corr_break", "time")
-      
-      if (input$display_overview == "full") {
-        colnames(df_overview)[1:3] <- c("SNP caller","Genotype caller","Read counts from")
-        
-        idx_columns <- which(choices %in% input$over_columns)
-        idx_columns <- idx_columns + 6
-        data_display <- df_overview[, c(1:6, idx_columns)]
-        
-      } else {
-        colnames(df_overview)[7:15] <-  c("geno", "phases", "marker", "noninfo", "mapsize",
-                                          "nmarker", "conco_break", "corr_break", "time")
-        df_overview$time <- as.numeric(as.character(df_overview$time))
-        # Include statistics 
-        data_display <- df_overview %>% group_by(depth, SNPCall, GenoCall, CountsFrom, Value) %>%
-          summarise(geno_mean = mean(geno),
-                    geno_se = sd(geno)/sqrt(length(geno)),
-                    phases_mean = mean(phases),
-                    phases_se = sd(phases)/sqrt(length(phases)),
-                    marker_mean = mean(marker),
-                    marker_se = sd(marker)/sqrt(length(marker)),
-                    noninfo_mean = mean(noninfo),
-                    noninfo_se = sd(noninfo)/sqrt(length(noninfo)),
-                    mapsize_mean = mean(mapsize),
-                    mapsize_se = sd(mapsize)/sqrt(length(mapsize)),
-                    nmarker_mean = mean(nmarker),
-                    nmarker_se = sd(nmarker)/sqrt(length(nmarker)),
-                    conco_break_mean = mean(conco_break),
-                    conco_break_se = sd(conco_break)/sqrt(length(conco_break)),
-                    corr_break_mean = mean(corr_break),
-                    corr_break_se = sd(corr_break)/sqrt(length(corr_break)),
-                    time_mean = mean(time),
-                    time_se = sd(time)/sqrt(length(time))) %>% ungroup()
-        
-        colnames(data_display)[6:23] <- c("Kappa's coefficient for genotypes mean",
-                                          "Kappa's coefficient for genotypes se",
-                                          "Kappa's coefficient for phases mean",
-                                          "Kappa's coefficient for phases se",
-                                          "Kappa's coefficient for marker types mean",
-                                          "Kappa's coefficient for marker types se",
-                                          "Percentage of non-informative markers mean", 
-                                          "Percentage of non-informative markers se", 
-                                          "Map size (cM) mean",
-                                          "Map size (cM) se",
-                                          "Number markers in map mean",
-                                          "Number markers in map se",
-                                          "Kendall's coefficient of concordance for breakpoints mean",
-                                          "Kendall's coefficient of concordance for breakpoints se",
-                                          "Kendall's coefficient of correlation for breakpoints mean",
-                                          "Kendall's coefficient of correlation for breakpoints se",
-                                          "Time spent (s) mean",
-                                          "Time spent (s) se")
-        choices <- rep(choices, each=2)
-        idx_columns <- which(choices %in% input$over_columns)
-        idx_columns <- idx_columns + 5
-        data_display <- data_display[, c(1:5, idx_columns)]
-        colnames(data_display)[2:4] <- c("SNP caller","Genotype caller","Read counts from")
-      }
-      
-      idx <- c("value", "p-value") %in% input$value
-      if(all(idx)){
-        df_sele <- data_display
-      } else if(idx[1] == TRUE){
-        df_sele <- data_display %>% filter(Value == "value")
-      } else {
-        df_sele <- data_display %>% filter(Value == "p-value")
-      }
-      df_sele
-    })
-    
-    ## download
-    output$overview_down <- downloadHandler(
-      filename =  function() {
-        paste("overview.rds")
-      },
-      # content is a function with argument file. content writes the plot to the device
-      content = function(file) {
-        df_overview <- button31()
-        choices <- c("geno", "phases", "marker", "noninfo", "mapsize",
-                     "nmarker", "conco_break", "corr_break", "time")
-        
-        if (input$display_overview == "full") {
-          colnames(df_overview)[1:3] <- c("SNP caller","Genotype caller","Read counts from")
-          
-          idx_columns <- which(choices %in% input$over_columns)
-          idx_columns <- idx_columns + 6
-          data_display <- df_overview[, c(1:6, idx_columns)]
-          
-        } else {
-          colnames(df_overview)[7:15] <-  c("geno", "phases", "marker", "noninfo", "mapsize",
-                                            "nmarker", "conco_break", "corr_break", "time")
-          df_overview$time <- as.numeric(as.character(df_overview$time))
-          # Include statistics 
-          data_display <- df_overview %>% group_by(depth, SNPCall, GenoCall, CountsFrom, Value) %>%
-            summarise(geno_mean = mean(geno),
-                      geno_se = sd(geno)/sqrt(length(geno)),
-                      phases_mean = mean(phases),
-                      phases_se = sd(phases)/sqrt(length(phases)),
-                      marker_mean = mean(marker),
-                      marker_se = sd(marker)/sqrt(length(marker)),
-                      noninfo_mean = mean(noninfo),
-                      noninfo_se = sd(noninfo)/sqrt(length(noninfo)),
-                      mapsize_mean = mean(mapsize),
-                      mapsize_se = sd(mapsize)/sqrt(length(mapsize)),
-                      nmarker_mean = mean(nmarker),
-                      nmarker_se = sd(nmarker)/sqrt(length(nmarker)),
-                      conco_break_mean = mean(conco_break),
-                      conco_break_se = sd(conco_break)/sqrt(length(conco_break)),
-                      corr_break_mean = mean(corr_break),
-                      corr_break_se = sd(corr_break)/sqrt(length(corr_break)),
-                      time_mean = mean(time),
-                      time_se = sd(time)/sqrt(length(time))) %>% ungroup()
-          
-          colnames(data_display)[6:23] <- c("Kappa's coefficient for genotypes mean",
-                                            "Kappa's coefficient for genotypes se",
-                                            "Kappa's coefficient for phases mean",
-                                            "Kappa's coefficient for phases se",
-                                            "Kappa's coefficient for marker types mean",
-                                            "Kappa's coefficient for marker types se",
-                                            "Percentage of non-informative markers mean", 
-                                            "Percentage of non-informative markers se", 
-                                            "Map size (cM) mean",
-                                            "Map size (cM) se",
-                                            "Number markers in map mean",
-                                            "Number markers in map se",
-                                            "Kendall's coefficient of concordance for breakpoints mean",
-                                            "Kendall's coefficient of concordance for breakpoints se",
-                                            "Kendall's coefficient of correlation for breakpoints mean",
-                                            "Kendall's coefficient of correlation for breakpoints se",
-                                            "Time spent (s) mean",
-                                            "Time spent (s) se")
-          choices <- rep(choices, each=2)
-          idx_columns <- which(choices %in% input$over_columns)
-          idx_columns <- idx_columns + 5
-          data_display <- data_display[, c(1:5, idx_columns)]
-          colnames(data_display)[2:4] <- c("SNP caller","Genotype caller","Read counts from")
-        }
-        
-        idx <- c("value", "p-value") %in% input$value
-        if(all(idx)){
-          df_sele <- data_display
-        } else if(idx[1] == TRUE){
-          df_sele <- data_display %>% filter(Value == "value")
-        } else {
-          df_sele <- data_display %>% filter(Value == "p-value")
-        }
-        saveRDS(df_sele, file = file)
-      } 
-    )    
+    # button31 <- eventReactive(input$go31, {
+    #   
+    #   withProgress(message = 'Building graphic', value = 0, {
+    #     incProgress(0, detail = paste("Doing part", 1))
+    #     
+    #     data <- result_list[[1]]
+    #     data[,8:9] <- apply(result_list[[1]][,8:9], 2, as.character)
+    #     incProgress(0.1, detail = paste("Doing part", 2))
+    # 
+    #     # Why are there NAs in ref and alt of polyrad?
+    #     if(length(which(is.na(data$ref))) > 0)
+    #       data <- data[-which(is.na(data$ref)),]
+    #     incProgress(0.15, detail = paste("Doing part", 3))
+    #     data$gab <- as.numeric(factor(data$gabGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt"))) 
+    #     data$est <- as.numeric(factor(data$methGT, levels=c("homozygote-ref", "heterozygote", "homozygote-alt", "missing")))
+    #     
+    #     data <- data %>% group_by(SNPCall, GenoCall, CountsFrom, depth, seed) %>%
+    #       summarise(kappa_phases = agree_coefs(cbind(gab,est), method = "kappa")) %>% ungroup()
+    #     
+    #     genotype <- cbind(data[,1:5], data$kappa_phases[,1:2])
+    #     colnames(genotype)[6:7] <- c("Value", "Kappa's coefficient for genotypes")
+    #     
+    #     data <- datas_simu()[[2]][-which(datas_simu()[[2]]$fake =="with-false"),]
+    #     data1 <- data %>% group_by(GenoCall, SNPCall, CountsFrom, depth, seed) %>%
+    #       summarise(kappa_phases= agree_coefs(cbind(est.phases, real.phases), method = "kappa"),
+    #                 kappa_markers= agree_coefs(cbind(type, real.type), method = "kappa"),
+    #                 non_informative = (sum(real.type=="non-informative")/length(real.type))*100,
+    #                 map_size = rf[length(rf)],
+    #                 n_markers = n()) %>% 
+    #       ungroup()
+    #     incProgress(0.2, detail = paste("Doing part", 4))
+    #     data1 <- cbind(data1[,1:5], 
+    #                    data1$kappa_phases[,1:2], 
+    #                    data1$kappa_markers[,2], 
+    #                    data1$non_informative,
+    #                    data1$map_size,
+    #                    data1$n_markers)
+    #     
+    #     colnames(data1)[6:11] <- c("Value", "Kappa's coefficient for phases",
+    #                                "Kappa's coefficient for marker types",
+    #                                "Percentage of non-informative markers", 
+    #                                "Map size (cM)",
+    #                                "Number markers in map")
+    #     
+    #     df_overview <- merge(genotype, data1)
+    #     
+    #     only_true <- seq(1,length(datas_simu()[[8]]),2)
+    #     part<-0.7/length(datas_simu()[[8]][only_true])
+    #     parts <- seq(0.2,0.9, part)[-1]
+    #     
+    #     df_breakpoints <- data.frame()
+    #     z <- 1
+    #     for(i in only_true){
+    #       #incProgress(0.2+parts[z], detail = paste("Doing part", 4+z))
+    #       z <- z + 1
+    #       ID <- unlist(strsplit(datas_simu()[[8]][i], "_"))
+    #       data <- readList(datas_simu()[[10]], index = i)
+    #       data <- data[[1]]
+    #       class(data) <- "sequence"
+    #       inds <- 1:data$data.name$n.ind
+    #       df <- progeny_haplotypes(data, ind = inds, most_likely = T)
+    #       counts <- progeny_haplotypes_counts(df)
+    #       
+    #       df_correct <- datas_simu()[[9]] %>% filter(seed == ID[1]) %>%
+    #         filter(depth == ID[2]) 
+    #       
+    #       sub_dat <- df_correct[,-c(1,2)]
+    #       class(sub_dat) <- c("onemap_progeny_haplotypes", "outcross", "data.frame", "most.likely")
+    #       data2 <- progeny_haplotypes_counts(x = sub_dat)
+    #       
+    #       counts$grp <- unique(data2$grp)
+    #       temp_list <- merge(counts, data2, by = c("ind", "grp", "homologs"))
+    #       
+    #       m <- cbind(est = temp_list[,4], gab = temp_list[,5])
+    #       
+    #       data3 <- agree_coefs(m, method = c("kendall.concor","kendall.corr"))
+    #       
+    #       breakpoints <- data.frame(seed = ID[1], depth = ID[2], SNPCall = ID[4], 
+    #                                 CountsFrom = ID[5], GenoCall = ID[6], data3[,c(1,2,3)])
+    #       
+    #       df_breakpoints <- rbind(df_breakpoints, breakpoints)
+    #     }
+    #     
+    #     incProgress(0.95, detail = paste("Doing last part"))
+    #     colnames(df_breakpoints)[6:8] <- c("Value", "Kendall's coefficient of concordance for breakpoints",
+    #                                        "Kendall's coefficient of correlation for breakpoints")
+    #     
+    #     df_breakpoints$GenoCall <- as.character(df_breakpoints$GenoCall)
+    #     df_breakpoints$GenoCall[df_breakpoints$GenoCall == "default0.05"] <- "SNPCaller0.05"
+    #     df_breakpoints$GenoCall[df_breakpoints$GenoCall == "default"] <- "OneMap_version2"
+    #     
+    #     df_overview <- merge(df_overview, df_breakpoints)
+    #     
+    #     
+    #     time <- datas_simu()[[4]] %>% filter(fake == "without-false")
+    #     time <- time[,-6] 
+    #     
+    #     df_overview <- merge(df_overview, time)
+    #     df_overview
+    #   })
+    # })
+    # 
+    # output$overview_plot_out <- renderPlot({
+    #   df_overview <- button31()
+    #   over_graph <- overview_graph(df_overview, input$overview_depth)
+    #   annotate_figure(over_graph,
+    #                   top = text_grob("Overview", face = "bold", size = 14))
+    # }, width = 1000, height = 670)
+    # 
+    # 
+    # ## download
+    # output$overview_plot_down <- downloadHandler(
+    #   filename =  function() {
+    #     paste("overview.eps")
+    #   },
+    #   # content is a function with argument file. content writes the plot to the device
+    #   content = function(file) {
+    #     df_overview <- button31()
+    #     p <- overview_graph(df_overview, depth = input$overview_depth)
+    #     ggsave(p, filename = file, width = 220, height = 220, units = "mm")
+    #   }
+    # )    
+    # 
+    # 
+    # output$overview_out <- renderDataTable({
+    #   df_overview <- button31()
+    #   choices <- c("geno", "phases", "marker", "noninfo", "mapsize",
+    #                "nmarker", "conco_break", "corr_break", "time")
+    #   
+    #   if (input$display_overview == "full") {
+    #     colnames(df_overview)[1:3] <- c("SNP caller","Genotype caller","Read counts from")
+    #     
+    #     idx_columns <- which(choices %in% input$over_columns)
+    #     idx_columns <- idx_columns + 6
+    #     data_display <- df_overview[, c(1:6, idx_columns)]
+    #     
+    #   } else {
+    #     colnames(df_overview)[7:15] <-  c("geno", "phases", "marker", "noninfo", "mapsize",
+    #                                       "nmarker", "conco_break", "corr_break", "time")
+    #     df_overview$time <- as.numeric(as.character(df_overview$time))
+    #     # Include statistics 
+    #     data_display <- df_overview %>% group_by(depth, SNPCall, GenoCall, CountsFrom, Value) %>%
+    #       summarise(geno_mean = mean(geno),
+    #                 geno_se = sd(geno)/sqrt(length(geno)),
+    #                 phases_mean = mean(phases),
+    #                 phases_se = sd(phases)/sqrt(length(phases)),
+    #                 marker_mean = mean(marker),
+    #                 marker_se = sd(marker)/sqrt(length(marker)),
+    #                 noninfo_mean = mean(noninfo),
+    #                 noninfo_se = sd(noninfo)/sqrt(length(noninfo)),
+    #                 mapsize_mean = mean(mapsize),
+    #                 mapsize_se = sd(mapsize)/sqrt(length(mapsize)),
+    #                 nmarker_mean = mean(nmarker),
+    #                 nmarker_se = sd(nmarker)/sqrt(length(nmarker)),
+    #                 conco_break_mean = mean(conco_break),
+    #                 conco_break_se = sd(conco_break)/sqrt(length(conco_break)),
+    #                 corr_break_mean = mean(corr_break),
+    #                 corr_break_se = sd(corr_break)/sqrt(length(corr_break)),
+    #                 time_mean = mean(time),
+    #                 time_se = sd(time)/sqrt(length(time))) %>% ungroup()
+    #     
+    #     colnames(data_display)[6:23] <- c("Kappa's coefficient for genotypes mean",
+    #                                       "Kappa's coefficient for genotypes se",
+    #                                       "Kappa's coefficient for phases mean",
+    #                                       "Kappa's coefficient for phases se",
+    #                                       "Kappa's coefficient for marker types mean",
+    #                                       "Kappa's coefficient for marker types se",
+    #                                       "Percentage of non-informative markers mean", 
+    #                                       "Percentage of non-informative markers se", 
+    #                                       "Map size (cM) mean",
+    #                                       "Map size (cM) se",
+    #                                       "Number markers in map mean",
+    #                                       "Number markers in map se",
+    #                                       "Kendall's coefficient of concordance for breakpoints mean",
+    #                                       "Kendall's coefficient of concordance for breakpoints se",
+    #                                       "Kendall's coefficient of correlation for breakpoints mean",
+    #                                       "Kendall's coefficient of correlation for breakpoints se",
+    #                                       "Time spent (s) mean",
+    #                                       "Time spent (s) se")
+    #     choices <- rep(choices, each=2)
+    #     idx_columns <- which(choices %in% input$over_columns)
+    #     idx_columns <- idx_columns + 5
+    #     data_display <- data_display[, c(1:5, idx_columns)]
+    #     colnames(data_display)[2:4] <- c("SNP caller","Genotype caller","Read counts from")
+    #   }
+    #   
+    #   idx <- c("value", "p-value") %in% input$value
+    #   if(all(idx)){
+    #     df_sele <- data_display
+    #   } else if(idx[1] == TRUE){
+    #     df_sele <- data_display %>% filter(Value == "value")
+    #   } else {
+    #     df_sele <- data_display %>% filter(Value == "p-value")
+    #   }
+    #   df_sele
+    # })
+    # 
+    # ## download
+    # output$overview_down <- downloadHandler(
+    #   filename =  function() {
+    #     paste("overview.rds")
+    #   },
+    #   # content is a function with argument file. content writes the plot to the device
+    #   content = function(file) {
+    #     df_overview <- button31()
+    #     choices <- c("geno", "phases", "marker", "noninfo", "mapsize",
+    #                  "nmarker", "conco_break", "corr_break", "time")
+    #     
+    #     if (input$display_overview == "full") {
+    #       colnames(df_overview)[1:3] <- c("SNP caller","Genotype caller","Read counts from")
+    #       
+    #       idx_columns <- which(choices %in% input$over_columns)
+    #       idx_columns <- idx_columns + 6
+    #       data_display <- df_overview[, c(1:6, idx_columns)]
+    #       
+    #     } else {
+    #       colnames(df_overview)[7:15] <-  c("geno", "phases", "marker", "noninfo", "mapsize",
+    #                                         "nmarker", "conco_break", "corr_break", "time")
+    #       df_overview$time <- as.numeric(as.character(df_overview$time))
+    #       # Include statistics 
+    #       data_display <- df_overview %>% group_by(depth, SNPCall, GenoCall, CountsFrom, Value) %>%
+    #         summarise(geno_mean = mean(geno),
+    #                   geno_se = sd(geno)/sqrt(length(geno)),
+    #                   phases_mean = mean(phases),
+    #                   phases_se = sd(phases)/sqrt(length(phases)),
+    #                   marker_mean = mean(marker),
+    #                   marker_se = sd(marker)/sqrt(length(marker)),
+    #                   noninfo_mean = mean(noninfo),
+    #                   noninfo_se = sd(noninfo)/sqrt(length(noninfo)),
+    #                   mapsize_mean = mean(mapsize),
+    #                   mapsize_se = sd(mapsize)/sqrt(length(mapsize)),
+    #                   nmarker_mean = mean(nmarker),
+    #                   nmarker_se = sd(nmarker)/sqrt(length(nmarker)),
+    #                   conco_break_mean = mean(conco_break),
+    #                   conco_break_se = sd(conco_break)/sqrt(length(conco_break)),
+    #                   corr_break_mean = mean(corr_break),
+    #                   corr_break_se = sd(corr_break)/sqrt(length(corr_break)),
+    #                   time_mean = mean(time),
+    #                   time_se = sd(time)/sqrt(length(time))) %>% ungroup()
+    #       
+    #       colnames(data_display)[6:23] <- c("Kappa's coefficient for genotypes mean",
+    #                                         "Kappa's coefficient for genotypes se",
+    #                                         "Kappa's coefficient for phases mean",
+    #                                         "Kappa's coefficient for phases se",
+    #                                         "Kappa's coefficient for marker types mean",
+    #                                         "Kappa's coefficient for marker types se",
+    #                                         "Percentage of non-informative markers mean", 
+    #                                         "Percentage of non-informative markers se", 
+    #                                         "Map size (cM) mean",
+    #                                         "Map size (cM) se",
+    #                                         "Number markers in map mean",
+    #                                         "Number markers in map se",
+    #                                         "Kendall's coefficient of concordance for breakpoints mean",
+    #                                         "Kendall's coefficient of concordance for breakpoints se",
+    #                                         "Kendall's coefficient of correlation for breakpoints mean",
+    #                                         "Kendall's coefficient of correlation for breakpoints se",
+    #                                         "Time spent (s) mean",
+    #                                         "Time spent (s) se")
+    #       choices <- rep(choices, each=2)
+    #       idx_columns <- which(choices %in% input$over_columns)
+    #       idx_columns <- idx_columns + 5
+    #       data_display <- data_display[, c(1:5, idx_columns)]
+    #       colnames(data_display)[2:4] <- c("SNP caller","Genotype caller","Read counts from")
+    #     }
+    #     
+    #     idx <- c("value", "p-value") %in% input$value
+    #     if(all(idx)){
+    #       df_sele <- data_display
+    #     } else if(idx[1] == TRUE){
+    #       df_sele <- data_display %>% filter(Value == "value")
+    #     } else {
+    #       df_sele <- data_display %>% filter(Value == "p-value")
+    #     }
+    #     saveRDS(df_sele, file = file)
+    #   } 
+    # )    
     
     ##################################################################
     # Empirical 

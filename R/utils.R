@@ -31,29 +31,38 @@ stop_bam <- function(countsfrom, error){
 }
 
 perfumaria <- function(data){
-  snpcall <- c(GATK = "gatk", freebayes = "freebayes")
-  data$SNPCall <- names(snpcall)[match(data$SNPCall, snpcall)]
   
-  genocall <- c(polyRAD = "polyrad", 
-                SuperMASSA = "supermassa", 
-                GUSMap = "gusmap", 
-                updog = "updog", 
-                OneMap_version2 = "OneMap_version2", 
-                `freebayes/GATK` = "SNPCaller",
-                `polyRAD (5%)` = "polyrad0.05", 
-                `updog (5%)` = "updog0.05", 
-                `SuperMASSA (5%)` = "supermassa0.05", 
-                `freebayes/GATK (5%)` = "SNPCaller0.05")
+  if(any(colnames(data) %in% "SNPCall")){
+    snpcall <- c(GATK = "gatk", freebayes = "freebayes")
+    data$SNPCall <- names(snpcall)[match(data$SNPCall, snpcall)]
+  }
   
-  data$GenoCall <- names(genocall)[match(data$GenoCall, genocall)]
+  if(any(colnames(data) %in% "GenoCall")){
+    genocall <- c(polyRAD = "polyrad", 
+                  SuperMASSA = "supermassa", 
+                  GUSMap = "gusmap", 
+                  updog = "updog", 
+                  OneMap_version2 = "OneMap_version2", 
+                  `freebayes/GATK` = "SNPCaller",
+                  `polyRAD (5%)` = "polyrad0.05", 
+                  `updog (5%)` = "updog0.05", 
+                  `SuperMASSA (5%)` = "supermassa0.05", 
+                  `freebayes/GATK (5%)` = "SNPCaller0.05")
+    
+    data$GenoCall <- names(genocall)[match(data$GenoCall, genocall)]
+  }
   
-  countsfrom <- c(BAM = "bam", VCF = "vcf")
-  data$CountsFrom <- names(countsfrom)[match(data$CountsFrom, countsfrom)]
-
-  depth.n <- paste("Depth", unique(data$depth))
-  depth <- unique(data$depth)
-  names(depth) <- depth.n
-  data$depth <- names(depth)[match(data$depth, depth)]
+  if(any(colnames(data) %in% "CountsFrom")){
+    countsfrom <- c(BAM = "bam", VCF = "vcf")
+    data$CountsFrom <- names(countsfrom)[match(data$CountsFrom, countsfrom)]
+  }
+  
+  if(any(colnames(data) %in% "depth")){
+    depth.n <- paste("Depth", unique(data$depth))
+    depth <- unique(data$depth)
+    names(depth) <- depth.n
+    data$depth <- names(depth)[match(data$depth, depth)]
+  }
   
   return(data)
 }
