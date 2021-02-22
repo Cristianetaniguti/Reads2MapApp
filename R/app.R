@@ -59,7 +59,7 @@ Reads2MapApp <- function(...) {
                             "VCF"="vcf")
   
   stats_choice <- list("euclidean_dist", "mean", "median", "var", "total", "total_size")
-  names(stats_choice) <- c("mean", "median", "var", "total", "total size")
+  names(stats_choice) <- c("Euclidean distance (D)", "mean", "median", "var", "total", "total size")
   
   fake_choices <- list("with-false", "without-false")
   names(fake_choices) <- c("yes", "no")
@@ -72,6 +72,12 @@ Reads2MapApp <- function(...) {
   ## Header
   header <- dashboardHeader(
     title = "Reads2MapApp",
+    # Logo in the header
+    # tags$li(class = "dropdown",
+    #         tags$a(href="https://statgen-esalq.github.io/", target="_blank", 
+    #                tags$img(height = "20px", alt="SNAP Logo", src="logo_fundo_azul.png")
+    #         )
+    # ),
     titleWidth = 250)
   
   sidebar <- dashboardSidebar(
@@ -87,6 +93,7 @@ Reads2MapApp <- function(...) {
                menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type"),
                menuSubItem("Times", icon = icon("circle"), tabName = "times"),
                menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth"),
+               menuSubItem("Genotype probabilities", icon = icon("circle"), tabName = "probs"),
                menuSubItem("Map size each family", icon = icon("circle"), tabName = "ind_size"),
                menuSubItem("Overview map size", icon = icon("circle"), tabName = "all_size"),
                menuSubItem("Phases", icon = icon("circle"), tabName = "phases"),
@@ -109,11 +116,73 @@ Reads2MapApp <- function(...) {
                menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts_emp"),
                menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb_emp"),
                menuSubItem("Overview", icon = icon("circle"), tabName = "overview_emp")),
-      menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times")
+      menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times"),
+      tags$li(class = "dropdown",
+              tags$a(href="https://statgen-esalq.github.io/", target="_blank", 
+                     tags$img(height = "60px", alt="Logo", src="logo_fundo_azul.png")
+              ))
     )
   )
   
   body <- dashboardBody(
+    # Also add some custom CSS to make the title background area the same
+    # color as the rest of the header.
+    tags$head(tags$style(HTML('
+        /* logo */
+        .skin-blue .main-header .logo {
+                              background-color: #003350;
+                              }
+
+        /* logo when hovered */
+        .skin-blue .main-header .logo:hover {
+                              background-color: #003350;
+                              }
+
+        /* navbar (rest of the header) */
+        .skin-blue .main-header .navbar {
+                              background-color: #003350;
+                              }        
+
+        /* main sidebar */
+        .skin-blue .main-sidebar {
+                              background-color: #003350;
+                              }
+
+        /* active selected tab in the sidebarmenu */
+        .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+                              background-color:  #003350;
+                              color: #ffffff;
+                              }
+
+        /* other links in the sidebarmenu */
+        .skin-blue .main-sidebar .sidebar .sidebar-menu a{
+                              background-color:  #003350;
+                              color: #ffffff;
+                              }
+
+        /* other links in the sidebarmenu when hovered */
+         .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
+                              background-color: #cc662f;
+                              color: #000000;
+                              }
+        /* toggle button when hovered  */                    
+         .skin-blue .main-header .navbar .sidebar-toggle:hover{
+                              background-color: #003350;
+         }
+                              
+        .box.box-solid.box-primary>.box-header {
+          color:#fff;
+          background:#cc662f
+                            }
+        
+        .box.box-solid.box-primary{
+        border-bottom-color:#cc662f;
+        border-left-color:#cc662f;
+        border-right-color:#cc662f;
+        border-top-color:#cc662f;
+        }
+                              '))),
+    
     tabItems(
       ##########################################################
       tabItem(tabName = "about",
@@ -137,47 +206,45 @@ Reads2MapApp <- function(...) {
               tags$b("EmpiricalReads2Map.wdl example results"),".",
               hr(),
               column(width = 6,
-                     box(width = 12,
+                     box(width = 12, solidHeader = TRUE, collapsible = FALSE, status="primary", title = "SimulatedReads2Map",
                          fluidPage(
                            tags$h4(tags$b("Upload SimulatesReads2Map results:")),
-                           "If you have more than one depth value, submit all them together.", br(),
-                           tags$strong("To not overload our server, we limited the upload size to 500MB."), br(), 
+                           "To not overload our server, we limited the upload size to 500MB.", 
                            "If your results have larger size, please run the app locally using:", br(),
-                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(),
+                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(), br(),
                            # Copy the line below to make a file upload manager
+                           "If you have more than one depth value, submit all them together.", br(),
                            fileInput("simulatedreads", label = h6("SimulatedReads2Map_<depth>.tar.gz"), multiple = T),
                          ),
                          
                          fluidPage(
                            # Copy the line below to make a select box 
                            selectInput("example_simu", label = h4(tags$b("SimulatedReads2Map.wdl example results")), 
-                                       choices = list("Populus 30% of chromosome 10 pop size 200 (RADinitio)" = "populus_200_radinitio",
-                                                      "Populus chromosome 10 pop size 50 (pirs)" = "populus_50_pirs",
-                                                      "Populus chromosome 10 pop size 150 (pirs)" = "populus_150_pirs",
-                                                      "Populus chromosome 10 pop size 150 with multiallelics (pirs)" = "populus_150_multi_pirs",
-                                                      "Toy sample" = "toy_sample",
+                                       choices = list("Populus 30% of chromosome 10 pop size 200 only biallelics (RADinitio)" = "populus_200_bi_radinitio",
+                                                      "Populus 30% of chromosome 10 pop size 200 with multiallelics (RADinitio)" = "populus_200_multi_radinitio",
+                                                      "Toy sample" = "toy_sample_bi",
                                                       "Toy sample with multiallelics" = "toy_sample_multi"), 
                                        selected = "toy_sample_multi"),
                          )
                      )
               ),
               column(width = 6,
-                     box(width = 12,
+                     box(width = 12, solidHeader = TRUE, collapsible = FALSE, status="primary", title= "EmpiricalReads2Map",
                          fluidPage(
                            
                            tags$h4(tags$b("Upload EmpiricalReads2Map results:")),
-                           "If you have more than one depth value, submit all them together.", br(),
-                           tags$strong("To not overload our server, we limited the upload size to 500MB."), br(), 
+                           "To not overload our server, we limited the upload size to 500MB.", 
                            "If your results have larger size, please run the app locally using:", br(),
-                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(),
+                           tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(), br(),
                            # Copy the line below to make a file upload manager
+                           "If you have more than one depth value, submit all them together.", br(),
                            fileInput("empiricalreads", label = h6("EmpiricalReads2Map_<depth>.tar.gz"), multiple = T, accept = ".tar.gz"),
                          ),
                          fluidPage(
                            # Copy the line below to make a select box 
                            selectInput("example_emp", label = h4(tags$b("EmpiricalReads2Map.wdl example results")), 
-                                       choices = list("Populus chromosome 10 with contaminants" = "populus_cont",
-                                                      "Populus chromosome 10 " = "populus",
+                                       choices = list("Populus chromosome 10 with contaminants only biallelics" = "populus_cont",
+                                                      "Populus chromosome 10 only biallelics" = "populus",
                                                       "Populus chromosome 10 with multiallics" = "populus_multi",
                                                       "Eucalyptus chromosome 10" = "eucalyptus",
                                                       "Toy sample" = "toy_sample",
@@ -198,8 +265,8 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidRow(
                 column(width = 6,
-                       box(
-                         width = NULL,
+                       box(title = "Depth and genotyping 1",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("disper_depth_out"),
                          hr(),
                          actionButton("go1", "Update",icon("refresh")),
@@ -259,8 +326,8 @@ Reads2MapApp <- function(...) {
                 ),
                 
                 column(width = 6,
-                       box(
-                         width = NULL,
+                       box(title = "Depth and genotyping 2",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("disper_depth2_out"), 
                          hr(),
                          tableOutput('disper_depth2_cor_out'),
@@ -321,14 +388,95 @@ Reads2MapApp <- function(...) {
               )
       ),
       ##########################################################
+      tabItem(tabName = "probs",
+              "Progeny and parents genotpe concordance", hr(),
+              fluidRow(
+                column(width=6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb_probs", label = p("Genotyping method"),
+                                              choices = maps_choice,
+                                              selected = names(maps_choice)),
+                           hr()
+                         ),
+                         #helpText("Select the SNP calling method"),
+                         fluidPage(
+                           checkboxGroupInput("SNPCall_probs", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = unlist(SNPCall_choice)),
+                         )
+                       )
+                ),
+                column(width=6,
+                       box(width = NULL, solidHeader = TRUE,
+                           #helpText("Select the family seed"),
+                           fluidPage(
+                             checkboxGroupInput("depth_probs", label = p("Depth"),
+                                         choices = "It will be updated",
+                                         selected = "It will be updated"),
+                             hr()
+                           ),
+                           
+                           #helpText("Read counts from:"),
+                           fluidPage(
+                             
+                             checkboxGroupInput("CountsFrom_probs", label = p("Counts from"),
+                                          choices = CountsFrom_choice,
+                                          selected = "vcf"),
+                             hr(),
+                             actionButton("go_probs", "Update",icon("refresh")),
+                             # ),
+                           )
+                       )
+                ), br(),
+                column(width=12,
+                       box(width=NULL, solidHeader = TRUE,
+                           tags$strong("Progeny genotypes"), br(),
+                           "We can evaluate the estimated progenies genotypes concordance by comparing the agreement between
+                 real and estimated heterozygous, reference allele homozygous (homozygous-ref), and alternative 
+                 allele homozygous (homozygous-alt). For that, we used conditional probabilities: P (Estimate =
+                 E|M ethod = M ∩ Real = R). It returns the probability of an estimated genotype given a method and
+                 a real genotype. The methods are the combination of each SNP caller, genotype caller, and reads count58
+                 source. We expect that a good method results in high probabilities for the same estimated and real genotypes
+                 (e.g. P (E = heterozygous|M ∩ R = hetetozygous)) and low probabilities when they are different
+                 (e.g. P (E = heterozygous|M ∩ S = homozygous − alt))."),
+                       hr(),
+                       
+                       box(title = "Biallelics and multiallelics",
+                         width = NULL, solidHeader = TRUE, collapsible = TRUE, status="primary",
+                         plotOutput("probs_prog_out", width = "100%", height = "100%"),
+                       )
+                ),
+                column(width = 12,
+                       box(width=NULL, solidHeader = TRUE,
+                           tags$strong("Parents genotypes"), br(),
+                           "To test the capabilities of software correctly estimating the parents’ genotypes, we can used the
+                 same conditional probability, but, instead of measure the similarities between individuals genotypes, we
+                 test the combination of both parents genotypes. To do that we performed the conditional probabilities
+                 analysis between the marker types (e.g. P (E = B3.7|M ∩ R = B3.7))"),
+                       hr(),
+                       box(title = "Only biallelic markers.",
+                         width = NULL, solidHeader = TRUE, collapsible = TRUE, status="primary",
+                         plotOutput("probs_pare_bi_out", width = "100%", height = "100%"),
+                       ),
+                       box(title = "Only multiallelic markers.",
+                         width = NULL, solidHeader = TRUE, collapsible = TRUE, status="primary",
+                         plotOutput("probs_pare_multi_out", width = "100%", height = "100%"),
+                       ),
+                )
+              )
+      ),
+      ##########################################################
       tabItem(tabName = "cmxmb",
               "The scatter plots show the relation between genetic (cM) and physical (MB) distance.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title= "cM x Mb",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("cmbymb_out"),
+                         hr(),
                          actionButton("go_cmbymb", "Update",icon("refresh")),
                        )
                 ),
@@ -353,7 +501,6 @@ Reads2MapApp <- function(...) {
                            checkboxGroupInput("SNPCall_cmbymb", label = p("SNP calling method"),
                                               choices = SNPCall_choice,
                                               selected = unlist(SNPCall_choice)),
-                           hr()
                          )
                        )
                 ),
@@ -391,13 +538,14 @@ Reads2MapApp <- function(...) {
       ),
       ##########################################################
       tabItem(tabName = "ind_size",
-              "The boxplots show the distribuition of the difference between estimated and simulated  distances for each marker of the generated maps.",
+              "The graphic show the distribuition of the difference between estimated and simulated  distances for each marker of the generated maps.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "Map size each family",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("ind_size_out"),
+                         hr(),
                          actionButton("go3", "Update",icon("refresh")),
                        )
                 ),
@@ -465,8 +613,8 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title= "Overview map size",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("all_size_out"),
                          hr(),
                          dataTableOutput("all_size_df_out"),
@@ -536,8 +684,8 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "Markers type",
+                         width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("marker_type_out"),
                          hr(),
                          actionButton("go5", "Update",icon("refresh")),
@@ -584,45 +732,18 @@ Reads2MapApp <- function(...) {
                              div(downloadButton("marker_type_out_down"),style="float:right")
                            )
                        )
-                ),
-                column(width = 12,
-                       "The plot bellow shows the conditional probability of a marker type be estimated 
-                       given a real marker type and the method applied.", br(),
-                  box(width = NULL,
-                      fluidPage(
-                        radioButtons("SNPCall_mk_type", label = p("Here we plot a SNP call method at a time:"),
-                                     choices = SNPCall_choice,
-                                     selected = names(SNPCall_choice)[1]),
-                      ),
-                  )
-                ),
-                
-                column(width = 12,                       
-                       box(width = NULL,
-                           "Biallelic markers", hr(),
-                           plotOutput("type_prob_bi_out", width = "100%", height = "100%"),
-                           hr(),
-                       ),
-                       
-                       box(
-                         width = NULL,
-                         "Multiallelic markers",hr(),
-                         plotOutput("type_prob_multi_out", width = "100%", height = "100%"),
-                       )
                 )
               )
       ),
       ###################################################################################
       tabItem(tabName = "phases",
-              "These boxplots show the percentage of right estimated phases for all estimated families by depths.",
+              "These graphic show the percentage of right estimated phases for all estimated families by depths.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "Phases",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("phases_out"),
-                         hr(),
-                         dataTableOutput("phases_df_out"),
                          hr(),
                          actionButton("go6", "Update",icon("refresh")),
                        )
@@ -674,15 +795,13 @@ Reads2MapApp <- function(...) {
       ),
       ###################################################################################
       tabItem(tabName = "times",
-              "The boxplots show the distribuition of times and number of markers of all families by depth.",
+              "The graphic show the distribuition of times and number of markers of all families by depth.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "Times",
+                         width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("times_out"),
-                         hr(),
-                         dataTableOutput("times_df_out"),
                          hr(),
                          actionButton("go7", "Update",icon("refresh")),
                        )
@@ -739,85 +858,16 @@ Reads2MapApp <- function(...) {
                 )
               )
       ),
-      ###################################################################################
-      tabItem(tabName = "coverage",
-              "This barplots show the percentage of the chromosome covered by the map built. It depends of the 
-            chromosome size information in base pair (bp). The chromosome we used in our example has 1019956 bp (toy sample) or 22862796 bp in chromosome 10 of populus.",
-              hr(),
-              fluidRow(
-                column(width = 12,
-                       box(
-                         width = NULL,
-                         plotOutput("coverage_out"),
-                         actionButton("go8", "Update",icon("refresh")),
-                       )
-                ),
-                
-                column(width=6,
-                       box(
-                         width = NULL, solidHeader = TRUE,
-                         fluidPage(
-                           checkboxGroupInput("ErrorProb5", label = p("Genotyping method"),
-                                              choices = maps_choice,
-                                              selected = names(maps_choice)),
-                           hr()
-                         ),
-                         fluidPage(
-                           radioButtons("Global0.05.5", label = p("Error rate"),
-                                        choices = global0.05_choices,
-                                        selected = "FALSE"),
-                           hr()
-                         ), 
-                         fluidPage(
-                           checkboxGroupInput("SNPCall5", label = p("SNP calling method"),
-                                              choices = SNPCall_choice,
-                                              selected = names(SNPCall_choice)),
-                           hr()
-                         ),
-                         fluidPage(
-                           checkboxGroupInput("depth5", label = p("Depth"),
-                                              choices = "This will be updated",
-                                              selected = "This will be updated"),
-                           hr()
-                         )
-                       )
-                ),
-                column(width=6,
-                       box(width = NULL, solidHeader = T,
-                           fluidPage(
-                             radioButtons("CountsFrom5", label = p("Counts from:"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
-                             hr()
-                           ),
-                           fluidPage(
-                             
-                             radioButtons("fake6", label = p("Allow false positives?"),
-                                          choices = fake_choices,
-                                          selected = "without-false"),
-                             hr()
-                           ),
-                           
-                           fluidPage(
-                             numericInput("chr_size1", label = p("Chromosome size"), value = "complete here"),
-                             
-                             hr(),
-                             div(downloadButton("coverage_out_down"),style="float:right")
-                           )
-                       )
-                )
-              )
-      ),
       ####################################################################################
       tabItem(tabName = "snpcall",
-              "The boxplots here show some characteristics of SNP calling. The x axis contain the different 
+              "The graphic here show some characteristics of SNP calling. The x axis contain the different 
             characteristics indexed according with section `Options`, and y axis shows the number of markers.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
-                         plotOutput("snpcall_out"),    
+                       box(title = "SNP calling efficiency",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                         plotOutput("snpcall_out"), hr(),
                          actionButton("go9", "Update",icon("refresh")),
                        )
                 ),
@@ -842,14 +892,14 @@ Reads2MapApp <- function(...) {
       ),
       ################################################################################3
       tabItem(tabName = "filters",
-              "The boxplots here show the total number of markers (n_markers) available for analysis, 
+              "The graphic here show the total number of markers (n_markers) available for analysis, 
             the number of markers filtered by OneMap because of missing data, segregation distortion and redundancy.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
-                         plotOutput("filters_out"),  
+                       box(title = "Filters",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                         plotOutput("filters_out"),  hr(),
                          actionButton("go10", "Update",icon("refresh")),
                        )
                 ),
@@ -881,9 +931,9 @@ Reads2MapApp <- function(...) {
                 column(width = 6,
                        box(width = NULL, solidHeader = T,
                            fluidPage(
-                             radioButtons("CountsFrom7", label = p("Counts from"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
+                             checkboxGroupInput("CountsFrom7", label = p("Counts from"),
+                                                choices = CountsFrom_choice,
+                                                selected = "vcf"),
                              hr()
                            ),
                            fluidPage(
@@ -906,117 +956,121 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidRow(
                 column(width = 8,
-                       box(
-                         width = NULL,
-                         plotOutput("map_out"),
-                         hr(),
-                         actionButton("go11.1", "Update",icon("refresh")),
-                         hr(),
-                         box(solidHeader = T,
-                             radioButtons("ErrorProb11", label = p("Genotyping method"),
-                                          choices = maps_choice,
-                                          selected = "updog"),
-                         ),
-                         box(solidHeader = T,
-                             radioButtons("Global0.05.11", label = p("Error rate"),
-                                          choices = global0.05_choices,
-                                          selected = "FALSE"),
-                         ), 
-                         
-                         box(solidHeader = T,
-                             radioButtons("SNPCall11", label = p("SNP calling method"),
-                                          choices = SNPCall_choice,
-                                          selected = "gatk"),
-                         ),
-                         box(solidHeader = T,
-                             selectInput("seed11", label = p("Seed"),
-                                         choices = "It will be updated",
-                                         selected = "It will be updated"),
-                         ),
-                         box(solidHeader = T,
-                             radioButtons("fake11", label = p("Allow false positives"),
-                                          choices = fake_choices,
-                                          selected = "without-false"),
-                         ),
-                         box(solidHeader = T,
-                             radioButtons("CountsFrom11", label = p("Counts from"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
-                         ),
-                         div(downloadButton("map1_out_down"),style="float:right")
-                       )
+                       box(title = "Recombination fraction heatmap",
+                           width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                           plotOutput("map_out"),
+                           hr(),
+                           actionButton("go11.1", "Update",icon("refresh")),
+                       ), br(),
+                       box(solidHeader = T,
+                           radioButtons("ErrorProb11", label = p("Genotyping method"),
+                                        choices = maps_choice,
+                                        selected = "updog"),
+                       ),
+                       box(solidHeader = T,
+                           radioButtons("Global0.05.11", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                       ), 
+                       
+                       box(solidHeader = T,
+                           radioButtons("SNPCall11", label = p("SNP calling method"),
+                                        choices = SNPCall_choice,
+                                        selected = "gatk"),
+                       ),
+                       box(solidHeader = T,
+                           selectInput("seed11", label = p("Seed"),
+                                       choices = "It will be updated",
+                                       selected = "It will be updated"),
+                       ),
+                       box(solidHeader = T,
+                           radioButtons("fake11", label = p("Allow false positives"),
+                                        choices = fake_choices,
+                                        selected = "without-false"),
+                       ),
+                       box(solidHeader = T,
+                           radioButtons("CountsFrom11", label = p("Counts from"),
+                                        choices = CountsFrom_choice,
+                                        selected = "vcf"),
+                       div(downloadButton("map1_out_down"),style="float:right"),
+                       ),
+                       
+                       
                 ),
                 
                 column(width = 4,
-                       actionButton("go11", "Update",icon("refresh")),
-                       hr(),
-                       imageOutput("map1_out")
+                       box(title = "Genetic map", 
+                           width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                           actionButton("go11", "Update",icon("refresh")),
+                           hr(),
+                           imageOutput("map1_out", width = "100%", height = "100%")
+                       )
                 )
               )
       ),
-      
       ################################################################################3
       tabItem(tabName = "haplo",
               "Based on the built map, progeny haplotypes can be draw by onemap function progeny_haplotypes. Choose pipeline and the individuals you want to check the haplotypes.",
               hr(),
               fluidRow(
-                box(
-                  width = NULL,
-                  "Estimated progeny haplotypes",
-                  actionButton("go12", "Update",icon("refresh")),
-                  hr(),
-                  plotOutput("haplot_out"),
-                  hr(),
-                  "Simulated progeny haplotypes",
-                  actionButton("go12.1", "Update",icon("refresh")),
-                  hr(),
-                  plotOutput("haplot_simu_out"),
-                  hr(),
-                  box(solidHeader = T,
-                      radioButtons("ErrorProb12", label = p("Genotyping method"),
-                                   choices = maps_choice,
-                                   selected = "updog"),
-                  ),
-                  box(solidHeader = T,
-                      radioButtons("Global0.05.12", label = p("Error rate"),
-                                   choices = global0.05_choices,
-                                   selected = "FALSE"),
-                  ), 
-                  
-                  box(solidHeader = T,
-                      radioButtons("SNPCall12", label = p("SNP calling method"),
-                                   choices = SNPCall_choice,
-                                   selected = "gatk"),
-                  ),
-                  box(solidHeader = T,
-                      selectInput("seed12", label = p("Seed"),
-                                  choices = "It will be updated",
-                                  selected = "It will be updated"),
-                  ),
-                  box(solidHeader = T,
-                      radioButtons("fake12", label = p("Allow false positives"),
-                                   choices = fake_choices,
-                                   selected = "without-false"),
-                  ),
-                  box(solidHeader = T,
-                      radioButtons("Most_likely12", label = p("Choose how to show genotypes probabilities"),
-                                   choices = list("The most likely genotypes receiveis maximum probabilities" = TRUE,
-                                                  "Genotypes probabilities are how they were outputted by HMM"= FALSE),
-                                   selected = "TRUE"),
-                  ), 
-                  box(solidHeader = T,
-                      radioButtons("CountsFrom12", label = p("Counts from"),
-                                   choices = CountsFrom_choice,
-                                   selected = "vcf"),
-                  ),
-                  box(solidHeader = T, collapsible = T,
-                      checkboxGroupInput("inds12", label = p("Individuals from progeny"),
-                                         choices = "It will be updated",
-                                         selected = "It will be updated"),
-                  ),
-                  div(downloadButton("haplot_out_down"),style="float:right")
-                )
+                box(title = "Estimated progeny haplotypes",
+                    width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                    plotOutput("haplot_out"),
+                    hr(),
+                    actionButton("go12", "Update",icon("refresh")),
+                ),
+                
+                box(title = "Real progeny haplotypes",
+                    width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                    plotOutput("haplot_simu_out"),
+                    hr(),
+                    actionButton("go12.1", "Update",icon("refresh"))
+                ), br(),
+                box(solidHeader = T,
+                    radioButtons("ErrorProb12", label = p("Genotyping method"),
+                                 choices = maps_choice,
+                                 selected = "updog"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("Global0.05.12", label = p("Error rate"),
+                                 choices = global0.05_choices,
+                                 selected = "FALSE"),
+                ), 
+                
+                box(solidHeader = T,
+                    radioButtons("SNPCall12", label = p("SNP calling method"),
+                                 choices = SNPCall_choice,
+                                 selected = "gatk"),
+                ),
+                box(solidHeader = T,
+                    selectInput("seed12", label = p("Seed"),
+                                choices = "It will be updated",
+                                selected = "It will be updated"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("fake12", label = p("Allow false positives"),
+                                 choices = fake_choices,
+                                 selected = "without-false"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("Most_likely12", label = p("Choose how to show genotypes probabilities"),
+                                 choices = list("The most likely genotypes receiveis maximum probabilities" = TRUE,
+                                                "Genotypes probabilities are how they were outputted by HMM"= FALSE),
+                                 selected = "TRUE"),
+                ), 
+                box(solidHeader = T,
+                    radioButtons("CountsFrom12", label = p("Counts from"),
+                                 choices = CountsFrom_choice,
+                                 selected = "vcf"),
+                ),
+                box(solidHeader = T, collapsible = T, collapsed = T,
+                    checkboxGroupInput("inds12", label = p("Individuals from progeny"),
+                                       choices = "It will be updated",
+                                       selected = "It will be updated"),
+                ),
+                div(downloadButton("haplot_out_down"),style="float:right")
               )
+              
       ),
       ################################################################################3
       tabItem(tabName = "counts",
@@ -1024,53 +1078,50 @@ Reads2MapApp <- function(...) {
             Choose pipeline and the individuals you want to check the haplotypes.",
               hr(),
               fluidRow(
-                box(
-                  width = NULL,
-                  "Estimated number of recombination breakpoints for each individual",br(),
-                  hr(),
-                  plotOutput("counts_out"),
-                  hr(),
-                  "Simulated number of recombination breakpoints for each individual", br(),
-                  hr(),
-                  plotOutput("counts_simu_out"),
-                  hr(),
-                  dataTableOutput("wrong_haplotypes"),
-                  hr(),
-                  actionButton("go13", "Update",icon("refresh")),
-                  hr(),
-                  box(solidHeader = T,
-                      radioButtons("ErrorProb13", label = p("Genotyping method"),
-                                   choices = maps_choice,
-                                   selected = "updog"),
-                  ),
-                  box(solidHeader = T,
-                      radioButtons("Global0.05.13", label = p("Error rate"),
-                                   choices = global0.05_choices,
-                                   selected = "FALSE"),
-                  ), 
-                  
-                  box(solidHeader = T,
-                      radioButtons("SNPCall13", label = p("SNP calling method"),
-                                   choices = SNPCall_choice,
-                                   selected = "gatk"),
-                  ),
-                  box(solidHeader = T,
-                      selectInput("seed13", label = p("Seed"),
-                                  choices = "It will be updated",
-                                  selected = "It will be updated"),
-                  ),
-                  box(solidHeader = T,
-                      radioButtons("fake13", label = p("Allow false positives"),
-                                   choices = fake_choices,
-                                   selected = "without-false"),
-                  ),
-                  box(solidHeader = T,
-                      radioButtons("CountsFrom13", label = p("Counts from"),
-                                   choices = CountsFrom_choice,
-                                   selected = "vcf"),
-                  ),
-                  div(downloadButton("counts_out_down"),style="float:right")
-                )
+                box(title = "Estimated number of recombination breakpoints for each individual",
+                    width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                    plotOutput("counts_out")
+                ),
+                box(title = "Real number of recombination breakpoints for each individual",
+                    width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                    hr(),
+                    plotOutput("counts_simu_out"),
+                    hr(),
+                    actionButton("go13", "Update",icon("refresh")),
+                ),
+                
+                box(solidHeader = T,
+                    radioButtons("ErrorProb13", label = p("Genotyping method"),
+                                 choices = maps_choice,
+                                 selected = "updog"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("Global0.05.13", label = p("Error rate"),
+                                 choices = global0.05_choices,
+                                 selected = "FALSE"),
+                ), 
+                
+                box(solidHeader = T,
+                    radioButtons("SNPCall13", label = p("SNP calling method"),
+                                 choices = SNPCall_choice,
+                                 selected = "gatk"),
+                ),
+                box(solidHeader = T,
+                    selectInput("seed13", label = p("Seed"),
+                                choices = "It will be updated",
+                                selected = "It will be updated"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("fake13", label = p("Allow false positives"),
+                                 choices = fake_choices,
+                                 selected = "without-false"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("CountsFrom13", label = p("Counts from"),
+                                 choices = CountsFrom_choice,
+                                 selected = "vcf"),
+                ),
+                div(downloadButton("counts_out_down"),style="float:right")
               )
       ),
       ################################################################################
@@ -1080,7 +1131,7 @@ Reads2MapApp <- function(...) {
               fluidRow(
                 column(width = 12,
                        box(
-                         width = NULL,
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          actionButton("go31", "Update",icon("refresh")),
                          hr(),
                          dataTableOutput("overview_out"),
@@ -1137,8 +1188,8 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidRow(
                 column(width = 6,
-                       box(
-                         width = NULL,
+                       box(title = "Depth and genotyping 1",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("disper_depth_emp_out"),   
                          hr(),
                          tableOutput("disper_depth_emp_table"),
@@ -1196,8 +1247,8 @@ Reads2MapApp <- function(...) {
                 ),
                 
                 column(width = 6,
-                       box(
-                         width = NULL,
+                       box(title = "Depth and genotyping 2",
+                           width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("disper_depth2_emp_out"),
                          hr(),
                          tableOutput("disper_depth2_emp_table"),
@@ -1256,12 +1307,12 @@ Reads2MapApp <- function(...) {
       ),
       ##########################################################
       tabItem(tabName = "ind_size_emp",
-              "The boxplots show the distribuition of the difference between estimated and simulated distances between each pair markers of the generated maps.",
+              "The graphic show the distribuition of the difference between estimated and simulated distances between each pair markers of the generated maps.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "Map size",
+                         width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("ind_size_emp_out"),
                          hr(),
                          dataTableOutput("ind_size_emp_df_out"),
@@ -1315,8 +1366,8 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "Marker type",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("marker_type_emp_out"),
                          actionButton("go19", "Update",icon("refresh")),
                        )
@@ -1353,12 +1404,12 @@ Reads2MapApp <- function(...) {
       ),
       ###################################################################################
       tabItem(tabName = "times_emp",
-              "The boxplots show the distribuition of times and number of markers of all families by depth.",
+              "The graphic show the distribuition of times and number of markers of all families by depth.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "Times",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("times_emp_out"),
                          hr(),
                          dataTableOutput("times_emp_df_out"),
@@ -1401,62 +1452,15 @@ Reads2MapApp <- function(...) {
                 )
               )
       ),
-      ###################################################################################
-      tabItem(tabName = "coverage_emp",
-              "This barplots show the percentage of the chromosome covered by the map built. It depends of the 
-            chromosome size information in base pair (bp). The chromosome we used in our example has 1019956 bp (toy sample) or 22862796 bp in chromosome 10 of populus.",
-              hr(),
-              fluidRow(
-                column(width = 12,
-                       box(
-                         width = NULL,
-                         plotOutput("coverage_emp_out"),
-                         actionButton("go21", "Update",icon("refresh")),
-                       ),
-                ),
-                column(width = 6,
-                       box(
-                         width = NULL, solidHeader = TRUE,
-                         fluidPage(
-                           checkboxGroupInput("ErrorProb5_emp", label = p("Genotyping method"),
-                                              choices = maps_choice,
-                                              selected = names(maps_choice)),
-                         ),
-                       )
-                ),
-                column(width = 6,
-                       box(
-                         width = NULL, solidHeader = T,
-                         fluidPage(
-                           checkboxGroupInput("SNPCall5_emp", label = p("SNP calling method"),
-                                              choices = SNPCall_choice,
-                                              selected = names(SNPCall_choice)),
-                         ),
-                         fluidPage(
-                           radioButtons("CountsFrom5_emp", label = p("Counts from"),
-                                        choices = CountsFrom_choice,
-                                        selected = "vcf"),
-                         ),
-                         
-                         fluidPage(
-                           numericInput("chr_size", label = p("Chromosome size"), value = "complete here"),
-                           
-                           hr(),
-                           div(downloadButton("coverage_emp_out_down"),style="float:right")
-                         )
-                       )
-                )
-              )
-      ),
       ################################################################################3
       tabItem(tabName = "filters_emp",
-              "The boxplots here show the total number of markers (n_markers) available for analysis, 
+              "The graphic here show the total number of markers (n_markers) available for analysis, 
             the number of markers filtered by OneMap because of missing data, segregation distortion and redundancy.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "Fitlers",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("filters_emp_out"),
                          hr(),
                          dataTableOutput("filters_emp_df_out"),
@@ -1504,8 +1508,8 @@ Reads2MapApp <- function(...) {
       ################################################################################3
       tabItem(tabName = "heatmaps_emp",
               fluidRow(
-                box(solidHeader = T,
-                    width = NULL,
+                box(title = "Interactive recombination fraction heatmap",
+                    width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                     plotlyOutput("heatmaps_emp_out", height = 650),
                     actionButton("go23", "Update",icon("refresh")),
                 )
@@ -1555,13 +1559,14 @@ Reads2MapApp <- function(...) {
             'Download' button, it will download the RData sequenced resulted from the selected 'Genotype method', 'SNP calling method', 'Error rate' and 'Counts from'.",
               fluidRow(
                 column(width = 8,
-                       box(solidHeader = T,
-                           width = NULL,
+                       box(title = "Recombination fraction heatmap",
+                           width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                            plotOutput("map1_emp_out"),
-                           hr(),
-                           actionButton("go25", "Update",icon("refresh"))
+                           
                        ),
                        box(solidHeader = T,
+                           hr(),
+                           actionButton("go25", "Update",icon("refresh")), br(), hr(),
                            radioButtons("ErrorProb11_emp", label = p("Genotyping method"),
                                         choices = maps_choice,
                                         selected = "updog"),
@@ -1583,9 +1588,12 @@ Reads2MapApp <- function(...) {
                            div(downloadButton("map_emp_out_down"),style="float:right")
                        )
                 ),
-                column(width = 4,
-                       actionButton("go24", "Update",icon("refresh")),
-                       imageOutput("map_emp_out")
+                box(title = "Genetic map",
+                    width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                    column(width = 4,
+                           actionButton("go24", "Update",icon("refresh")),
+                           imageOutput("map_emp_out")
+                    )
                 )
               )
       ),
@@ -1594,47 +1602,48 @@ Reads2MapApp <- function(...) {
               "Based on the built map, progeny haplotypes can be draw by onemap function progeny_haplotypes. Choose pipeline and the individuals you want to check the haplotypes.",
               hr(),
               fluidRow(
-                box(
-                  width = NULL,
-                  plotOutput("haplot_emp_out"),
-                  hr(),
-                  actionButton("go26", "Update",icon("refresh")),
-                  hr(),
-                  box(solidHeader = T,
-                      radioButtons("ErrorProb12_emp", label = p("Genotyping method"),
-                                   choices = maps_choice,
-                                   selected = "updog"),
-                  ),
-                  box(solidHeader = T,
-                      radioButtons("Global0.05.12_emp", label = p("Error rate"),
-                                   choices = global0.05_choices,
-                                   selected = "FALSE"),
-                  ), 
-                  box(solidHeader = T,
-                      radioButtons("Most_likely12_emp", label = p("Choose how to show genotypes probabilities"),
-                                   choices = list("The most likely genotypes receiveis maximum probabilities" = TRUE,
-                                                  "Genotypes probabilities are how they were outputted by HMM"= FALSE),
-                                   selected = "TRUE"),
-                  ), 
-                  
-                  box(solidHeader = T,
-                      radioButtons("SNPCall12_emp", label = p("SNP calling method"),
-                                   choices = SNPCall_choice,
-                                   selected = "gatk"),
-                  ),
-                  box(solidHeader = T,
-                      radioButtons("CountsFrom12_emp", label = p("Counts from"),
-                                   choices = CountsFrom_choice,
-                                   selected = "vcf"),
-                  ),
-                  box(solidHeader = T, collapsible = T,
-                      checkboxGroupInput("inds12_emp", label = p("Individuals from progeny"),
-                                         choices = "It will be updated",
-                                         selected = "It will be updated"),
-                  ),
-                  div(downloadButton("haplot_emp_out_down"),style="float:right")
-                )
+                box(title = "Individual haplotype",
+                    width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                    plotOutput("haplot_emp_out"),
+                    hr()),
+                
+                box(solidHeader = T,
+                    actionButton("go26", "Update",icon("refresh")),
+                    hr(),
+                    radioButtons("ErrorProb12_emp", label = p("Genotyping method"),
+                                 choices = maps_choice,
+                                 selected = "updog"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("Global0.05.12_emp", label = p("Error rate"),
+                                 choices = global0.05_choices,
+                                 selected = "FALSE"),
+                ), 
+                box(solidHeader = T,
+                    radioButtons("Most_likely12_emp", label = p("Choose how to show genotypes probabilities"),
+                                 choices = list("The most likely genotypes receiveis maximum probabilities" = TRUE,
+                                                "Genotypes probabilities are how they were outputted by HMM"= FALSE),
+                                 selected = "TRUE"),
+                ), 
+                
+                box(solidHeader = T,
+                    radioButtons("SNPCall12_emp", label = p("SNP calling method"),
+                                 choices = SNPCall_choice,
+                                 selected = "gatk"),
+                ),
+                box(solidHeader = T,
+                    radioButtons("CountsFrom12_emp", label = p("Counts from"),
+                                 choices = CountsFrom_choice,
+                                 selected = "vcf"),
+                ),
+                box(solidHeader = T, collapsible = T,
+                    checkboxGroupInput("inds12_emp", label = p("Individuals from progeny"),
+                                       choices = "It will be updated",
+                                       selected = "It will be updated"),
+                ),
+                div(downloadButton("haplot_emp_out_down"),style="float:right")
               )
+              
       ),
       ################################################################################3
       tabItem(tabName = "counts_emp",
@@ -1642,8 +1651,8 @@ Reads2MapApp <- function(...) {
             Choose pipeline and the individuals you want to check the haplotypes.",
               hr(),
               fluidRow(
-                box(
-                  width = NULL,
+                box(title = "Breakpoints counts",
+                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                   "Estimated number of recombination breakpoints for each individual",
                   hr(),
                   plotOutput("counts_emp_out"),
@@ -1683,8 +1692,8 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "cM x Mb",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          plotOutput("cmxmb_emp_out"),
                          actionButton("go29", "Update",icon("refresh")),
                        )
@@ -1736,8 +1745,8 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(
-                         width = NULL,
+                       box(title = "Overview",
+                         width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          actionButton("go30", "Update",icon("refresh")),
                          hr(),
                          dataTableOutput("overview_emp_out"),
@@ -1772,7 +1781,7 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidPage(
                 box(width = NULL,
-                    box(solidHeader = T,
+                    box(title = "Time spent by each WDL task",
                         tags$h4(tags$b("Upload workflow log file")), br(),
                         # Copy the line below to make a file upload manager
                         # fileInput("wflog", label = h6("slurm_<depth>.out"), multiple = T),
@@ -1804,7 +1813,7 @@ Reads2MapApp <- function(...) {
     )
   )
   
-  ui <- dashboardPage(header, sidebar, body, skin = "purple")
+  ui <- dashboardPage(header, sidebar, body)
   
   ## Define server logic required to draw a histogram ----
   server <- function(input, output,session) {
@@ -1826,9 +1835,9 @@ Reads2MapApp <- function(...) {
           } else if(input$example_simu == "populus_200_multi_radinitio"){
             data.gz <- c("inst/ext/simulations/SimulatedReads_results_depth10pop200_multi_up.tar.gz",
                          "inst/ext/simulations/SimulatedReads_results_depth20pop200_multi_up.tar.gz")
-          } else if(input$example_simu == "toy_sample"){
-            data.gz <- c(#"inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz",
-              "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz")
+          } else if(input$example_simu == "toy_sample_bi"){
+            data.gz <- c("inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz",
+                         "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz")
           } else if(input$example_simu == "toy_sample_multi"){
             data.gz <- c("inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz",
                          "inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz")
@@ -1975,6 +1984,11 @@ Reads2MapApp <- function(...) {
                         selected=unlist(seeds_choice)[1])
       
       updateCheckboxGroupInput(session, "depth4",
+                               label="Depth",
+                               choices = depth_choice,
+                               selected=unlist(depth_choice))
+      
+      updateCheckboxGroupInput(session, "depth_probs",
                                label="Depth",
                                choices = depth_choice,
                                selected=unlist(depth_choice))
@@ -2421,7 +2435,7 @@ Reads2MapApp <- function(...) {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         
-        data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
+        data <- datas_simu[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
           filter(SNPCall %in% input$SNPCall10) %>%
           filter(CountsFrom == input$CountsFrom10) %>%
           filter(depth == input$depth10) %>%
@@ -2442,59 +2456,13 @@ Reads2MapApp <- function(...) {
           data1 <- data1[which(data1$key == "estimated"),]
         }
         
-        # Probabilities
-        if(input$SNPCall_mk_type == "gatk") snpcall = "GATK" else snpcall = "freebayes"
-        data <- data %>% filter(SNPCall == snpcall)
-        
-        probs_plot <- list()
-        if(input$fake3 == "without-false"){
-          data$method <- paste0(data$seed,"_", data$depth,"_", 
-                                data$SNPCall, "_",data$CountsFrom,"_",
-                                data$GenoCall)
-          
-          data <- mutate_if(data, is.character, as.factor)
-          
-          real.mks.sele <-c("true marker", "multiallelic")
-          for(i in 1:2){
-            data_prob <- data %>% filter(real.mks == real.mks.sele[i])
-            if(dim(data_prob)[1] == 0){
-              probs_plot[[i]] <- 0
-            } else {
-              probs <- prob_f(data=data_prob, method = "method", estimate = "type", gabarito = "real.type")
-              
-              probs_df <- plyr::adply(probs, c(1,2,3))
-              probs_df$X3 <- as.character(probs_df$X3)
-              
-              split_meth <- strsplit(probs_df$X3, "_")
-              
-              probs_plot[[i]] <- data.frame(est = probs_df$X1, simu = probs_df$X2, 
-                                            seed = sapply(split_meth, "[",1),
-                                            depth = sapply(split_meth, "[",2),
-                                            SNPCall = sapply(split_meth, "[",3),
-                                            CountsFrom = sapply(split_meth, "[",4),
-                                            GenoCall = sapply(split_meth, "[",5),
-                                            prob = probs_df$V1)
-            }
-          }
-        } else {
-          probs_plot[[1]] <- probs_plot[[2]] <- 0
-        }
-        
-        list(data1, probs_plot[[1]], probs_plot[[2]])
+        list(data1)
       })
     })
     
     output$marker_type_out <- renderPlot({
       marker_type_graph(button5()[[1]])
     })
-    
-    output$type_prob_bi_out <- renderPlot({
-      marker_type_probs(button5()[[2]])
-    }, width = 1152, height = 1152)
-    
-    output$type_prob_multi_out <- renderPlot({
-      marker_type_probs(button5()[[3]])
-    }, width = 1152, height = 1152)
     
     ## download
     output$marker_type_out_down <- downloadHandler(
@@ -2536,6 +2504,115 @@ Reads2MapApp <- function(...) {
         })
       } 
     )
+    ##########################
+    # Genotypes probabilities
+    ##########################
+    button_probs <- eventReactive(input$go_probs, {
+      withProgress(message = 'Building graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        ## parents
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb_probs) %>%
+          filter(SNPCall %in% input$SNPCall_probs) %>%
+          filter(CountsFrom %in% input$CountsFrom_probs) %>%
+          filter(depth %in% input$depth_probs) %>%
+          filter(fake == "without-false")
+        
+        data <- perfumaria(data)
+        
+        probs_plot <- list()
+        data$method <- paste0(data$seed,"_", data$depth,"_", 
+                              data$SNPCall, "_",data$CountsFrom,"_",
+                              data$GenoCall)
+        
+        data <- mutate_if(data, is.character, as.factor)
+        
+        real.mks.sele <-c("true marker", "multiallelic")
+        for(i in 1:2){
+          data_prob <- data %>% filter(real.mks == real.mks.sele[i])
+          if(dim(data_prob)[1] == 0){
+            probs_plot[[i]] <- 0
+          } else {
+            probs <- prob_f(data=data_prob, method = "method", estimate = "type", gabarito = "real.type")
+            
+            probs_df <- plyr::adply(probs, c(1,2,3))
+            probs_df$X3 <- as.character(probs_df$X3)
+            
+            split_meth <- strsplit(probs_df$X3, "_")
+            
+            probs_plot[[i]] <- data.frame(est = probs_df$X1, simu = probs_df$X2, 
+                                          seed = sapply(split_meth, "[",1),
+                                          depth = sapply(split_meth, "[",2),
+                                          SNPCall = sapply(split_meth, "[",3),
+                                          CountsFrom = sapply(split_meth, "[",4),
+                                          GenoCall = sapply(split_meth, "[",5),
+                                          prob = probs_df$V1)
+          }
+        }
+        incProgress(0.25, detail = paste("Doing part", 2))
+        # progeny
+        data <- datas_simu()[[1]] %>% filter(GenoCall %in% input$ErrorProb_probs) %>%
+          filter(SNPCall %in% input$SNPCall_probs) %>%
+          filter(CountsFrom %in% input$CountsFrom_probs) %>%
+          filter(depth %in% input$depth_probs) 
+        
+        data <- perfumaria(data)
+        
+        data$method <- paste0(data$seed,"_", data$depth,"_", 
+                              data$SNPCall, "_",data$CountsFrom,"_",
+                              data$GenoCall)
+        
+        data <- mutate_if(data, is.character, as.factor)
+        
+        probs <- prob_f(data=data, method = "method", estimate = "gt.onemap.alt.ref", gabarito = "gabGT")
+        
+        probs_df <- plyr::adply(probs, c(1,2,3))
+        probs_df$X3 <- as.character(probs_df$X3)
+        
+        split_meth <- strsplit(probs_df$X3, "_")
+        
+        data_plot <- data.frame(est = probs_df$X1, simu = probs_df$X2, 
+                                seed = sapply(split_meth, "[",1),
+                                depth = sapply(split_meth, "[",2),
+                                SNPCall = sapply(split_meth, "[",3),
+                                CountsFrom = sapply(split_meth, "[",4),
+                                GenoCall = sapply(split_meth, "[",5),
+                                prob = probs_df$V1)
+        
+        probs_error <- prob_error(data=data, method = "method", 
+                                  estimate = "gt.onemap.alt.ref", gabarito = "gabGT", error = "errors")
+        
+        test <- plyr::adply(probs_error, c(1,2,3))
+        test$X3 <- as.character(test$X3)
+        
+        split_meth <- strsplit(test$X3, "_")
+        
+        data_plot_error <- data.frame(est = test$X1, simu = test$X2, 
+                                      seed = sapply(split_meth, "[",1),
+                                      depth = sapply(split_meth, "[",2),
+                                      SNPCall = sapply(split_meth, "[",3),
+                                      CountsFrom = sapply(split_meth, "[",4),
+                                      GenoCall = sapply(split_meth, "[",5),
+                                      error = test$V1)
+        
+        data_tot <- inner_join(data_plot, data_plot_error)
+        incProgress(0.5, detail = paste("Doing part", 3))
+        list(probs_plot[[1]], probs_plot[[2]], data_tot)
+      })
+    })
+    
+    output$probs_pare_bi_out <- renderPlot({
+      marker_type_probs(button_probs()[[1]])
+    }, width = 1152, height = 1152)
+    
+    output$probs_pare_multi_out <- renderPlot({
+      marker_type_probs(button_probs()[[2]])
+    }, width = 1152, height = 1152)
+    
+    output$probs_prog_out <- renderPlot({
+      geno_probs(button_probs()[[3]])
+    }, width = 1152, height = 1152)
+
     #######################
     # Phases
     #######################
@@ -2548,7 +2625,7 @@ Reads2MapApp <- function(...) {
           filter(SNPCall %in% input$SNPCall8) %>%
           filter(CountsFrom == input$CountsFrom8 | 
                    (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
-          filter(depth == input$depth8) %>%
+          filter(depth %in% input$depth8) %>%
           filter(fake == "without-false") %>%
           filter(real.mks == "true marker") # This graphic do not consider multiallelic markers because their were not simulated
         
@@ -2775,7 +2852,7 @@ Reads2MapApp <- function(...) {
         data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall7) %>%
           filter(depth == input$depth7) %>%
-          filter(CountsFrom == input$CountsFrom7 | 
+          filter(CountsFrom %in% input$CountsFrom7 | 
                    (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
           pivot_longer(cols=1:5)
         
@@ -2886,7 +2963,7 @@ Reads2MapApp <- function(...) {
       
       list(src = button11()[[2]],
            contentType = 'image/png',
-           width = 400,
+           width = 384,
            height = 900)
     }, deleteFile = TRUE) # change here
     
@@ -3150,8 +3227,8 @@ Reads2MapApp <- function(...) {
     #   withProgress(message = 'Building graphic', value = 0, {
     #     incProgress(0, detail = paste("Doing part", 1))
     #     
-    #     data <- result_list[[1]]
-    #     data[,8:9] <- apply(result_list[[1]][,8:9], 2, as.character)
+    #     data <- datas_simu()[[1]]
+    #     data[,8:9] <- apply(datas_simu()[[1]][,8:9], 2, as.character)
     #     incProgress(0.1, detail = paste("Doing part", 2))
     # 
     #     # Why are there NAs in ref and alt of polyrad?

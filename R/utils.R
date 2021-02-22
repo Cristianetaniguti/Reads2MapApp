@@ -97,3 +97,33 @@ prob_f <- function(data, method, estimate, gabarito){
   p
   return(p)
 }
+
+
+prob_error <- function(data, method, estimate, gabarito, error){
+  data <-data.frame(data)
+  n_method <- length(levels(data[,method]))
+  n_gab <- length(levels(data[,gabarito]))
+  n_estimate <- length(levels(data[,estimate]))
+  
+  p <- array(data=NA, dim=c(n_estimate, n_gab, n_method), 
+             dimnames = list(paste("Est:",levels(data[,estimate])),
+                             paste("Real:",levels(data[,gabarito])),
+                             levels(data[,method])))
+  for(i in 1:n_estimate){
+    for(j in 1:n_gab){
+      for(k in 1:n_method){
+        num <- mean(data[,error][data[,method]==levels(data[,method])[k] &
+                                   data[,estimate]==levels(data[,estimate])[i] & 
+                                   data[,gabarito]==levels(data[,gabarito])[j]], na.rm = T)
+        
+        if(num == 0 | is.nan(num)){
+          p[i,j,k] <- NA
+        }else{
+          p[i,j,k] <- num
+        }
+      }
+    }
+  }
+  p
+  return(p)
+}
