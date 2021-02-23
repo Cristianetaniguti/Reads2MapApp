@@ -364,7 +364,7 @@ marker_type_probs <- function(data_plot_par){
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
           axis.title.y = element_blank(), legend.position = "top",
           legend.text=element_text(size=12))
-  p3_comb <- ggarrange(p3, widths = 13, heights = 16)
+  p3_comb <- ggarrange(p3, widths = 13, heights = 20)
   
   
   p_comb[[1]]/p_comb[[2]]/p_comb[[3]]/p3_comb
@@ -393,7 +393,7 @@ geno_probs <- function(data_plot_par){
                                   expression("P(E|M"*intersect("R)"))), values = c("red", "blue"))+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
             axis.title.y = element_blank(), legend.position = "top",
-            legend.text=element_text(size=12))
+            legend.text=element_text(size=11))
     
     p2 <- data_plot_par %>% pivot_longer(cols=8:9) %>% filter(simu == labels_real[i] & 
                                                               est != labels_est[i]) %>%
@@ -407,9 +407,9 @@ geno_probs <- function(data_plot_par){
                                   expression("P(E|M"*intersect("R)"))), values = c("red", "blue"))+
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
             axis.title.y = element_blank(), legend.position = "top",
-            legend.text=element_text(size=12))
+            legend.text=element_text(size=11))
     
-    p_comb[[i]] <- ggarrange(p1, p2, common.legend = T, widths = c(3,10), heights = c(16,16))
+    p_comb[[i]] <- ggarrange(p1, p2, common.legend = T, widths = c(4,8), heights = c(20,20))
   }
 
   p_comb[[1]]/p_comb[[2]]/p_comb[[3]]

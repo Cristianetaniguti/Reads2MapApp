@@ -214,7 +214,7 @@ Reads2MapApp <- function(...) {
                            tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(), br(),
                            # Copy the line below to make a file upload manager
                            "If you have more than one depth value, submit all them together.", br(),
-                           fileInput("simulatedreads", label = h6("SimulatedReads2Map_<depth>.tar.gz"), multiple = T),
+                           fileInput("simulatedreads", label = h6("File: SimulatedReads2Map_<depth>.tar.gz"), multiple = T),
                          ),
                          
                          fluidPage(
@@ -238,7 +238,7 @@ Reads2MapApp <- function(...) {
                            tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(), br(),
                            # Copy the line below to make a file upload manager
                            "If you have more than one depth value, submit all them together.", br(),
-                           fileInput("empiricalreads", label = h6("EmpiricalReads2Map_<depth>.tar.gz"), multiple = T, accept = ".tar.gz"),
+                           fileInput("empiricalreads", label = h6("File: EmpiricalReads2Map_<depth>.tar.gz"), multiple = T, accept = ".tar.gz"),
                          ),
                          fluidPage(
                            # Copy the line below to make a select box 
@@ -389,7 +389,7 @@ Reads2MapApp <- function(...) {
       ),
       ##########################################################
       tabItem(tabName = "probs",
-              "Progeny and parents genotpe concordance", hr(),
+              "Genotype probabilities",
               fluidRow(
                 column(width=6,
                        box(
@@ -1829,12 +1829,18 @@ Reads2MapApp <- function(...) {
           data.gz <- x[,4]
           path = "data/"
         } else { ######## Only the toy_sample in the package - the rest in server
-          if(input$example_simu == "populus_200_bi_radinitio"){
-            data.gz <- c("inst/ext/simulations/SimulatedReads_results_depth10pop200_bi_up.tar.gz",
-                         "inst/ext/simulations/SimulatedReads_results_depth20pop200_bi_up.tar.gz")
-          } else if(input$example_simu == "populus_200_multi_radinitio"){
-            data.gz <- c("inst/ext/simulations/SimulatedReads_results_depth10pop200_multi_up.tar.gz",
-                         "inst/ext/simulations/SimulatedReads_results_depth20pop200_multi_up.tar.gz")
+          if(input$example_simu == "populus_200_bi_radinitio20"){
+            data.gz <- c("inst/ext/simulations/RADinitio20/SimulatedReads_results_depth10pop200_bi_up.tar.gz",
+                         "inst/ext/simulations/RADinitio20/SimulatedReads_results_depth20pop200_bi_up.tar.gz")
+          } else if(input$example_simu == "populus_200_multi_radinitio20"){
+            data.gz <- c("inst/ext/simulations/RADinitio20/SimulatedReads_results_depth10pop200_multi_up.tar.gz",
+                         "inst/ext/simulations/RADinitio20/SimulatedReads_results_depth20pop200_multi_up.tar.gz")
+          } else if(input$example_simu == "populus_200_bi_radinitio37"){
+            data.gz <- c("inst/ext/simulations/RADinitio37/biallelics/SimulatedReads_results_depth10.tar.gz",
+                         "inst/ext/simulations/RADinitio37/biallelics/SimulatedReads_results_depth20.tar.gz")
+          } else if(input$example_simu == "populus_200_multi_radinitio37"){
+            data.gz <- c("inst/ext/simulations/RADinitio37/multiallelics/SimulatedReads_results_depth10.tar.gz",
+                         "inst/ext/simulations/RADinitio37/multiallelics/SimulatedReads_results_depth20.tar.gz")
           } else if(input$example_simu == "toy_sample_bi"){
             data.gz <- c("inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz",
                          "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz")
@@ -2512,6 +2518,7 @@ Reads2MapApp <- function(...) {
         incProgress(0, detail = paste("Doing part", 1))
         
         ## parents
+        
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb_probs) %>%
           filter(SNPCall %in% input$SNPCall_probs) %>%
           filter(CountsFrom %in% input$CountsFrom_probs) %>%
@@ -2547,8 +2554,12 @@ Reads2MapApp <- function(...) {
                                           CountsFrom = sapply(split_meth, "[",4),
                                           GenoCall = sapply(split_meth, "[",5),
                                           prob = probs_df$V1)
+            
+            probs_plot[[i]]$GenoCall <- as.character(probs_plot[[i]]$GenoCall)
+            probs_plot[[i]]$GenoCall[probs_plot[[i]]$GenoCall == "OneMap"] <- "OneMap_version2"
           }
         }
+        
         incProgress(0.25, detail = paste("Doing part", 2))
         # progeny
         data <- datas_simu()[[1]] %>% filter(GenoCall %in% input$ErrorProb_probs) %>%
@@ -2602,6 +2613,7 @@ Reads2MapApp <- function(...) {
     })
     
     output$probs_pare_bi_out <- renderPlot({
+      marker_type_probs(data_plot_par = probs_plot[[1]])
       marker_type_probs(button_probs()[[1]])
     }, width = 1152, height = 1152)
     
@@ -2714,12 +2726,14 @@ Reads2MapApp <- function(...) {
                    (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
           filter(depth %in% input$depth9)  
         
+        data$times <- data$time/60
+        
         data_df <- merge(data, data_n) 
         
         data <- data_df %>%
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -fake, -seed, -depth)
         
-        data$key <- gsub("time", "seconds", data$key)
+        data$key <- gsub("time", "minutes", data$key)
         
         incProgress(0.5, detail = paste("Doing part", 2))
         data <- perfumaria(data)
