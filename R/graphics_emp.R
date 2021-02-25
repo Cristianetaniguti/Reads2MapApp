@@ -41,11 +41,21 @@ ind_size_graph_emp <- function(data){
   colors <- rainbow(2)
   names(colors) <- levels(data$SNPCall)
   
-  data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
-    geom_boxplot() + geom_hline(yintercept=0, color="red") +
-    labs(x="Genotype call", y = "centimorgan") +
-    facet_wrap(key~., ncol=1, scales = "free", strip.position = "right") +
-    scale_fill_manual(name="SNP call", values = colors) 
+  p1 <- data %>% filter(key == "n markers") %>% 
+    ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
+    geom_bar(stat="identity", position=position_dodge())  +
+    geom_text(aes(label= round(value,2)), position=position_dodge(width=0.9), vjust=-0.25) +
+    scale_y_continuous(expand = c(.1,.1)) +
+    labs(x="Genotype call", y = "Number of markers", fill = "SNP call") +
+    scale_fill_viridis_d()
+  
+  p2 <- data %>% filter(key == "Distance between markers (cM)") %>% 
+    ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
+    geom_point(position=position_dodge(width = 0.5)) + 
+    labs(x="Genotype call", y = "Distance between markers (cM)", fill = "SNP call") +
+    scale_color_viridis_d()
+                          
+  p2/p1  
 }
 
 all_size_graph_emp <- function(data, stat){

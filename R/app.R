@@ -1469,12 +1469,12 @@ Reads2MapApp <- function(...) {
       ),
       ################################################################################3
       tabItem(tabName = "filters_emp",
-              "The graphic here show the total number of markers (n_markers) available for analysis, 
+              "The graphic here show the total number of markers available for analysis, 
             the number of markers filtered by OneMap because of missing data, segregation distortion and redundancy.",
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(title = "Fitlers",
+                       box(title = "Filters",
                            width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                            plotOutput("filters_emp_out"),
                            hr(),
@@ -3014,9 +3014,11 @@ Reads2MapApp <- function(...) {
         depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
         seed <- datas_simu()[[7]][[2]][as.numeric(input$seed11)]
         if(input$fake11 == "with-false") fake <- T else fake <- F
-        temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall11, "_", 
-                         input$CountsFrom11, "_", geno, "_", fake)
         
+        temp_n <- map_name(depth, seed, geno, fake, 
+                           snpcall = input$SNPCall11, countsfrom = input$CountsFrom11, 
+                           data_names = datas_simu()[[8]])
+
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
           data <- datas_simu()[[6]][[temp_n]]
@@ -3059,8 +3061,9 @@ Reads2MapApp <- function(...) {
           depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
           seed <- datas_simu()[[7]][[2]][as.numeric(input$seed11)]
           if(input$fake11 == "with-false") fake <- T else fake <- F
-          temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall11, "_", 
-                           input$CountsFrom11, "_", geno, "_", fake)
+          
+          temp_n <- map_name(depth, seed, geno, fake, 
+                             input$SNPCall11, input$CountsFrom11, datas_simu()[[8]])
           
           if(geno == "gusmap"){
             data <- datas_simu()[[6]][[temp_n]]
@@ -3092,8 +3095,8 @@ Reads2MapApp <- function(...) {
         depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
         seed <- datas_simu()[[7]][[2]][as.numeric(input$seed12)]
         if(input$fake12 == "with-false") fake <- T else fake <- F
-        temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall12, "_", 
-                         input$CountsFrom12, "_", geno, "_", fake)
+        temp_n <- map_name(depth, seed, geno, fake, 
+                           input$SNPCall12, input$CountsFrom12, datas_simu()[[8]])
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
@@ -3148,8 +3151,8 @@ Reads2MapApp <- function(...) {
           depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
           seed <- datas_simu()[[7]][[2]][as.numeric(input$seed12)]
           if(input$fake12 == "with-false") fake <- T else fake <- F
-          temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall12, "_", 
-                           input$CountsFrom12, "_", geno, "_", fake)
+          temp_n <- map_name(depth, seed, geno, fake, 
+                             input$SNPCall12, input$CountsFrom12, datas_simu()[[8]])
           
           incProgress(0.25, detail = paste("Doing part", 2))
           if(geno == "gusmap"){
@@ -3180,8 +3183,8 @@ Reads2MapApp <- function(...) {
         depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
         seed <- datas_simu()[[7]][[2]][as.numeric(input$seed13)]
         if(input$fake13 == "with-false") fake <- T else fake <- F
-        temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall13, "_", 
-                         input$CountsFrom13, "_", geno, "_", fake)
+        temp_n <- map_name(depth, seed, geno, fake, 
+                           input$SNPCall13, input$CountsFrom13, datas_simu()[[8]])
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
@@ -3234,8 +3237,8 @@ Reads2MapApp <- function(...) {
           depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed13)])
           seed <- datas_simu()[[7]][[2]][as.numeric(input$seed13)]
           if(input$fake13 == "with-false") fake <- T else fake <- F
-          temp_n <- paste0("map_",seed, "_", depth, "_", input$SNPCall13, "_", 
-                           input$CountsFrom13, "_", geno, "_", fake)
+          temp_n <- map_name(depth, seed, geno, fake, 
+                             input$SNPCall13, input$CountsFrom13, datas_simu()[[8]])
           
           incProgress(0.25, detail = paste("Doing part", 2))
           if(geno == "gusmap"){
@@ -3560,7 +3563,7 @@ Reads2MapApp <- function(...) {
           filter(SNPCall == input$SNPCall1_emp) %>%
           filter(CountsFrom == input$CountsFrom1_emp)
         incProgress(0.5, detail = paste("Doing part", 2))
-        data
+        perfumaria(data)
       })
     })
     
@@ -3630,7 +3633,7 @@ Reads2MapApp <- function(...) {
           filter(SNPCall == input$SNPCall2_emp) %>%
           filter(CountsFrom == input$CountsFrom2_emp)
         incProgress(0.5, detail = paste("Doing part", 2))
-        data
+        perfumaria(data)
       })
     })
     
@@ -3668,6 +3671,8 @@ Reads2MapApp <- function(...) {
           filter(CountsFrom == input$CountsFrom3_emp) %>%
           mutate(interv.diff = sqrt(c(0,cm[-1] - cm[-length(cm)])^2))
         
+        data <- perfumaria(data)
+        
         data_df <- data %>% group_by(GenoCall, SNPCall, CountsFrom) %>%
           summarise(tot_size = round(cm[length(cm)],3),
                     n = n())
@@ -3681,8 +3686,10 @@ Reads2MapApp <- function(...) {
           gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom, -cm)
         
         incProgress(0.5, detail = paste("Doing part", 2))
-        data$key <- gsub("interv.diff", "diff (cM)", data$key)
-        data$key <- gsub("n", "n markers", data$key)
+
+        n <- c(`n markers` = "n", `Distance between markers (cM)` = "interv.diff")
+        data$key <- names(n)[match(data$key, n)]
+        
         list(data, data_df)
       })
     })
@@ -3752,7 +3759,7 @@ Reads2MapApp <- function(...) {
           group_by(mk.type, GenoCall, SNPCall, CountsFrom) %>%
           summarise(n = n()) %>%
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
-        data
+        perfumaria(data)
       })
     })
     
@@ -3812,9 +3819,13 @@ Reads2MapApp <- function(...) {
           group_by(GenoCall, SNPCall, CountsFrom) %>%
           summarise(n = n()) 
         
+        data_n <- perfumaria(data_n)
+        
         data <- datas_emp()[[4]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall9_emp) %>%
           filter(CountsFrom == input$CountsFrom9_emp)
+        
+        data <- perfumaria(data)
         
         data_df<- merge(data, data_n) 
         
@@ -3903,10 +3914,19 @@ Reads2MapApp <- function(...) {
         } else {
           geno <- choosed
         }
-        datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
+        data <- datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall7_emp) %>%
           filter(CountsFrom == input$CountsFrom7_emp)  %>%
-          gather(key, value, -CountsFrom, -GenoCall, -SNPCall)
+          gather(key, value, -CountsFrom, -GenoCall, -SNPCall) %>%
+          filter(key %in% c("n_markers", "miss", "distorted_markers", 
+                          "redundant_markers",  "selected_chr_no_dist"))
+        
+        new_names <- c(`Without filters` = "n_markers", `Missing data` = "miss", 
+                       `Segregation test` = "distorted_markers", Redundants = "redundant_markers", 
+                       `After all filters`= "selected_chr_no_dist")
+        data$key <- names(new_names)[match(data$key, new_names)]
+        
+        perfumaria(data)
         
       })
     })
@@ -4334,7 +4354,7 @@ Reads2MapApp <- function(...) {
           filter(SNPCall %in% input$SNPCall14_emp) %>%
           filter(CountsFrom == input$CountsFrom14_emp) 
         data$pos <- data$pos/1000 
-        data
+        perfumaria(data)
       })
     })
     

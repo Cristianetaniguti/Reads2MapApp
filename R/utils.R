@@ -127,3 +127,15 @@ prob_error <- function(data, method, estimate, gabarito, error){
   p
   return(p)
 }
+
+map_name <- function(depth, seed, geno, fake, snpcall, countsfrom, data_names){
+  
+  bugfix <- lapply(strsplit(data_names[1], "_"), "[[", 1) # exclusive for 20cM dataset
+  if(bugfix == "map"){
+    temp_n <- paste0("map_",seed, "_", depth, "_", snpcall, "_", 
+                     countsfrom, "_", geno, "_", fake)
+  } else {
+    temp_n <- paste0(seed, "_", depth, "_map_", snpcall, "_", 
+                     countsfrom, "_", geno, "_", fake)
+  }
+}
