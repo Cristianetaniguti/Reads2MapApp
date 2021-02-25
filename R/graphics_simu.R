@@ -1,31 +1,33 @@
 #' Functions to build graphics for the data from simulations
 #' 
-errorProb_graph <- function(data, genotypes){
+errorProb_graph <- function(data, genotypes, alpha){
   data <- data.frame(data)
-  colors <- c("black", "blue", "red", "green")
-  names(colors) <-  c("missing", "homozygous-alt","homozygous-ref", "heterozygous")
+  if(dim(data)[1] == 0) stop("This marker does not exists in this dataset.")
+  
+  colors <- c("gray", "#FDE725FF", "#440154", "#55C667FF", "#2D708EFF")
+  names(colors) <-  c("missing", "homozygous-alt","homozygous-ref", "heterozygous", "homozygous-alt == ref")
   data$pop <- "progeny"
   data$pop[data$ind %in% c("P1", "P2")] <- "parents"
   
   if(genotypes == "simulated_genotypes"){
     data %>% ggplot(aes(x=ref, y=alt, color=gabGT)) + 
-      geom_point(alpha = 0.3, aes(shape=pop)) +
+      geom_point(alpha = alpha, aes(shape=pop), size = 1.5) +
       scale_shape_manual(values=c(3, 19))+
       labs(title= "Depths",x="ref", y = "alt", color="Genotypes", shape = "Individuals") +
-      scale_color_viridis_d() +
+      scale_color_manual(values = colors) +
       guides(colour = guide_legend(override.aes = list(alpha = 1)), 
              shape = guide_legend(override.aes = list(alpha = 1)))
   }else if(genotypes == "estimated_genotypes"){
     data %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.alt.ref)) + 
-      geom_point(alpha = 0.3, aes(shape=pop)) +
+      geom_point(alpha = alpha, aes(shape=pop), size = 1.5) +
       scale_shape_manual(values=c(3, 19))+
       labs(title= "Depths",x="ref", y = "alt", color="Genotypes", shape = "Individuals") +
-      scale_color_viridis_d() +
+      scale_color_manual(values = colors) +
       guides(colour = guide_legend(override.aes = list(alpha = 1)), 
              shape = guide_legend(override.aes = list(alpha = 1)))
   } else if(genotypes == "estimated_errors"){
     data %>% ggplot(aes(x=ref, y=alt, color=errors)) + 
-      geom_point(alpha = 0.3, aes(shape=pop)) +
+      geom_point(alpha = alpha, aes(shape=pop), size = 1.5) +
       scale_shape_manual(values=c(3, 19))+
       labs(title= "Depths",x="ref", y = "alt", color="Error rate", shape = "Individuals") +
       scale_colour_gradient(low = "#70ED57", high = "#F62A2C") +
@@ -364,7 +366,7 @@ marker_type_probs <- function(data_plot_par){
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
           axis.title.y = element_blank(), legend.position = "top",
           legend.text=element_text(size=12))
-  p3_comb <- ggarrange(p3, widths = 13, heights = 20)
+  p3_comb <- ggarrange(p3, widths = 13, heights = 16)
   
   
   p_comb[[1]]/p_comb[[2]]/p_comb[[3]]/p3_comb
@@ -409,7 +411,7 @@ geno_probs <- function(data_plot_par){
             axis.title.y = element_blank(), legend.position = "top",
             legend.text=element_text(size=11))
     
-    p_comb[[i]] <- ggarrange(p1, p2, common.legend = T, widths = c(4,8), heights = c(20,20))
+    p_comb[[i]] <- ggarrange(p1, p2, common.legend = T, widths = c(4,8), heights = c(16,16))
   }
 
   p_comb[[1]]/p_comb[[2]]/p_comb[[3]]

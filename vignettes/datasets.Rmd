@@ -1,0 +1,32 @@
+---
+title: "Available Datasets"
+output: html_document
+---
+
+# Available Datasets
+
+Here we describe some of the main characteristics of each dataset available in this server. It is possible to access all other arguments used in the analysis in the metadata produced by the workflows.
+
+## SimultedReads2Map results
+
+|                           ID                          | depth - Parents | depth - Progeny | Population size | Number of families |            Reference Genome            |                        Reference VCF                       |     Reference map     | Library type |
+|:-----------------------------------------------------:|:---------------:|:---------------:|:----------------------:|:--------------------------------------:|:----------------------------------------------------------:|:---------------------:|:------------:|:-----------------|
+| *P. tremula* 20cM of chromosome 10 - without multiallelics |     80, 160     |      10, 20     |  200 |        5         | *Populus trichocarpa* v4.0 chromosome 10:0-7000000 |  From EmpiricalReads2Map with Bioproject PRJNA395and GATK  | From thesis chapter 2 |   RADinitio  |
+|   *P. tremula* 20cM of chromosome 10 - with multiallelics  |     80, 160     |      10, 20     |  200 |        5         | *Populus trichocarpa* v4.0 chromosome 10:0-7000000 | From EmpiricalReads2Map with  Bioproject PRJNA395 and GATK | From thesis chapter 2 |   RADinitio  |
+| *P. tremula* 37cM of chromosome 10 - without multiallelics |     80, 160     |      10, 20     |  200 |        5         | *Populus trichocarpa* v4.0 chromosome 10:0-8500000 | From EmpiricalReads2Map with  Bioproject PRJNA395 and GATK | From thesis chapter 2 |   RADinitio  |
+|   *P. tremula* 37cM of chromosome 10 - with multiallelics  |     80, 160     |      10, 20     |  200 |        5         | *Populus trichocarpa* v4.0 chromosome 10:0-8500000 | From EmpiricalReads2Map with  Bioproject PRJNA395 and GATK | From thesis chapter 2 |   RADinitio  |
+|            Toy sample without multiallelics           |      20,30      |      10,20      |  20 |        2         | *Populus trichocarpa* v4.0 chromosome 10:0-2000000 | From EmpiricalReads2Map with  Bioproject PRJNA395 and GATK | From thesis chapter 2 |   RADinitio  |
+|             Toy sample with multiallelics             |      20,30      |      10,20      |  20 |        2         | *Populus trichocarpa* v4.0 chromosome 10:0-2000000 | From EmpiricalReads2Map with  Bioproject PRJNA395 and GATK | From thesis chapter 2 |   RADinitio  |
+
+
+## EmpiricalReads2Map results
+
+|                          ID                          |       FASTQ files      | Population size | Library type |     Reference genome     | Selected chromosome |
+|:----------------------------------------------------:|:-------------:|:----------------------:|:---------------:|:------------:|:------------------------:|
+| *P. tremula* - with contaminants; without multiallelics |   Bioproject PRJNA395  |       122       |    RADseq    | *Populus trichocarpa* v4.0 |          10         |
+|           *P. tremula* - without multiallelics          |   Bioproject PRJNA395  |       116       |    RADseq    | *Populus trichocarpa* v4.0 |          10         |
+|             *P. tremula* - with multiallics             |   Bioproject PRJNA395  |       116       |    RADseq    | *Populus trichocarpa* v4.0 |          10         |
+|          Eucalyptus - without multiallelics          | From Suzano/Futuragene |       200       |    RADseq    |  *Eucalyptus grandis* v3.0 |          10         |
+|           Toy sample without multiallelics           |   Bioproject PRJNA395  |        5        |    RADseq    | *Populus trichocarpa* v4.0 |          10         |
+|             Toy sample with multiallelics            |   Bioproject PRJNA395  |        5        |    RADseq    | *Populus trichocarpa* v4.0 |          10         |
+

@@ -3,9 +3,11 @@ title: "About"
 output: html_document
 ---
 
+<!--
 ## OneMap software
 
 The OneMap software was first developed by Gabriel Margarido, Marcelo Mollinari, and Antonio Augusto Franco Garcia and [published in 2007](http://taurus.unicamp.br/bitstream/REPOSIP/81752/1/WOS000248257800002.pdf). It was one of the first software able to build genetic maps for outcrossing species. It estimates a two-point recombination fraction for each combination of markers and applies a multipoint approach to combine information from every marker in the linkage group to estimate the genetic distances. But, the software was first developed to deal with few and informative genetic markers, as microsatellites. With the modern high-throughput markers, OneMap now has to deal with thousands of markers, with low-informativeness and a lot of genotyping errors. Without an adaptation of the software, it produces inflated maps and takes a lot of time to run.
+-->
 
 ## Reads2Map workflows
 
@@ -39,7 +41,10 @@ You can also have more details about the workflows and how they can be applied:
 
 * [Paper](vignettes/under_development.html)
 
+
+<!--
+
 ## Authors
 
 Cristiane Taniguti is currently a PhD student at ESALQ/USP Statistical Genetics Lab. Access her personal page [here](http://cristianetaniguti.github.io/), and the page of the lab [here](http://augustogarcia.me/statgen-esalq/).
- 
+-->
