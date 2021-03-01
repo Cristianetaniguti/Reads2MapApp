@@ -4,7 +4,7 @@ errorProb_graph <- function(data, genotypes, alpha){
   data <- data.frame(data)
   if(dim(data)[1] == 0) stop("This marker does not exists in this dataset.")
   
-  colors <- c("gray", "#FDE725FF", "#440154", "#55C667FF", "#2D708EFF")
+  colors <- c("gray", "#5289C7", "#4EB265", "#882E72", "#F6C141")
   names(colors) <-  c("missing", "homozygous-alt","homozygous-ref", "heterozygous", "homozygous-alt == ref")
   data$pop <- "progeny"
   data$pop[data$ind %in% c("P1", "P2")] <- "parents"
@@ -13,26 +13,26 @@ errorProb_graph <- function(data, genotypes, alpha){
     data %>% ggplot(aes(x=ref, y=alt, color=gabGT)) + 
       geom_point(alpha = alpha, aes(shape=pop), size = 1.5) +
       scale_shape_manual(values=c(3, 19))+
-      labs(title= "Depths",x="ref", y = "alt", color="Genotypes", shape = "Individuals") +
+      labs(x="reference allele counts", y = "alternative allele counts", color="Genotypes", shape = "Individuals") +
       scale_color_manual(values = colors) +
       guides(colour = guide_legend(override.aes = list(alpha = 1)), 
-             shape = guide_legend(override.aes = list(alpha = 1)))
+             shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw()
   }else if(genotypes == "estimated_genotypes"){
     data %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.alt.ref)) + 
       geom_point(alpha = alpha, aes(shape=pop), size = 1.5) +
       scale_shape_manual(values=c(3, 19))+
-      labs(title= "Depths",x="ref", y = "alt", color="Genotypes", shape = "Individuals") +
+      labs(x="reference allele counts", y = "alternative allele counts", color="Genotypes", shape = "Individuals") +
       scale_color_manual(values = colors) +
       guides(colour = guide_legend(override.aes = list(alpha = 1)), 
-             shape = guide_legend(override.aes = list(alpha = 1)))
+             shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw()
   } else if(genotypes == "estimated_errors"){
     data %>% ggplot(aes(x=ref, y=alt, color=errors)) + 
       geom_point(alpha = alpha, aes(shape=pop), size = 1.5) +
       scale_shape_manual(values=c(3, 19))+
-      labs(title= "Depths",x="ref", y = "alt", color="Error rate", shape = "Individuals") +
+      labs(x="reference allele counts", y = "alternative allele counts", color="Error rate", shape = "Individuals") +
       scale_colour_gradient(low = "#70ED57", high = "#F62A2C") +
       guides(colour = guide_legend(override.aes = list(alpha = 1)), 
-             shape = guide_legend(override.aes = list(alpha = 1)))
+             shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw()
   }
 }
 
@@ -41,37 +41,38 @@ ind_size_graph <- function(data, data_n){
   names(colors_dots) <- c( "true marker", "false positive", "multiallelic")
   
   if(unique(data$fake) == "without-false"){
-    legend.y <- "Distance between real and estimated (cM)"
+    legend.y <- "distance between real and estimated (cM)"
   } else {
-    legend.y <- "Distance between markers (cM)"
+    legend.y <- "distance between markers (cM)"
   }
   
   p1 <- data %>% ggplot() +
-    geom_boxplot(aes(x=GenoCall, y = diff, fill=GenoCall), alpha = 0.6) +
-    geom_point(aes(x=GenoCall, y = diff,color = factor(real.mks)), 
+    geom_boxplot(aes(x=GenoCall, y = `diff (cM)`, fill=GenoCall), alpha = 0.6) +
+    geom_point(aes(x=GenoCall, y = `diff (cM)`,color = factor(real.mks)), 
                position=position_jitterdodge(jitter.width=0.5, dodge.width = 0.5)) +
     scale_fill_viridis_d() +
-    facet_wrap(SNPCall~., ncol=2, scales = "fixed", strip.position = "top") +
+    facet_wrap(SNPCall + CountsFrom~., scales = "fixed", strip.position = "top", ncol = 1) +
     scale_color_manual("Markers", values = colors_dots) +    
     guides(fill=FALSE) +
     theme(
       axis.title.x = element_blank(),
       legend.position = "top") + 
-    ylab(legend.y)
+    labs(x = "", title = "Genetic distances") +
+    ylab(legend.y) + theme_bw()
   
   
   p2 <- data_n %>% ggplot()+
     geom_bar(aes(x=GenoCall, y=`n markers`, fill=GenoCall), stat = "identity") + 
     scale_fill_viridis_d() +
-    facet_wrap(.~SNPCall, ncol=2, scales = "fixed", strip.position = "bottom") +
-    labs(x = "Genotyping method") +
+    facet_wrap(SNPCall + CountsFrom~., scales = "fixed", strip.position = "top", ncol = 1) +
+    labs(x = "", y= "number of markers", fill = "Genotyping", title = "Number of markers") +
     theme(
       strip.background = element_blank(),
       strip.text.x = element_blank(),
       legend.position = "none",
-    )
+    ) + theme_bw()
   
-  p1 / p2
+  ggarrange(p1, p2, legend = "top", ncol = 2, align = "hv")
 }
 
 all_size_graph <- function(data, data_n,stat, fake){
@@ -81,21 +82,13 @@ all_size_graph <- function(data, data_n,stat, fake){
   
   p1 <- data %>% ggplot(aes(x=GenoCall, y=.[[dim(data)[2]]], color=SNPCall)) +
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5)  +
-    labs(y = colnames(data)[dim(data)[2]]) + 
-    facet_wrap(depth~CountsFrom, ncol=2, scales = "fixed", strip.position = "top") +
-    theme(
-      axis.title.x = element_blank(),
-      legend.position = "top"
-    )
-  
+    labs(y = colnames(data)[dim(data)[2]], x = "Genotyping method", title = "Statistic") + 
+    facet_wrap(depth~CountsFrom, ncol=1, scales = "fixed") + theme_bw()
+
   p2 <- data_n %>% ggplot(aes(x=GenoCall, y=`n markers`, color=SNPCall)) +
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5)  +
-    labs(x = "Genotyping method") + 
-    facet_wrap(depth~., ncol=2, scales = "fixed", strip.position = "bottom") +
-    theme(
-      strip.background = element_blank(),
-      strip.text.x = element_blank(),
-      legend.position = "none")
+    labs(x = "Genotyping method", y = "Number of markers", title= "Number of markers") + 
+    facet_wrap(depth~CountsFrom, ncol=1, scales = "fixed") + theme_bw()
   
   n_fam <- length(unique(paste0(data$seed,data$depth)))
   
@@ -106,8 +99,7 @@ all_size_graph <- function(data, data_n,stat, fake){
     p1 <- p1 + geom_boxplot()
     p2 <- p2 + geom_boxplot()
   }
-  
-  p1 / p2  
+  ggarrange(p1,p2, legend = "top", common.legend = T)
 }
 
 marker_type_graph <- function(data){
@@ -116,38 +108,62 @@ marker_type_graph <- function(data){
     scale_fill_viridis_d(name="Marker type") + 
     labs(x = NULL, y = "Number of markers") +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
-    facet_grid(SNPCall+key~GenoCall) 
+    facet_grid(SNPCall+CountsFrom+key~GenoCall) + theme_bw()
 }
 
 phases_graph <- function(data){
-  p <- data %>% ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
+  p1 <- data %>% filter(key == "% correct") %>%  
+    ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5) + 
-    labs(x = "Genotyping method", y = "percent of corrected phases") +
-    facet_wrap(depth~key, ncol=1, scales = "free", strip.position = "right") 
+    labs(x = "Genotyping method", y = "%", title="Percent of corrected phases") +
+    facet_wrap(depth + CountsFrom~., ncol=1) + theme_bw() 
+  
+  p2 <- data %>% filter(key == "n markers") %>%  
+    ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
+    scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5) + 
+    labs(x = "Genotyping method", y = "Number of markers", title = "Number of markers") +
+    facet_wrap(depth + CountsFrom~., ncol=1) + theme_bw()
   
   n_fam <- length(unique(paste0(data$seed,data$depth)))
-  if(n_fam < 20)   p + geom_point(position=position_dodge(width=0.5))  
-  else p + geom_boxplot()
+  if(n_fam < 20)  {
+    p1 <- p1 + geom_point(position=position_dodge(width=0.5))
+    p2 <- p2 + geom_point(position=position_dodge(width=0.5))
+  } else p +  {
+    p1 <- p1 + geom_boxplot()
+    p2 <- p2 + geom_boxplot()
+  }
+  ggarrange(p1,p2, common.legend = T, legend = "top")
 }
 
 times_graph <- function(data){
   data$value <- as.numeric(data$value)
-  p <- data %>% ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
+  p1 <- data %>% filter(key == "minutes") %>% ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5) + 
-    labs(x = "Genotyping method", y = "") +
-    facet_wrap(depth~key, ncol=1, scales = "free", strip.position = "right")
+    labs(x = "Genotyping method", y = "minutes", title = "Time spent") +
+    facet_grid(depth + CountsFrom ~.) 
+
+  p2 <- data %>% filter(key == "n markers") %>% ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
+    scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5) + 
+    labs(x = "Genotyping method", y = "number of markers", title = "Number of markers") +
+    facet_grid(depth + CountsFrom ~.) 
   
   n_fam <- length(unique(paste0(data$seed,data$depth)))
-  if(n_fam < 20)   p + geom_point(position=position_dodge(width=0.5))  
-  else p + geom_boxplot(position=position_dodge(width=0.5))
+  if(n_fam < 20)  {
+    p1 <- p1 + geom_point(position=position_dodge(width=0.5)) + theme_bw()
+    p2 <- p2 + geom_point(position=position_dodge(width=0.5)) + theme_bw()
+  } else {
+    p1 <- p1 + geom_boxplot(position=position_dodge(width=0.5)) + theme_bw()
+    p2 <- p2 + geom_boxplot(position=position_dodge(width=0.5)) + theme_bw()
+  }
+  ggarrange(p1, p2, common.legend = T)
 }
 
 avalSNPs_graph <- function(data){
   p <- data %>% ggplot(aes(x=name, y=value, color= SNPCall)) +
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5) + 
     labs(x = "Genotyping method", y = "number of markers") + 
-    facet_wrap( ~depth, ncol=1, scales = "free", strip.position = "right") +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) 
+    facet_grid(depth ~.) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + theme_bw()
   
   n_fam <- length(unique(paste0(data$seed,data$depth)))
   if(n_fam < 20)   p + geom_point(position=position_dodge(width=0.5))  
@@ -158,8 +174,8 @@ filters_graph <- function(data){
   p <- data %>% ggplot(aes(x= name, y=value, color= GenoCall)) +
     scale_color_viridis_d(name="Genotype call") + 
     labs(x = "", y = "number of markers") +
-    facet_wrap(SNPCall~CountsFrom, ncol=2, scales = "fixed", strip.position = "top")+
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) 
+    facet_grid(depth + CountsFrom~SNPCall, scales = "fixed")+
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + theme_bw()
   
   n_fam <- length(unique(paste0(data$seed,data$depth)))
   if(n_fam < 20)   p + geom_point(position=position_dodge(width=0.5))  else p + geom_boxplot(position=position_dodge(width=0.5))
@@ -310,7 +326,7 @@ cmbymb <- function(data){
     scale_color_viridis_d(begin = 0, end = 0.5) +
     guides(color=guide_legend(title="Markers")) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    facet_grid(key~SNPCall+GenoCall, scales = "fixed") +
+    facet_grid(SNPCall+GenoCall~key, scales = "fixed") +
     theme_bw() 
 }
 
@@ -415,4 +431,15 @@ geno_probs <- function(data_plot_par){
   }
 
   p_comb[[1]]/p_comb[[2]]/p_comb[[3]]
+}
+
+roc_graph <- function(data){
+  data %>% ggplot(aes(x=1-specificity, y=sensitivity, color = GenoCall)) +
+    geom_point() + 
+    geom_line()  +
+    facet_grid(CountsFrom + depth ~ SNPCall) + 
+    theme_bw() +
+    scale_color_brewer(palette = "Set1") +
+    labs(color = "Genotype caller") +
+    geom_abline(intercept = 0, slope = 1)
 }

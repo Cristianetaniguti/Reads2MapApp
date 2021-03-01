@@ -12,11 +12,85 @@
 ##'@import ggpubr
 ##'@import RColorBrewer
 ##'@import vroom
+##'@import pROC
+##'@import shinymanager
 ##'@importFrom htmlwidgets saveWidget
 ##'@importFrom irr kappa2 kendall agree
 ##'
 ##'@export
 Reads2MapApp <- function(...) {
+  ##########################
+  ## Datasets available
+  ##########################
+  # Simulated
+  id <- c("P. tremula 20cM of chromosome 10 - without multiallelics", 
+          "P. tremula 20cM of chromosome 10 - with multiallelics",
+          "P. tremula 37cM of chromosome 10 - without multiallelics",
+          "P. tremula 37cM of chromosome 10 - with multiallelics",
+          "Toy sample without multiallelics",
+          "Toy sample with multiallelics")
+  depth_parents <- c(rep("80,160", 4), rep("20,30", 2))
+  depth_progeny <- c(rep("10,20",4), rep("10,20",2))
+  population_size <- c(rep(200,4), 20,20)
+  number_fam <- c(rep(5,4), 2,2)
+  ref_gen <- c(rep("Populus trichocarpa v4.0 chromosome 10:0-7000000",2),
+               rep("Populus trichocarpa v4.0 chromosome 10:0-8500000",2),
+               rep("Populus trichocarpa v4.0 chromosome 10:0-2000000",2))
+  ref_vcf <- c(rep("From EmpiricalReads2Map with Bioproject PRJNA395 raw data", 6))
+  ref_map <- (rep("From thesis chapter 2",6))
+  library <- c(rep("RADinitio",6))
+  
+  simulated_datasets <- data.frame(ID = id,
+                                   `Depth - Parents` = depth_parents,
+                                   `Depth - Progeny` = depth_progeny,
+                                   `Popularion size` = population_size,
+                                   `Number of families` = number_fam,
+                                   `Reference genome` = ref_gen,
+                                   `Reference VCF` = ref_vcf,
+                                   `Reference genetic map` = ref_map,
+                                   `Library type` = library)
+  ### Empirical
+  id <- c("P. tremula - with contaminants; without multiallelics",
+          "P. tremula - without multiallelics	",
+          "P. tremula - with multiallics",
+          "Eucalyptus - without multiallelics",
+          "Toy sample without multiallelics",
+          "Toy sample with multiallelics")
+  fastq <- c(rep("Bioproject PRJNA395",3),
+             "From Suzano/Futuragene",
+             rep("Bioproject PRJNA395",2))
+  pop_size <- c(122,116,116,200,5,5)
+  library_type <- rep("RADseq",6)
+  ref_gen <- c(rep("Populus trichocarpa v4.0", 3), 
+               "Eucalyptus grandis v3.0", 
+               rep("Populus trichocarpa v4.0",2))
+  chr_sele <- c(rep("10", 6))
+  
+  empirical_datasets <- data.frame(ID = id,
+                                   `FASTQ files` = fastq,
+                                   `Population size` = pop_size,
+                                   `Library type` = library_type,
+                                   `Reference genome` = ref_gen,
+                                   `Selected chromosome` = chr_sele)
+  
+  
+  #####################
+  # Credentials
+  ####################
+  credentials <- data.frame(
+    user = c("Cris", "Marcelo", "Alexandre", "Augusto", "Gabriel", "Wellingson", "Lucas", "Thiago"), # mandatory
+    password = c("9LKTc!Q3", "z8*R@3X1", "Lw2c5UQ&", "uTm93C#C", "swb$sS66", "a*9F13cP", "E5!YY1dR", "8Qgp!t13"), # mandatory
+    start = c(rep("2021-02-28", 8)), # optinal (all others)
+    expire = c(rep(NA,8)),
+    admin = c(TRUE, rep(FALSE, 7)),
+    comment = "Simple and secure authentification mechanism 
+  for single ‘Shiny’ applications.",
+    stringsAsFactors = FALSE
+  )
+  
+  #####################
+  # Choices
+  #####################
   ## Permanently choices - If add more softwares in workflow comparision this part requires update
   overview_emp_choices <- list("n_markers", "redundants", "n_markers_map", "filt_mks",
                                "map_size", "time", "breakpoints", "mean_break", "se_break")
@@ -43,6 +117,11 @@ Reads2MapApp <- function(...) {
                            "freebayes/GATK"="SNPCaller",
                            "SuperMASSA"="supermassa",
                            "updog"="updog")
+  
+  ErrorProb_choice_unique <- list("polyRAD"="polyrad",
+                                  "freebayes/GATK"="SNPCaller",
+                                  "SuperMASSA"="supermassa",
+                                  "updog"="updog")
   
   global0.05_choices <- list("global error of 0.05"=TRUE,
                              "variable error" = FALSE)
@@ -94,6 +173,7 @@ Reads2MapApp <- function(...) {
                menuSubItem("Times", icon = icon("circle"), tabName = "times"),
                menuSubItem("Depth and genotyping", icon = icon("circle"), tabName = "disper_depth"),
                menuSubItem("Genotype probabilities", icon = icon("circle"), tabName = "probs"),
+               menuSubItem("ROC curves", icon = icon("circle"), tabName = "roc"),
                menuSubItem("Map size each family", icon = icon("circle"), tabName = "ind_size"),
                menuSubItem("Overview map size", icon = icon("circle"), tabName = "all_size"),
                menuSubItem("Phases", icon = icon("circle"), tabName = "phases"),
@@ -256,7 +336,19 @@ Reads2MapApp <- function(...) {
                          )
                      )
               ),
-              includeMarkdown(system.file("vignettes", "datasets.Rmd", package = "Reads2MapApp"))
+              column(width = 12,
+                     "Here we describe some of the main characteristics of each dataset available in this server. 
+                     It is possible to access all other arguments used in the analysis in the metadata produced by the workflows.", hr(),
+                     box(width = NULL,  solidHeader = TRUE, 
+                         collapsible = FALSE, status="primary", title= "SimulatedReads2Map results available",
+                         DT::dataTableOutput("simulated_datasets", width = "100%"),
+                     ), 
+                     hr(),
+                     box(width = NULL,  solidHeader = TRUE, 
+                         collapsible = FALSE, status="primary", title= "EmpiricalReads2Map results available",
+                         DT::dataTableOutput("empirical_datasets", width = "100%"),
+                     )
+              )
       ),
       ##########################################################
       # Simulations
@@ -325,9 +417,9 @@ Reads2MapApp <- function(...) {
                          #helpText("Read counts from:"),
                          fluidPage(
                            textInput("marker1", label = p("By default, it plots the genotypes of all markers, you can select a specific one defining its ID here:"),
-                                     value = "Ex: Chr10_1000"),
-                           hr(),
-                           div(downloadButton("disper_depth_out_down"),style="float:right")
+                                     value = "Ex: Chr10_1000")
+                           # hr(),
+                           # div(downloadButton("disper_depth_out_down"),style="float:right")
                            # ),
                          )
                        )
@@ -409,7 +501,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb_probs", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                            hr()
                          ),
                          #helpText("Select the SNP calling method"),
@@ -435,7 +527,7 @@ Reads2MapApp <- function(...) {
                              
                              checkboxGroupInput("CountsFrom_probs", label = p("Counts from"),
                                                 choices = CountsFrom_choice,
-                                                selected = "vcf"),
+                                                selected = unlist(CountsFrom_choice)),
                              hr(),
                              actionButton("go_probs", "Update",icon("refresh")),
                              # ),
@@ -480,6 +572,77 @@ Reads2MapApp <- function(...) {
               )
       ),
       ##########################################################
+      tabItem(tabName = "roc",
+              "",
+              hr(),
+              fluidRow(
+                column(width = 12,
+                       box(title= "ROC curves",
+                           width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                           plotOutput("roc_out", width = "100%", height = "500px"),
+                           hr(),
+                           "Best thresholds:",
+                           tableOutput("thr_out"), hr(),
+                           actionButton("go_roc", "Update",icon("refresh")),
+                       )
+                ),
+                
+                column(width=6,
+                       box(
+                         width = NULL, solidHeader = TRUE,
+                         fluidPage(
+                           checkboxGroupInput("ErrorProb_roc", label = p("Genotyping method"),
+                                              choices = ErrorProb_choice_unique,
+                                              selected = unlist(ErrorProb_choice_unique)),
+                           hr()
+                         ),
+                         fluidPage(
+                           radioButtons("Global0.05_roc", label = p("Error rate"),
+                                        choices = global0.05_choices,
+                                        selected = "FALSE"),
+                           hr()
+                         ),
+                         #helpText("Select the SNP calling method"),
+                         fluidPage(
+                           checkboxGroupInput("SNPCall_roc", label = p("SNP calling method"),
+                                              choices = SNPCall_choice,
+                                              selected = unlist(SNPCall_choice)),
+                         )
+                       )
+                ),
+                column(width=6,
+                       box(width = NULL, solidHeader = TRUE,
+                           #helpText("Select the family seed"),
+                           fluidPage(
+                             checkboxGroupInput("depth_roc", label = p("Depth"),
+                                                choices = "It will be updated",
+                                                selected = "It will be updated"),
+                             hr()
+                           ),
+                           
+                           #helpText("Read counts from:"),
+                           fluidPage(
+                             
+                             checkboxGroupInput("CountsFrom_roc", label = p("Counts from"),
+                                                choices = CountsFrom_choice,
+                                                selected = unlist(CountsFrom_choice)),
+                             hr()
+                           ),
+                           
+                           fluidPage(
+                             
+                             radioButtons("fake_roc", label = p("Allow false positives?"),
+                                          choices = fake_choices,
+                                          selected = "without-false")
+                             # hr(),
+                             # div(downloadButton("roc_out_down"),style="float:right")
+                             # ),
+                           )
+                       )
+                )
+              )
+      ),
+      ##########################################################
       tabItem(tabName = "cmxmb",
               "The scatter plots show the relation between genetic (cM) and physical (MB) distance.",
               hr(),
@@ -487,7 +650,7 @@ Reads2MapApp <- function(...) {
                 column(width = 12,
                        box(title= "cM x Mb",
                            width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                           plotOutput("cmbymb_out"),
+                           plotOutput("cmbymb_out", width = "100%", height = "1000px"),
                            hr(),
                            actionButton("go_cmbymb", "Update",icon("refresh")),
                        )
@@ -499,7 +662,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb_cmbymb", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                            hr()
                          ),
                          fluidPage(
@@ -539,9 +702,9 @@ Reads2MapApp <- function(...) {
                              
                              radioButtons("fake_cmbymb", label = p("Allow false positives?"),
                                           choices = fake_choices,
-                                          selected = "without-false"),
-                             hr(),
-                             div(downloadButton("cmbymb_out_down"),style="float:right")
+                                          selected = "without-false")
+                             # hr(),
+                             # div(downloadButton("cmbymb_out_down"),style="float:right")
                              # ),
                            )
                        )
@@ -556,7 +719,7 @@ Reads2MapApp <- function(...) {
                 column(width = 12,
                        box(title = "Map size each family",
                            width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                           plotOutput("ind_size_out"),
+                           plotOutput("ind_size_out", width = "100%", height = "550px"),
                            hr(),
                            actionButton("go3", "Update",icon("refresh")),
                        )
@@ -568,7 +731,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb3", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                            hr()
                          ),
                          fluidPage(
@@ -599,9 +762,9 @@ Reads2MapApp <- function(...) {
                            #helpText("Read counts from:"),
                            fluidPage(
                              
-                             radioButtons("CountsFrom3", label = p("Counts from"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
+                             checkboxGroupInput("CountsFrom3", label = p("Counts from"),
+                                                choices = CountsFrom_choice,
+                                                selected = unlist(CountsFrom_choice)),
                              hr()
                            ),
                            
@@ -609,9 +772,9 @@ Reads2MapApp <- function(...) {
                              
                              radioButtons("fake1", label = p("Allow false positives?"),
                                           choices = fake_choices,
-                                          selected = "without-false"),
-                             hr(),
-                             div(downloadButton("ind_size_out_down"),style="float:right")
+                                          selected = "without-false")
+                             # hr(),
+                             # div(downloadButton("ind_size_out_down"),style="float:right")
                              # ),
                            )
                        )
@@ -627,9 +790,8 @@ Reads2MapApp <- function(...) {
                 column(width = 12,
                        box(title= "Overview map size",
                            width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                           plotOutput("all_size_out"),
+                           plotOutput("all_size_out", width = "100%", height = "550px"),
                            hr(),
-                           dataTableOutput("all_size_df_out"),
                            actionButton("go4", "Update",icon("refresh")),
                        )
                 ),
@@ -646,7 +808,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb4", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                            hr()
                          ),
                          fluidPage(
@@ -658,7 +820,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("SNPCall4", label = p("SNP calling method"),
                                               choices = SNPCall_choice,
-                                              selected = names(SNPCall_choice)),
+                                              selected = unlist(SNPCall_choice)),
                            hr()
                          )
                        )),
@@ -671,9 +833,9 @@ Reads2MapApp <- function(...) {
                              hr()
                            ),
                            fluidPage(
-                             radioButtons("CountsFrom4", label = p("Counts from"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
+                             checkboxGroupInput("CountsFrom4", label = p("Counts from"),
+                                                choices = CountsFrom_choice,
+                                                selected = unlist(CountsFrom_choice)),
                              hr()
                            ),
                            
@@ -681,9 +843,9 @@ Reads2MapApp <- function(...) {
                              
                              radioButtons("fake2", label = p("Allow false positives?"),
                                           choices = fake_choices,
-                                          selected = "without-false"),
-                             hr(),
-                             div(downloadButton("all_size_out_down"),style="float:right")
+                                          selected = "without-false")
+                             # hr(),
+                             # div(downloadButton("all_size_out_down"),style="float:right")
                            )
                        )
                 )
@@ -698,7 +860,7 @@ Reads2MapApp <- function(...) {
                 column(width = 12,
                        box(title = "Markers type",
                            width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
-                           plotOutput("marker_type_out"),
+                           plotOutput("marker_type_out", width = "100%", height = "550px"),
                            hr(),
                            actionButton("go5", "Update",icon("refresh")),
                        )
@@ -710,13 +872,13 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb10", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                            hr()
                          ),
                          fluidPage(
                            checkboxGroupInput("SNPCall10", label = p("SNP calling method"),
                                               choices = SNPCall_choice,
-                                              selected = names(SNPCall_choice)),
+                                              selected = unlist(SNPCall_choice)),
                            hr()
                          ))
                 ),
@@ -729,9 +891,9 @@ Reads2MapApp <- function(...) {
                              hr()
                            ),
                            fluidPage(
-                             radioButtons("CountsFrom10", label = p("Counts from"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
+                             checkboxGroupInput("CountsFrom10", label = p("Counts from"),
+                                                choices = CountsFrom_choice,
+                                                selected = unlist(CountsFrom_choice)),
                              hr()
                            ),
                            
@@ -739,9 +901,9 @@ Reads2MapApp <- function(...) {
                              
                              radioButtons("fake3", label = p("Allow false positives?"),
                                           choices = fake_choices,
-                                          selected = "without-false"),
-                             hr(),
-                             div(downloadButton("marker_type_out_down"),style="float:right")
+                                          selected = "without-false")
+                             # hr(),
+                             # div(downloadButton("marker_type_out_down"),style="float:right")
                            )
                        )
                 )
@@ -755,7 +917,7 @@ Reads2MapApp <- function(...) {
                 column(width = 12,
                        box(title = "Phases",
                            width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                           plotOutput("phases_out"),
+                           plotOutput("phases_out", width = "100%", height = "550px"),
                            hr(),
                            actionButton("go6", "Update",icon("refresh")),
                        )
@@ -767,7 +929,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb8", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                            hr()
                          ),
                          fluidPage(
@@ -779,7 +941,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("SNPCall8", label = p("SNP calling method"),
                                               choices = SNPCall_choice,
-                                              selected = names(SNPCall_choice)),
+                                              selected = unlist(SNPCall_choice)),
                            hr()
                          )
                        )
@@ -794,12 +956,12 @@ Reads2MapApp <- function(...) {
                            hr()
                          ),
                          fluidPage(
-                           radioButtons("CountsFrom8", label = p("Counts from"),
-                                        choices = CountsFrom_choice,
-                                        selected = "vcf"),
+                           checkboxGroupInput("CountsFrom8", label = p("Counts from"),
+                                              choices = CountsFrom_choice,
+                                              selected = unlist(CountsFrom_choice)),
                            hr()
-                         ),
-                         div(downloadButton("phases_out_down"),style="float:right")
+                         )
+                         # div(downloadButton("phases_out_down"),style="float:right")
                          
                        )
                 )
@@ -825,7 +987,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb9", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                            hr()
                          ),
                          fluidPage(
@@ -837,7 +999,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("SNPCall9", label = p("SNP calling method"),
                                               choices = SNPCall_choice,
-                                              selected = names(SNPCall_choice)),
+                                              selected = unlist(SNPCall_choice)),
                            hr()
                          )
                        )
@@ -851,9 +1013,9 @@ Reads2MapApp <- function(...) {
                              hr()
                            ),
                            fluidPage(
-                             radioButtons("CountsFrom9", label = p("Counts from"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
+                             checkboxGroupInput("CountsFrom9", label = p("Counts from"),
+                                                choices = CountsFrom_choice,
+                                                selected = unlist(CountsFrom_choice)),
                              hr()
                            ),
                            
@@ -861,10 +1023,10 @@ Reads2MapApp <- function(...) {
                              
                              radioButtons("fake5", label = p("Allow false positives?"),
                                           choices = fake_choices,
-                                          selected = "without-false"),
-                             hr(),
-                             
-                             div(downloadButton("times_out_down"),style="float:right")
+                                          selected = "without-false")
+                             # hr(),
+                             # 
+                             # div(downloadButton("times_out_down"),style="float:right")
                            )
                        )
                 )
@@ -888,15 +1050,15 @@ Reads2MapApp <- function(...) {
                            fluidPage(
                              checkboxGroupInput("SNPCall6", label = p("SNP calling method"),
                                                 choices = SNPCall_choice,
-                                                selected = names(SNPCall_choice)),
+                                                selected = unlist(SNPCall_choice)),
                              hr()
                            ),
                            fluidPage(
                              checkboxGroupInput("depth6", label = p("Depth"),
                                                 choices = "This will be updated",
-                                                selected = "This will be updated"),
-                             hr(),
-                             div(downloadButton("snpcall_out_down"),style="float:right")
+                                                selected = "This will be updated")
+                             # hr(),
+                             # div(downloadButton("snpcall_out_down"),style="float:right")
                            )
                        )
                 )
@@ -935,7 +1097,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("SNPCall7", label = p("SNP calling method"),
                                               choices = SNPCall_choice,
-                                              selected = names(SNPCall_choice)),
+                                              selected = unlist(SNPCall_choice)),
                            hr()
                          )
                        )
@@ -945,15 +1107,15 @@ Reads2MapApp <- function(...) {
                            fluidPage(
                              checkboxGroupInput("CountsFrom7", label = p("Counts from"),
                                                 choices = CountsFrom_choice,
-                                                selected = "vcf"),
+                                                selected = unlist(CountsFrom_choice)),
                              hr()
                            ),
                            fluidPage(
-                             selectInput("depth7", label = p("Depth"),
-                                         choices = "This will be updated",
-                                         selected = "This will be updated"),
-                             hr(),
-                             div(downloadButton("filters_out_down"),style="float:right")
+                             checkboxGroupInput("depth7", label = p("Depth"),
+                                                choices = "This will be updated",
+                                                selected = "This will be updated")
+                             # hr(),
+                             # div(downloadButton("filters_out_down"),style="float:right")
                            )
                        )
                 )
@@ -1082,8 +1244,8 @@ Reads2MapApp <- function(...) {
                     checkboxGroupInput("inds12", label = p("Individuals from progeny"),
                                        choices = "It will be updated",
                                        selected = "It will be updated"),
-                ),
-                div(downloadButton("haplot_out_down"),style="float:right")
+                )
+                # div(downloadButton("haplot_out_down"),style="float:right")
               )
               
       ),
@@ -1139,8 +1301,8 @@ Reads2MapApp <- function(...) {
                     radioButtons("CountsFrom13", label = p("Counts from"),
                                  choices = CountsFrom_choice,
                                  selected = "vcf"),
-                ),
-                div(downloadButton("counts_out_down"),style="float:right")
+                )
+                # div(downloadButton("counts_out_down"),style="float:right")
               )
       ),
       ################################################################################
@@ -1153,9 +1315,9 @@ Reads2MapApp <- function(...) {
                          width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                          actionButton("go31", "Update",icon("refresh")),
                          hr(),
-                         dataTableOutput("overview_out"),
-                         hr(),
-                         div(downloadButton("overview_down"),style="float:right")
+                         dataTableOutput("overview_out")
+                         # hr(),
+                         # div(downloadButton("overview_down"),style="float:right")
                        )
                 )
               ),
@@ -1189,9 +1351,9 @@ Reads2MapApp <- function(...) {
                 column(width = 12, 
                        box(
                          width = NULL, height = 900,
-                         plotOutput("overview_plot_out"),
-                         hr(),
-                         div(downloadButton("overview_plot_down"),style="float:right")
+                         plotOutput("overview_plot_out")
+                         # hr(),
+                         # div(downloadButton("overview_plot_down"),style="float:right")
                        )
                 )
               ),
@@ -1257,9 +1419,9 @@ Reads2MapApp <- function(...) {
                            
                            radioButtons("CountsFrom1_emp", label = p("Counts from"),
                                         choices = CountsFrom_choice,
-                                        selected = "vcf"),
-                           hr(),
-                           div(downloadButton("disper_depth_emp_out_down"),style="float:right")
+                                        selected = "vcf")
+                           # hr(),
+                           # div(downloadButton("disper_depth_emp_out_down"),style="float:right")
                            # ),
                          )
                        )
@@ -1344,7 +1506,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb3_emp", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                            hr()
                          )
                        )
@@ -1366,11 +1528,11 @@ Reads2MapApp <- function(...) {
                            ), 
                            fluidPage(
                              
-                             radioButtons("CountsFrom3_emp", label = p("Counts from"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
-                             hr(),
-                             div(downloadButton("ind_size_out_emp_down"),style="float:right")
+                             checkboxGroupInput("CountsFrom3_emp", label = p("Counts from"),
+                                                choices = CountsFrom_choice,
+                                                selected = unlist(CountsFrom_choice))
+                             # hr(),
+                             # div(downloadButton("ind_size_out_emp_down"),style="float:right")
                              # ),
                            )
                        )
@@ -1395,7 +1557,7 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb10_emp", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                          )
                        )
                 ),
@@ -1405,15 +1567,15 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("SNPCall10_emp", label = p("SNP calling method"),
                                               choices = SNPCall_choice,
-                                              selected = names(SNPCall_choice)),
+                                              selected = unlist(SNPCall_choice)),
                          ),
                          
                          fluidPage(
-                           radioButtons("CountsFrom10_emp", label = p("Counts from"),
-                                        choices = CountsFrom_choice,
-                                        selected = "vcf"),
-                           hr(),
-                           div(downloadButton("marker_type_emp_out_down"),style="float:right")
+                           checkboxGroupInput("CountsFrom10_emp", label = p("Counts from"),
+                                              choices = CountsFrom_choice,
+                                              selected = unlist(CountsFrom_choice))
+                           # hr(),
+                           # div(downloadButton("marker_type_emp_out_down"),style="float:right")
                          )
                        )
                 )
@@ -1438,12 +1600,12 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            checkboxGroupInput("ErrorProb9_emp", label = p("Genotyping method"),
                                               choices = maps_choice,
-                                              selected = names(maps_choice)),
+                                              selected = unlist(maps_choice)),
                          ),
                          fluidPage(
                            checkboxGroupInput("SNPCall9_emp", label = p("SNP calling method"),
                                               choices = SNPCall_choice,
-                                              selected = names(SNPCall_choice)),
+                                              selected = unlist(SNPCall_choice)),
                          )
                        )
                 ),
@@ -1457,11 +1619,11 @@ Reads2MapApp <- function(...) {
                            hr()
                          ), 
                          fluidPage(
-                           radioButtons("CountsFrom9_emp", label = p("Counts from"),
-                                        choices = CountsFrom_choice,
-                                        selected = "vcf"),
-                           hr(),
-                           div(downloadButton("times_emp_out_down"),style="float:right")
+                           checkboxGroupInput("CountsFrom9_emp", label = p("Counts from"),
+                                              choices = CountsFrom_choice,
+                                              selected = unlist(CountsFrom_choice))
+                           # hr(),
+                           # div(downloadButton("times_emp_out_down"),style="float:right")
                          )
                        )
                 )
@@ -1504,15 +1666,15 @@ Reads2MapApp <- function(...) {
                            fluidPage(
                              checkboxGroupInput("SNPCall7_emp", label = p("SNP calling method"),
                                                 choices = SNPCall_choice,
-                                                selected = names(SNPCall_choice)),
+                                                selected = unlist(SNPCall_choice)),
                              hr()
                            ),
                            fluidPage(
-                             radioButtons("CountsFrom7_emp", label = p("Counts from"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
-                             hr(),
-                             div(downloadButton("filters_emp_out_down"),style="float:right")
+                             checkboxGroupInput("CountsFrom7_emp", label = p("Counts from"),
+                                                choices = CountsFrom_choice,
+                                                selected = unlist(CountsFrom_choice))
+                             # hr(),
+                             # div(downloadButton("filters_emp_out_down"),style="float:right")
                            )
                        )
                 )
@@ -1558,9 +1720,9 @@ Reads2MapApp <- function(...) {
                            fluidPage(
                              radioButtons("CountsFrom8_emp", label = p("Counts from"),
                                           choices = CountsFrom_choice,
-                                          selected = "vcf"),
-                             hr(),
-                             div(downloadButton("heatmaps_emp_out_down"),style="float:right")
+                                          selected = "vcf")
+                             # hr(),
+                             # div(downloadButton("heatmaps_emp_out_down"),style="float:right")
                            )
                        )
                 )
@@ -1655,7 +1817,7 @@ Reads2MapApp <- function(...) {
                                        choices = "It will be updated",
                                        selected = "It will be updated"),
                 ),
-                div(downloadButton("haplot_emp_out_down"),style="float:right")
+                # div(downloadButton("haplot_emp_out_down"),style="float:right")
               )
               
       ),
@@ -1694,8 +1856,8 @@ Reads2MapApp <- function(...) {
                     radioButtons("CountsFrom13_emp", label = p("Counts from"),
                                  choices = CountsFrom_choice,
                                  selected = "vcf"),
-                ),
-                div(downloadButton("counts_emp_out_down"),style="float:right")
+                )
+                # div(downloadButton("counts_emp_out_down"),style="float:right")
               )
       ),
       ################################################################################3
@@ -1739,11 +1901,11 @@ Reads2MapApp <- function(...) {
                            ), 
                            fluidPage(
                              
-                             radioButtons("CountsFrom14_emp", label = p("Counts from"),
-                                          choices = CountsFrom_choice,
-                                          selected = "vcf"),
-                             hr(),
-                             div(downloadButton("cmxmb_emp_down"),style="float:right")
+                             checkboxGroupInput("CountsFrom14_emp", label = p("Counts from"),
+                                                choices = CountsFrom_choice,
+                                                selected = unlist(CountsFrom_choice))
+                             # hr(),
+                             # div(downloadButton("cmxmb_emp_down"),style="float:right")
                              # ),
                            )
                        )
@@ -1759,9 +1921,9 @@ Reads2MapApp <- function(...) {
                 column(width = 12,
                        box(title = "Overview",
                            width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                           actionButton("go30", "Update",icon("refresh")),
-                           hr(),
-                           div(downloadButton("overview_emp_down"),style="float:right")
+                           actionButton("go30", "Update",icon("refresh"))
+                           # hr(),
+                           # div(downloadButton("overview_emp_down"),style="float:right")
                        )
                 ),
                 column(width = 12,
@@ -1776,9 +1938,9 @@ Reads2MapApp <- function(...) {
                 column(width = 12,
                        box(solidHeader = T,
                            width = 12,
-                           plotOutput("overview_emp_plot_out"),
-                           hr(),
-                           div(downloadButton("overview_emp_plot_down"),style="float:right")
+                           plotOutput("overview_emp_plot_out")
+                           # hr(),
+                           # div(downloadButton("overview_emp_plot_down"),style="float:right")
                        )
                 )
               )
@@ -1805,7 +1967,6 @@ Reads2MapApp <- function(...) {
                                                "P.tremula empirical maps without contaminant" = "populus_emp",
                                                "Eucalyptus empirical SNP calling" = "eucalyptus_snpcalling",
                                                "Eucalyptus empirical maps" = "eucalyptus_map",
-                                               "P. tremula simulation 37cM of chromosome 10 -  5 families pop size 200 depth 10" = "populus_simu_fam5_pop200_depth10",
                                                "P. tremula simulation 37cM of chromosome 10 -  5 families pop size 200 depth 20" = "populus_simu_fam5_pop200_depth20"
                                 ), 
                                 selected = "populus_emp"),
@@ -1815,7 +1976,7 @@ Reads2MapApp <- function(...) {
                   title = "Time spent by each WDL task",
                   width = NULL,
                   actionButton("go28", "Update",icon("refresh")),
-                  div(downloadButton("wf_out_down"),style="float:right"),
+                  # div(downloadButton("wf_out_down"),style="float:right"),
                   hr(),
                   plotlyOutput("wf_times_out", width = "100%", height = "100%"),
               )
@@ -1824,10 +1985,27 @@ Reads2MapApp <- function(...) {
   )
   
   ui <- dashboardPage(header, sidebar, body)
-  
+  ui <- secure_app(ui)
   ## Define server logic required to draw a histogram ----
   server <- function(input, output,session) {
+    
+    # call the server part
+    # check_credentials returns a function to authenticate users
+    res_auth <- secure_server(
+      check_credentials = check_credentials(credentials)
+    )
+    
     options(shiny.maxRequestSize=500*1024^2)
+    ##################################################
+    # Available datasets
+    ##################################################
+    output$simulated_datasets <- DT::renderDataTable({
+      DT::datatable(simulated_datasets, options = list(scrollX = TRUE))
+    })
+    
+    output$empirical_datasets <- DT::renderDataTable({
+      DT::datatable(empirical_datasets, options = list(scrollX = TRUE))
+    })
     ##################################################
     # Simulations - rearranging data
     ##################################################
@@ -1838,6 +2016,9 @@ Reads2MapApp <- function(...) {
         if(!is.null(x)){
           data.gz <- x[,4]
           path = "data/"
+        } else if(is.null(input$example_simu)) {
+          cat("Wait credentials\n")
+          data.gz <- "Wait"
         } else { ######## Only the toy_sample in the package - the rest in server
           if(input$example_simu == "populus_200_bi_radinitio20"){
             data.gz <- c("inst/ext/simulations/RADinitio20/SimulatedReads_results_depth10pop200_bi_up.tar.gz",
@@ -1859,95 +2040,101 @@ Reads2MapApp <- function(...) {
                          "inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz")
           }
         }
-        path_dir <- tempdir()
-        list_files <- list()
-        incProgress(0, detail = paste("Doing part", 1))
-        for(i in 1:length(data.gz)){
-          untar(data.gz[i], exdir = path_dir)
-          list_files[[i]] <- untar(data.gz[i], list = T)
-        }
         
-        incProgress(0.25, detail = paste("Doing part", 2))
-        list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
-        for_rm <- sapply(list_files, "[", 1)
-        list_files <- lapply(list_files, "[", -1)
-        list_files <- lapply(list_files, sort)
-        
-        # Data
-        datas <- list()
-        for(i in 1:length(list_files[[1]])){
-          datas[[i]] <- sapply(list_files, "[", i)
-        }
-        
-        ## Tables
-        data1_depths_geno_prob <- data2_maps <- data3_filters <- vector()
-        data4_times <- data5_SNPCall_efficiency <- simu_haplo <- vector()
-        data6 <- names_rdatas  <- list()
-        #seeds <- depths <- seeds_choices <- depths_choices <- vector()
-        
-        temp_name <- tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".llo")
-        incProgress(0.5, detail = paste("Doing part", 3))
-        for(i in 1:length(datas)){
-          for(j in 1:length(datas[[i]])){
-            if(all(grepl("gusmap_RDatas.RData", datas[[i]]))){
-              temp1 <- load(datas[[i]][[j]])
-              temp1 <- base::get(temp1)
-              data6 <- c(data6, temp1)
-            } else if(all(grepl("sequences.llo", datas[[i]]))){
-              temp1 <- readList(datas[[i]][[j]])
-              if(j == 1){
-                saveList(temp1, file = temp_name, append = F, compress = T)
-                inds <- rownames(temp1[[1]]$data.name$geno)
+        if(data.gz == "Wait"){
+          cat("Waiting...\n")
+        } else {
+          path_dir <- tempdir()
+          list_files <- list()
+          incProgress(0, detail = paste("Doing part", 1))
+          for(i in 1:length(data.gz)){
+            untar(data.gz[i], exdir = path_dir)
+            list_files[[i]] <- untar(data.gz[i], list = T)
+          }
+          
+          incProgress(0.25, detail = paste("Doing part", 2))
+          list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
+          for_rm <- sapply(list_files, "[", 1)
+          list_files <- lapply(list_files, "[", -1)
+          list_files <- lapply(list_files, sort)
+          
+          # Data
+          datas <- list()
+          for(i in 1:length(list_files[[1]])){
+            datas[[i]] <- sapply(list_files, "[", i)
+          }
+          
+          ## Tables
+          data1_depths_geno_prob <- data2_maps <- data3_filters <- vector()
+          data4_times <- data5_SNPCall_efficiency <- simu_haplo <- vector()
+          data6 <- names_rdatas  <- list()
+          #seeds <- depths <- seeds_choices <- depths_choices <- vector()
+          
+          temp_name <- tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".llo")
+          incProgress(0.5, detail = paste("Doing part", 3))
+          for(i in 1:length(datas)){
+            for(j in 1:length(datas[[i]])){
+              if(all(grepl("gusmap_RDatas.RData", datas[[i]]))){
+                temp1 <- load(datas[[i]][[j]])
+                temp1 <- base::get(temp1)
+                data6 <- c(data6, temp1)
+              } else if(all(grepl("sequences.llo", datas[[i]]))){
+                temp1 <- readList(datas[[i]][[j]])
+                if(j == 1){
+                  saveList(temp1, file = temp_name, append = F, compress = T)
+                  inds <- rownames(temp1[[1]]$data.name$geno)
+                } else {
+                  saveList(temp1, file = temp_name, append = T, compress = T)
+                }
+              } else if(all(grepl("names.tsv.gz", datas[[i]]))){
+                temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
+                names_rdatas <- c(names_rdatas, temp1)
               } else {
-                saveList(temp1, file = temp_name, append = T, compress = T)
+                temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
+                name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
+                name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
+                assign(name_temp, rbind(base::get(name_temp), temp1))
               }
-            } else if(all(grepl("names.tsv.gz", datas[[i]]))){
-              temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
-              names_rdatas <- c(names_rdatas, temp1)
-            } else {
-              temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
-              name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
-              name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
-              assign(name_temp, rbind(base::get(name_temp), temp1))
             }
           }
+          
+          incProgress(0.75, detail = paste("Doing part", 4))
+          temp <- unique(paste0(data2_maps$depth, "_", data2_maps$seed))
+          seeds <- sapply(strsplit(temp, "_"), "[", 2)
+          depths <- sapply(strsplit(temp, "_"), "[", 1)
+          depths_choices <- as.list(depths)
+          names(depths_choices) <- depths
+          seed_depth <- unique(paste("Depth",data2_maps$depth, "seed", data2_maps$seed))
+          temp_names <- seed_depth
+          seeds_choices <- as.list(1:length(seed_depth))
+          names(seeds_choices) <- temp_names
+          inds_choices <- sort(inds)
+          names(inds_choices) <- sort(inds)
+          names_rdatas <- unlist(names_rdatas)
+          names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+          
+          data2_maps$fake[data2_maps$fake == "TRUE"] <- "with-false"
+          data2_maps$fake[data2_maps$fake == "FALSE"] <- "without-false"
+          
+          data4_times$fake[data4_times$fake == "TRUE"] <- "with-false"
+          data4_times$fake[data4_times$fake == "FALSE"] <- "without-false"
+          
+          result_list <- list("data1"=data1_depths_geno_prob, 
+                              "data2"=data2_maps, 
+                              "data3"=data3_filters, 
+                              "data4"=data4_times, 
+                              "data5"=data5_SNPCall_efficiency, 
+                              "data6"=data6, 
+                              "choices"=list(depths, seeds, seeds_choices, depths_choices, inds_choices),
+                              "names"=names_rdatas, 
+                              "haplo"=simu_haplo,
+                              "sequence.llo"=temp_name)
+          
+          system(paste("rm -r", paste(for_rm, collapse = " ")))
+          
+          result_list
         }
-        
-        incProgress(0.75, detail = paste("Doing part", 4))
-        temp <- unique(paste0(data2_maps$depth, "_", data2_maps$seed))
-        seeds <- sapply(strsplit(temp, "_"), "[", 2)
-        depths <- sapply(strsplit(temp, "_"), "[", 1)
-        depths_choices <- as.list(depths)
-        names(depths_choices) <- depths
-        seed_depth <- unique(paste("Depth",data2_maps$depth, "seed", data2_maps$seed))
-        temp_names <- seed_depth
-        seeds_choices <- as.list(1:length(seed_depth))
-        names(seeds_choices) <- temp_names
-        inds_choices <- sort(inds)
-        names(inds_choices) <- sort(inds)
-        names_rdatas <- unlist(names_rdatas)
-        names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
-        
-        data2_maps$fake[data2_maps$fake == "TRUE"] <- "with-false"
-        data2_maps$fake[data2_maps$fake == "FALSE"] <- "without-false"
-        
-        data4_times$fake[data4_times$fake == "TRUE"] <- "with-false"
-        data4_times$fake[data4_times$fake == "FALSE"] <- "without-false"
-        
-        result_list <- list("data1"=data1_depths_geno_prob, 
-                            "data2"=data2_maps, 
-                            "data3"=data3_filters, 
-                            "data4"=data4_times, 
-                            "data5"=data5_SNPCall_efficiency, 
-                            "data6"=data6, 
-                            "choices"=list(depths, seeds, seeds_choices, depths_choices, inds_choices),
-                            "names"=names_rdatas, 
-                            "haplo"=simu_haplo,
-                            "sequence.llo"=temp_name)
-        
-        system(paste("rm -r", paste(for_rm, collapse = " ")))
       })
-      result_list
     }
     
     datas_simu <- reactive({prepare_datas_simu(input$simulatedreads)})
@@ -1955,7 +2142,7 @@ Reads2MapApp <- function(...) {
     # Update choices of seed and depth according with the dataset chosen
     observe({
       seeds_choice <- datas_simu()[[7]][[3]] 
-      depth_choice <- datas_simu()[[7]][[4]]
+      depth_choice <- unique(datas_simu()[[7]][[4]])
       inds_choice <- datas_simu()[[7]][[5]]
       
       updateSelectInput(session, "seed1",
@@ -2010,6 +2197,11 @@ Reads2MapApp <- function(...) {
                                choices = depth_choice,
                                selected=unlist(depth_choice))
       
+      updateCheckboxGroupInput(session, "depth_roc",
+                               label="Depth",
+                               choices = depth_choice,
+                               selected=unlist(depth_choice))
+      
       updateRadioButtons(session, "depth10",
                          label="Depth",
                          choices = depth_choice,
@@ -2035,10 +2227,10 @@ Reads2MapApp <- function(...) {
                                choices = depth_choice,
                                selected=unlist(depth_choice))
       
-      updateSelectInput(session, "depth7",
-                        label="Depth",
-                        choices = depth_choice,
-                        selected=unlist(depth_choice)[1])
+      updateCheckboxGroupInput(session, "depth7",
+                               label="Depth",
+                               choices = depth_choice,
+                               selected=unlist(depth_choice))
       
       updateSelectInput(session, "overview_depth",
                         label="Choose depth for the plot",
@@ -2058,6 +2250,9 @@ Reads2MapApp <- function(...) {
         if(!is.null(x)){
           data.gz <- x[,4]
           path = "data/"
+        } else if(is.null(input$example_emp)){
+          cat("Wait credentials\n")
+          data.gz <- "Wait"
         } else { ######## Available examples
           if(input$example_emp == "populus"){
             data.gz <- "inst/ext/empirical/populus/multiallelics/EmpiricalReads_results.tar.gz"
@@ -2074,55 +2269,60 @@ Reads2MapApp <- function(...) {
           }
         }
         
-        path_dir <- tempdir()
-        list_files <- list()
-        for(i in 1:length(data.gz)){
-          untar(data.gz[i], exdir = path_dir)
-          list_files[[i]] <- untar(data.gz[i], list = T)
+        if(data.gz == "Wait"){
+          cat("Waiting...\n")
+        } else {
+          path_dir <- tempdir()
+          list_files <- list()
+          for(i in 1:length(data.gz)){
+            untar(data.gz[i], exdir = path_dir)
+            list_files[[i]] <- untar(data.gz[i], list = T)
+          }
+          
+          incProgress(0.5, detail = paste("Doing part", 2))
+          list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
+          list_files <- lapply(list_files, "[", -1)
+          
+          # Data
+          datas <- list()
+          for(i in 1:length(list_files[[1]])){
+            datas[[i]] <- sapply(list_files, "[", i)
+          }
+          
+          for_rm <- sapply(list_files, "[", -grep("sequences",datas))
+          
+          temp_dat <- readList(datas[[grep("sequences",datas)]], index = 1)
+          inds <- rownames(temp_dat[[1]]$data.name$geno)
+          inds_list <- as.list(1:length(inds))
+          names(inds_list) <- paste0(inds, " (", inds, ")")
+          
+          data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
+          data5 <- base::get(data5)
+          
+          ## Tables
+          idx <- grep("multi_names", datas)
+          if(length(idx) > 0){
+            multi_names <- load(datas[[idx]])
+            multi_names <- base::get(multi_names)
+          } else { multi_names = 0}
+          
+          names_rdatas <- readRDS(datas[[grep("names.rds", datas)]])
+          names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+          result_list <- list("data1" = readRDS(datas[[grep("data1_depths_geno_prob.rds", datas)]]), 
+                              "data2" = readRDS(datas[[grep("data2_maps.rds", datas)]]), 
+                              "data3" = readRDS(datas[[grep("data3_filters.rds", datas)]]), 
+                              "data4" = readRDS(datas[[grep("data4_times.rd", datas)]]), 
+                              "data5" = data5, 
+                              "names" = names_rdatas, 
+                              "ind_names" = inds_list,
+                              "sequence.llo" = datas[[grep("sequences",datas)]],
+                              "multi_names" = multi_names)
+          
+          system(paste("rm -r", paste(for_rm, collapse = " ")))
+          
+          result_list
         }
-        
-        incProgress(0.5, detail = paste("Doing part", 2))
-        list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
-        list_files <- lapply(list_files, "[", -1)
-        
-        # Data
-        datas <- list()
-        for(i in 1:length(list_files[[1]])){
-          datas[[i]] <- sapply(list_files, "[", i)
-        }
-        
-        for_rm <- sapply(list_files, "[", -grep("sequences",datas))
-        
-        temp_dat <- readList(datas[[grep("sequences",datas)]], index = 1)
-        inds <- rownames(temp_dat[[1]]$data.name$geno)
-        inds_list <- as.list(1:length(inds))
-        names(inds_list) <- paste0(inds, " (", inds, ")")
-        
-        data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
-        data5 <- base::get(data5)
-        
-        ## Tables
-        idx <- grep("multi_names", datas)
-        if(length(idx) > 0){
-          multi_names <- load(datas[[idx]])
-          multi_names <- base::get(multi_names)
-        } else { multi_names = 0}
-        
-        names_rdatas <- readRDS(datas[[grep("names.rds", datas)]])
-        names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
-        result_list <- list("data1" = readRDS(datas[[grep("data1_depths_geno_prob.rds", datas)]]), 
-                            "data2" = readRDS(datas[[grep("data2_maps.rds", datas)]]), 
-                            "data3" = readRDS(datas[[grep("data3_filters.rds", datas)]]), 
-                            "data4" = readRDS(datas[[grep("data4_times.rd", datas)]]), 
-                            "data5" = data5, 
-                            "names" = names_rdatas, 
-                            "ind_names" = inds_list,
-                            "sequence.llo" = datas[[grep("sequences",datas)]],
-                            "multi_names" = multi_names)
-        
-        system(paste("rm -r", paste(for_rm, collapse = " ")))
       })
-      result_list
     }
     
     datas_emp <- reactive({prepare_datas_emp(input$empiricalreads)})
@@ -2138,6 +2338,93 @@ Reads2MapApp <- function(...) {
     ##################################################################
     # Simulations
     ##################################################################
+    #######################
+    # ROC curves
+    #######################
+    button_roc <- eventReactive(input$go_roc, {
+      withProgress(message = 'Building left graphic', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        genocall <- test_geno(global = input$Global0.05_roc, error = input$ErrorProb_roc)
+        snpcall <- input$SNPCall_roc
+        countsfrom <- input$CountsFrom_roc
+        depth <- input$depth_roc
+        
+        methods <- expand.grid(genocall=genocall, snpcall=snpcall, 
+                               countsfrom = countsfrom, depth = depth)
+        
+        methods <- methods %>% filter(!(genocall == "SNPCaller" & countsfrom == "bam")) %>% 
+          mutate_if(is.factor, as.character)
+        
+        data <- datas_simu()[[1]]
+        data$id <- "non"
+        data[which(data$gabGT == data$gt.onemap.alt.ref),]$id <- "correct"
+        data[which(data$gabGT != data$gt.onemap.alt.ref),]$id <- "wrong"
+        
+        incProgress(0.25, detail = paste("Doing part", 2))
+        tot_df <- subset_df <- data.frame()
+        for(i in 1:dim(methods)[1]){
+          data1 <- data %>% filter(GenoCall == methods$genocall[i] & 
+                                     SNPCall == methods$snpcall[i] & 
+                                     CountsFrom == methods$countsfrom[i] & 
+                                     depth == methods$depth[i])
+          
+          if(all(data1$id == "correct")){
+            df <- data.frame(threshold = Inf, specificity = 1, sensitivity=1, precision =1) 
+            best <- data.frame(threshold =Inf)
+          } else if (all(data1$id == "wrong")){
+            df <- data.frame(threshold = -Inf, specificity = 0, sensitivity=0, precision =0)
+            best <- data.frame(threshold =-Inf)
+          } else {
+            method <- pROC::roc(response = data1$id, predictor = data1$errors)
+            
+            best <- pROC::coords(method, "best", ret="threshold", transpose = FALSE)
+            
+            df <- pROC::coords(method, "all", ret=c("threshold", "specificity", "sensitivity",
+                                                    "precision"), transpose = FALSE)
+          }
+          df$SNPCall <- methods$snpcall[i]
+          df$GenoCall <- methods$genocall[i]
+          df$CountsFrom <- methods$countsfrom[i]
+          df$depth <- methods$depth[i]
+          df$best_tr <- best$threshold
+          
+          n <- 80 # Only a subset of dots
+          vec <- 1:dim(df)[1]
+          subs <- round(seq(min(vec),max(vec),(max(vec)-min(vec))/(n-1)), 0)
+          subs_df <- df[order(df$sensitivity),]
+          subs_df <- subs_df[subs,]
+          
+          tot_df <- rbind(tot_df, df)
+          subset_df <- rbind(subset_df, subs_df)
+        }
+        
+        incProgress(0.5, detail = paste("Doing part", 3))
+        subset_df <- perfumaria(subset_df)
+        subset_df <- subset_df[-which(subset_df$threshold == Inf | subset_df$threshold == -Inf),]
+        
+        tot_df <- perfumaria(tot_df)
+        latex_df <- tot_df %>% group_by(GenoCall,SNPCall, CountsFrom, depth) %>%
+          summarise(best = unique(best_tr)) %>% pivot_wider(names_from = GenoCall, values_from = best)
+        
+        latex_df <- latex_df[order(latex_df$SNPCall),]
+        latex_df$`freebayes/GATK`[is.na(latex_df$`freebayes/GATK`)] <- "not applicable"
+        latex_df <- data.frame(latex_df)
+        latex_df[latex_df == Inf] <- "All genoypes correct"
+        latex_df[latex_df == -Inf] <- "All genoypes wrong"
+        
+        incProgress(0.75, detail = paste("Doing part", 4))
+        list(subset_df, latex_df)
+      })
+    })
+    
+    output$roc_out <- renderPlot({
+      roc_graph(button_roc()[[1]])
+    })
+    
+    output$thr_out <- renderTable(
+      button_roc()[[2]]
+    )
     
     #######################
     # cM by MB
@@ -2295,8 +2582,7 @@ Reads2MapApp <- function(...) {
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall3) %>%
           filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed3)]) %>%
-          filter(CountsFrom == input$CountsFrom3 | 
-                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(CountsFrom %in% input$CountsFrom3) %>%
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed3)]) %>%
           filter(fake == input$fake1) 
         
@@ -2311,7 +2597,7 @@ Reads2MapApp <- function(...) {
           data <- data %>% mutate("diff (cM)" = sqrt(c(0, (rf[-1] - rf[-length(rf)]))^2))
         }
         
-        data_n <- data %>%  group_by(GenoCall, SNPCall) %>%
+        data_n <- data %>%  group_by(GenoCall, SNPCall, CountsFrom) %>%
           summarise("n markers" = n()) 
         
         data <- merge(data, data_n) 
@@ -2380,8 +2666,7 @@ Reads2MapApp <- function(...) {
         
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall4) %>%
-          filter(CountsFrom == input$CountsFrom4 | 
-                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(CountsFrom %in% input$CountsFrom4) %>%
           filter(depth %in% input$depth4) %>%
           filter(fake == input$fake2) %>%
           group_by(seed,GenoCall, SNPCall, CountsFrom, depth) 
@@ -2466,9 +2751,9 @@ Reads2MapApp <- function(...) {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         
-        data <- datas_simu[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
+        data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb10) %>%
           filter(SNPCall %in% input$SNPCall10) %>%
-          filter(CountsFrom == input$CountsFrom10) %>%
+          filter(CountsFrom %in% input$CountsFrom10) %>%
           filter(depth == input$depth10) %>%
           filter(fake == input$fake3)
         
@@ -2659,8 +2944,7 @@ Reads2MapApp <- function(...) {
         
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall8) %>%
-          filter(CountsFrom == input$CountsFrom8 | 
-                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(CountsFrom %in% input$CountsFrom8) %>%
           filter(depth %in% input$depth8) %>%
           filter(fake == "without-false") %>%
           filter(real.mks == "true marker") # This graphic do not consider multiallelic markers because their were not simulated
@@ -2670,7 +2954,6 @@ Reads2MapApp <- function(...) {
         
         data1 <- data %>% group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
           summarise(`% correct`= 100*sum(est.phases == real.phases)/length(real.phases))
-        
         
         data <- merge(data1, data_n) %>%
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -seed, -depth)
@@ -2737,8 +3020,7 @@ Reads2MapApp <- function(...) {
         
         data_n <- datas_simu()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall9) %>%
-          filter(CountsFrom == input$CountsFrom9 | 
-                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(CountsFrom %in% input$CountsFrom9) %>%
           filter(fake == input$fake5) %>%
           group_by(GenoCall, SNPCall, CountsFrom, fake, seed, depth) %>%
           summarise(`n markers` = n()) 
@@ -2746,11 +3028,10 @@ Reads2MapApp <- function(...) {
         data <- datas_simu()[[4]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall9) %>%
           filter(fake == input$fake5) %>%
-          filter(CountsFrom == input$CountsFrom9 | 
-                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
+          filter(CountsFrom %in% input$CountsFrom9) %>%
           filter(depth %in% input$depth9)  
         
-        data$times <- data$time/60
+        data$time <- data$time/60
         
         data_df <- merge(data, data_n) 
         
@@ -2760,9 +3041,7 @@ Reads2MapApp <- function(...) {
         data$key <- gsub("time", "minutes", data$key)
         
         incProgress(0.5, detail = paste("Doing part", 2))
-        data <- perfumaria(data)
-        
-        data
+        perfumaria(data)
       })
     })
     
@@ -2889,10 +3168,11 @@ Reads2MapApp <- function(...) {
         
         data <- datas_simu()[[3]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall7) %>%
-          filter(depth == input$depth7) %>%
-          filter(CountsFrom %in% input$CountsFrom7 | 
-                   (CountsFrom == "vcf" & GenoCall %in% c("SNPCaller", "OneMap_version2", "SNPCaller0.05"))) %>%
-          pivot_longer(cols=1:5)
+          filter(depth %in% input$depth7) %>%
+          filter(CountsFrom %in% input$CountsFrom7) %>%
+          pivot_longer(cols=c("n_markers", "higher.than.25..missing", 
+                              "distorted_markers", "redundant_markers",
+                              "after_filters"))
         
         n <- c(`Without filters`="n_markers",
                `Missing data`= "higher.than.25..missing",
@@ -3018,7 +3298,7 @@ Reads2MapApp <- function(...) {
         temp_n <- map_name(depth, seed, geno, fake, 
                            snpcall = input$SNPCall11, countsfrom = input$CountsFrom11, 
                            data_names = datas_simu()[[8]])
-
+        
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
           data <- datas_simu()[[6]][[temp_n]]
@@ -3104,7 +3384,7 @@ Reads2MapApp <- function(...) {
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
           data <- readList(datas_simu()[[10]], index = idx)
-          data <- data[[1]][[1]]
+          if (!is.vector(data[[1]][[1]])) data <- data[[1]][[1]] else data <- data[[1]] # bugfix
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
           idx <- which(rownames(data$data.name$geno) %in% input$inds12)
@@ -3114,6 +3394,7 @@ Reads2MapApp <- function(...) {
     })
     
     output$haplot_out <- renderPlot({
+      plot(progeny_haplotypes(data, ind = idx, most_likely = input$Most_likely12))
       plot(progeny_haplotypes(button12()[[1]], ind = button12()[[2]], most_likely = input$Most_likely12))
     })
     
@@ -3130,6 +3411,7 @@ Reads2MapApp <- function(...) {
     })
     
     output$haplot_simu_out <- renderPlot({
+      plot(sub_dat)
       plot(button12.1())
     })
     
@@ -3192,7 +3474,8 @@ Reads2MapApp <- function(...) {
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
           data <- readList(datas_simu()[[10]], index = idx)
-          data <- data[[1]][[1]]
+          if (!is.vector(data[[1]][[1]])) data <- data[[1]][[1]] else data <- data[[1]] # bugfix
+          class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
           inds <- 1:data$data.name$n.ind
           df <- progeny_haplotypes(data, ind = inds, most_likely = T)
@@ -3668,7 +3951,7 @@ Reads2MapApp <- function(...) {
         
         data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall3_emp) %>%
-          filter(CountsFrom == input$CountsFrom3_emp) %>%
+          filter(CountsFrom %in% input$CountsFrom3_emp) %>%
           mutate(interv.diff = sqrt(c(0,cm[-1] - cm[-length(cm)])^2))
         
         data <- perfumaria(data)
@@ -3686,7 +3969,7 @@ Reads2MapApp <- function(...) {
           gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom, -cm)
         
         incProgress(0.5, detail = paste("Doing part", 2))
-
+        
         n <- c(`n markers` = "n", `Distance between markers (cM)` = "interv.diff")
         data$key <- names(n)[match(data$key, n)]
         
@@ -3755,7 +4038,7 @@ Reads2MapApp <- function(...) {
         incProgress(0, detail = paste("Doing part", 1))
         data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb10_emp) %>%
           filter(SNPCall %in% input$SNPCall10_emp) %>%
-          filter(CountsFrom == input$CountsFrom10_emp) %>%
+          filter(CountsFrom %in% input$CountsFrom10_emp) %>%
           group_by(mk.type, GenoCall, SNPCall, CountsFrom) %>%
           summarise(n = n()) %>%
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
@@ -3815,7 +4098,7 @@ Reads2MapApp <- function(...) {
         
         data_n <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall9_emp) %>%
-          filter(CountsFrom == input$CountsFrom9_emp) %>%
+          filter(CountsFrom %in% input$CountsFrom9_emp) %>%
           group_by(GenoCall, SNPCall, CountsFrom) %>%
           summarise(n = n()) 
         
@@ -3823,7 +4106,7 @@ Reads2MapApp <- function(...) {
         
         data <- datas_emp()[[4]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall9_emp) %>%
-          filter(CountsFrom == input$CountsFrom9_emp)
+          filter(CountsFrom %in% input$CountsFrom9_emp)
         
         data <- perfumaria(data)
         
@@ -3916,15 +4199,20 @@ Reads2MapApp <- function(...) {
         }
         data <- datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall7_emp) %>%
-          filter(CountsFrom == input$CountsFrom7_emp)  %>%
+          filter(CountsFrom %in% input$CountsFrom7_emp)  %>%
           gather(key, value, -CountsFrom, -GenoCall, -SNPCall) %>%
           filter(key %in% c("n_markers", "miss", "distorted_markers", 
-                          "redundant_markers",  "selected_chr_no_dist"))
+                            "redundant_markers",  "selected_chr_no_dist"))
         
         new_names <- c(`Without filters` = "n_markers", `Missing data` = "miss", 
                        `Segregation test` = "distorted_markers", Redundants = "redundant_markers", 
                        `After all filters`= "selected_chr_no_dist")
         data$key <- names(new_names)[match(data$key, new_names)]
+        data$key <- factor(data$key, levels = c("Without filters",
+                                                "Missing data",
+                                                "Segregation test",
+                                                "Redundants",
+                                                "After all filters"))
         
         perfumaria(data)
         
@@ -4279,6 +4567,8 @@ Reads2MapApp <- function(...) {
         })
       } 
     )
+    ################################
+    # Haplotype counts
     #################################
     button27 <- eventReactive(input$go27, {
       withProgress(message = 'Building graphic', value = 0, {
@@ -4352,7 +4642,7 @@ Reads2MapApp <- function(...) {
         
         data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall14_emp) %>%
-          filter(CountsFrom == input$CountsFrom14_emp) 
+          filter(CountsFrom %in% input$CountsFrom14_emp) 
         data$pos <- data$pos/1000 
         perfumaria(data)
       })
@@ -4360,8 +4650,8 @@ Reads2MapApp <- function(...) {
     
     output$cmxmb_emp_out <- renderPlot({
       ggplot(button29(), aes(x=cm, y=pos)) +
-        geom_point(size=2, shape=20) + facet_grid(SNPCall~GenoCall, scales = "free") +
-        xlab("cM") + ylab("Mb")
+        geom_point(size=2, shape=20) + facet_grid(SNPCall + CountsFrom~GenoCall, scales = "free") +
+        xlab("cM") + ylab("Mb") + theme_bw()
     })
     
     ## download
@@ -4570,10 +4860,8 @@ Reads2MapApp <- function(...) {
               
               # Simulations
               ## pop size 50
-            } else if(input$example_wf=="populus_simu_5fam_pop200_depth10"){
-              sele_file <- paste(system.file("ext","simulations/biallelics/slurm-67454631_depth20.out", package = "Reads2MapApp"))
             } else if(input$example_wf=="populus_simu_5fam_pop200_depth20"){
-              sele_file <- paste(system.file("ext","simulations/biallelics/slurm-67465833_depth10.out", package = "Reads2MapApp"))
+              sele_file <- paste(system.file("ext","simulations/biallelics/RADinitio37/SimulatedReads.bi.200.20.log", package = "Reads2MapApp"))
             } 
           }
           p <-workflow_times(sele_file, interactive = T)
