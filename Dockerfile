@@ -1,5 +1,5 @@
 FROM rocker/r-ver:4.0.3
-RUN apt-get update && apt-get install -y  imagemagick libcurl4-openssl-dev libgl1-mesa-dev libglu1-mesa-dev libicu-dev libpng-dev libssl-dev make pandoc pandoc-citeproc zlib1g-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y  libxml2-dev imagemagick libcurl4-openssl-dev libgl1-mesa-dev libglu1-mesa-dev libicu-dev libpng-dev libssl-dev make pandoc pandoc-citeproc zlib1g-dev && rm -rf /var/lib/apt/lists/*
 RUN echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site
 RUN R -e 'install.packages("remotes")'
 RUN R -e 'remotes::install_github("r-lib/remotes", ref = "97bbf81")'

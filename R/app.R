@@ -14,7 +14,6 @@
 ##'@import vroom
 ##'@import pROC
 ##'@import shinymanager
-##'@import DT
 ##'@importFrom htmlwidgets saveWidget
 ##'
 ##'@export
@@ -264,7 +263,7 @@ Reads2MapApp <- function(...) {
     tabItems(
       ##########################################################
       tabItem(tabName = "about",
-              includeMarkdown(system.file("vignettes", "about.Rmd", package = "Reads2MapApp"))
+              includeMarkdown("about.Rmd")
       ),
       ####################################################################################
       # tabItem(tabName = "parallel", # Se eu deixo isso funcional o menu deixa de ser dinamico
@@ -340,12 +339,12 @@ Reads2MapApp <- function(...) {
                      It is possible to access all other arguments used in the analysis in the metadata produced by the workflows.", hr(),
                      box(width = NULL,  solidHeader = TRUE, 
                          collapsible = FALSE, status="primary", title= "SimulatedReads2Map results available",
-                         DT::dataTableOutput("simulated_datasets", width = "100%"),
+                         dataTableOutput("simulated_datasets"),
                      ), 
                      hr(),
                      box(width = NULL,  solidHeader = TRUE, 
                          collapsible = FALSE, status="primary", title= "EmpiricalReads2Map results available",
-                         DT::dataTableOutput("empirical_datasets", width = "100%"),
+                         dataTableOutput("empirical_datasets"),
                      )
               )
       ),
@@ -420,7 +419,7 @@ Reads2MapApp <- function(...) {
                            hr(),
                            box(title = "Wrong genotypes",
                                width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                               DT::dataTableOutput("wrong_mks1_out") 
+                               dataTableOutput("wrong_mks1_out") 
                                # hr(),
                                # div(downloadButton("disper_depth_out_down"),style="float:right")
                                # ),
@@ -491,7 +490,7 @@ Reads2MapApp <- function(...) {
                            hr(),
                            box(title = "Wrong genotypes",
                                width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                               DT::dataTableOutput("wrong_mks2_out") 
+                               dataTableOutput("wrong_mks2_out") 
                            )
                            # ),
                          )
@@ -790,7 +789,7 @@ Reads2MapApp <- function(...) {
                 column(width = 12,
                        box(title = "Wrong marker types",
                            width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                           DT::dataTableOutput("wrong_mks_types_out") 
+                           dataTableOutput("wrong_mks_types_out") 
                            # hr(),
                            # div(downloadButton("disper_depth_out_down"),style="float:right")
                            # ),
@@ -2016,11 +2015,11 @@ Reads2MapApp <- function(...) {
     ##################################################
     # Available datasets
     ##################################################
-    output$simulated_datasets <- DT::renderDataTable({
+    output$simulated_datasets <- renderDataTable({
       DT::datatable(simulated_datasets, options = list(scrollX = TRUE))
     })
     
-    output$empirical_datasets <- DT::renderDataTable({
+    output$empirical_datasets <- renderDataTable({
       DT::datatable(empirical_datasets, options = list(scrollX = TRUE))
     })
     ##################################################
@@ -2038,23 +2037,23 @@ Reads2MapApp <- function(...) {
           data.gz <- "Wait"
         } else { ######## Only the toy_sample in the package - the rest in server
           if(input$example_simu == "populus_200_bi_radinitio20"){
-            data.gz <- c("inst/ext/simulations/RADinitio20/SimulatedReads_results_depth10pop200_bi_up.tar.gz",
-                         "inst/ext/simulations/RADinitio20/SimulatedReads_results_depth20pop200_bi_up.tar.gz")
+            data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_bi_up.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_bi_up.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "populus_200_multi_radinitio20"){
-            data.gz <- c("inst/ext/simulations/RADinitio20/SimulatedReads_results_depth10pop200_multi_up.tar.gz",
-                         "inst/ext/simulations/RADinitio20/SimulatedReads_results_depth20pop200_multi_up.tar.gz")
+            data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_multi_up.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_multi_up.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "populus_200_bi_radinitio37"){
-            data.gz <- c("inst/ext/simulations/RADinitio37/biallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/simulations/RADinitio37/biallelics/SimulatedReads_results_depth20.tar.gz")
+            data.gz <- c(system.file("ext", "simulations/RADinitio37/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio37/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "populus_200_multi_radinitio37"){
-            data.gz <- c("inst/ext/simulations/RADinitio37/multiallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/simulations/RADinitio37/multiallelics/SimulatedReads_results_depth20.tar.gz")
+            data.gz <- c(system.file("ext", "simulations/RADinitio37/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio37/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "toy_sample_bi"){
-            data.gz <- c("inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz")
+            data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "toy_sample_multi"){
-            data.gz <- c("inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz")
+            data.gz <- c(system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           }
         }
         
@@ -2272,17 +2271,17 @@ Reads2MapApp <- function(...) {
           data.gz <- "Wait"
         } else { ######## Available examples
           if(input$example_emp == "populus"){
-            data.gz <- "inst/ext/empirical/populus/multiallelics/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "empirical/populus/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else  if(input$example_emp == "populus_multi"){
-            data.gz <- "inst/ext/populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else  if(input$example_emp == "populus_cont"){
-            data.gz <- "inst/ext/populus/biallelics/with_contaminants/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "populus/biallelics/with_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else if(input$example_emp == "eucalyptus"){
-            data.gz <- "inst/ext/eucalyptus/biallelics/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "eucalyptus/biallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else if(input$example_emp == "toy_sample"){
-            data.gz <- "inst/ext/toy_sample_emp/temp/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "toy_sample_emp/temp/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else if(input$example_emp == "toy_sample_multi"){
-            data.gz <- "inst/ext/toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           }
         }
         
@@ -2511,7 +2510,7 @@ Reads2MapApp <- function(...) {
       errorProb_graph(button1()[[1]], input$real1, button1()[[2]])
     })
     
-    output$wrong_mks1_out <- DT::renderDataTable({
+    output$wrong_mks1_out <- renderDataTable({
       if(input$real1 == "simulated_genotypes"){
         stop("Simulated genotypes option is set. All genotypes are correct.")
       } else {
@@ -2557,7 +2556,7 @@ Reads2MapApp <- function(...) {
       errorProb_graph(button2()[[1]], input$real2, button2()[[2]])
     })
     
-    output$wrong_mks2_out <- DT::renderDataTable(
+    output$wrong_mks2_out <- renderDataTable(
       if(input$real2 == "simulated_genotypes"){
         stop("Simulated genotypes option is set. All genotypes are correct.")
       } else {
@@ -2607,7 +2606,7 @@ Reads2MapApp <- function(...) {
       ind_size_graph(button3()[[1]], button3()[[2]])
     })
     
-    output$wrong_mks_types_out <- DT::renderDataTable(
+    output$wrong_mks_types_out <- renderDataTable(
         DT::datatable(button3()[[1]][which(button3()[[1]]$type != button3()[[1]]$real.type),
                                      ], 
                       options = list(scrollX = TRUE))
