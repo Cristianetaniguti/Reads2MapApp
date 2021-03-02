@@ -28,4 +28,12 @@ Imports:
     config,
     vroom,
     RColorBrewer,
-    htmlwidgets
+    htmlwidgets,
+    patchwork,
+    pROC,
+    DT,
+    shinymanager,
+    attempt,
+    glue,
+    golem,
+    htmltools

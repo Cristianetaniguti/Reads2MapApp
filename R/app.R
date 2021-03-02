@@ -14,8 +14,8 @@
 ##'@import vroom
 ##'@import pROC
 ##'@import shinymanager
+##'@import DT
 ##'@importFrom htmlwidgets saveWidget
-##'@importFrom irr kappa2 kendall agree
 ##'
 ##'@export
 Reads2MapApp <- function(...) {
