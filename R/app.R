@@ -23,10 +23,10 @@ Reads2MapApp <- function(...) {
   ## Datasets available
   ##########################
   # Simulated
-  id <- c("P. tremula 20cM of chromosome 10 - without multiallelics", 
-          "P. tremula 20cM of chromosome 10 - with multiallelics",
-          "P. tremula 37cM of chromosome 10 - without multiallelics",
-          "P. tremula 37cM of chromosome 10 - with multiallelics",
+  id <- c("P. tremula 20 cM of chromosome 10 - without multiallelics", 
+          "P. tremula 20 cM of chromosome 10 - with multiallelics",
+          "P. tremula 37 cM of chromosome 10 - without multiallelics",
+          "P. tremula 37 cM of chromosome 10 - with multiallelics",
           "Toy sample without multiallelics",
           "Toy sample with multiallelics")
   depth_parents <- c(rep("80,160", 4), rep("20,30", 2))
@@ -40,39 +40,38 @@ Reads2MapApp <- function(...) {
   ref_map <- (rep("From thesis chapter 2",6))
   library <- c(rep("RADinitio",6))
   
-  simulated_datasets <- data.frame(ID = id,
-                                   `Depth - Parents` = depth_parents,
-                                   `Depth - Progeny` = depth_progeny,
-                                   `Popularion size` = population_size,
-                                   `Number of families` = number_fam,
-                                   `Reference genome` = ref_gen,
-                                   `Reference VCF` = ref_vcf,
-                                   `Reference genetic map` = ref_map,
-                                   `Library type` = library)
+  simulated_datasets <- data.frame(id, depth_parents, depth_progeny,
+                                   population_size, number_fam,
+                                   ref_gen, ref_vcf, ref_map,
+                                   library)
+  
+  colnames(simulated_datasets) <- c("ID", "Depth - Parents", "Depth - Progeny", 
+                                    "Population size", "Number of families", "Reference genome",
+                                    "Reference VCF", "Reference genetic map", "Library type")
   ### Empirical
   id <- c("P. tremula - with contaminants; without multiallelics",
           "P. tremula - without multiallelics	",
           "P. tremula - with multiallics",
-          "Eucalyptus - without multiallelics",
           "Toy sample without multiallelics",
           "Toy sample with multiallelics")
   fastq <- c(rep("Bioproject PRJNA395",3),
-             "From Suzano/Futuragene",
              rep("Bioproject PRJNA395",2))
-  pop_size <- c(122,116,116,200,5,5)
-  library_type <- rep("RADseq",6)
+  pop_size <- c(122,116,116,5,5)
+  library_type <- rep("RADseq",5)
   ref_gen <- c(rep("Populus trichocarpa v4.0", 3), 
-               "Eucalyptus grandis v3.0", 
                rep("Populus trichocarpa v4.0",2))
-  chr_sele <- c(rep("10", 6))
+  chr_sele <- c(rep("10", 5))
   
-  empirical_datasets <- data.frame(ID = id,
-                                   `FASTQ files` = fastq,
-                                   `Population size` = pop_size,
-                                   `Library type` = library_type,
-                                   `Reference genome` = ref_gen,
-                                   `Selected chromosome` = chr_sele)
+  empirical_datasets <- data.frame(id,
+                                   fastq,
+                                   pop_size,
+                                   library_type,
+                                   ref_gen,
+                                   chr_sele)
   
+  colnames(empirical_datasets) <- c("ID", "FASTQ files", 
+                                    "Population size", "Library type", 
+                                    "Reference genome", "Selected genome")
   
   #####################
   # Credentials
@@ -165,7 +164,7 @@ Reads2MapApp <- function(...) {
       menuItem("About", tabName = "about", icon = icon("lightbulb")),
       #menuItem("Parallel map", icon = icon("dot-circle"), tabName = "parallel"), 
       menuItem("Upload data", icon = icon("upload"), tabName= "upload"),
-      menuItem("Simulation results", icon = icon("dot-circle"), tabName= "simulations",
+      menuItem("SimulatedReads2Map", icon = icon("dot-circle"), tabName= "simulations",
                menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall"),
                #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage"),
                menuSubItem("Filters", icon = icon("circle"), tabName = "filters"),
@@ -183,7 +182,7 @@ Reads2MapApp <- function(...) {
                menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb")),
       #menuSubItem("Overview", icon = icon("circle"), tabName = "overview")),
       
-      menuItem("Empirical data results", icon = icon("dot-circle" ), tabName = "empirical",
+      menuItem("EmpiricalReads2Map", icon = icon("dot-circle" ), tabName = "empirical",
                #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
                menuSubItem("Filters", icon = icon("circle"), tabName = "filters_emp"),
                menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type_emp"),
@@ -329,7 +328,7 @@ Reads2MapApp <- function(...) {
                                        choices = list("P. tremula - with contaminants; without multiallelics" = "populus_cont",
                                                       "P. tremula - without multiallelics	" = "populus",
                                                       "P. tremula - with multiallics" = "populus_multi",
-                                                      "Eucalyptus - without multiallelics" = "eucalyptus",
+                                                      #"Eucalyptus - without multiallelics" = "eucalyptus",
                                                       "Toy sample without multiallelics " = "toy_sample",
                                                       "Toy sample with multiallelics" = "toy_sample_multi"), 
                                        selected = "toy_sample"),
@@ -417,10 +416,15 @@ Reads2MapApp <- function(...) {
                          #helpText("Read counts from:"),
                          fluidPage(
                            textInput("marker1", label = p("By default, it plots the genotypes of all markers, you can select a specific one defining its ID here:"),
-                                     value = "Ex: Chr10_1000")
-                           # hr(),
-                           # div(downloadButton("disper_depth_out_down"),style="float:right")
-                           # ),
+                                     value = "Ex: Chr10_1000"), 
+                           hr(),
+                           box(title = "Wrong genotypes",
+                               width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                               DT::dataTableOutput("wrong_mks1_out") 
+                               # hr(),
+                               # div(downloadButton("disper_depth_out_down"),style="float:right")
+                               # ),
+                           )
                          )
                        )
                 ),
@@ -484,7 +488,11 @@ Reads2MapApp <- function(...) {
                          fluidPage(
                            textInput("marker2", label = p("By default, it plots the genotypes of all markers, you can select a specific one defining its ID here:"),
                                      value = "Ex: Chr10_1000"),
-                           hr()
+                           hr(),
+                           box(title = "Wrong genotypes",
+                               width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                               DT::dataTableOutput("wrong_mks2_out") 
+                           )
                            # ),
                          )
                        )
@@ -573,7 +581,7 @@ Reads2MapApp <- function(...) {
       ),
       ##########################################################
       tabItem(tabName = "roc",
-              "",
+              "To summarize each genotype caller model predictive power we used \textit{receiver operating characteristic} (ROC) curves.",
               hr(),
               fluidRow(
                 column(width = 12,
@@ -772,11 +780,20 @@ Reads2MapApp <- function(...) {
                              
                              radioButtons("fake1", label = p("Allow false positives?"),
                                           choices = fake_choices,
-                                          selected = "without-false")
+                                          selected = "without-false"),
                              # hr(),
                              # div(downloadButton("ind_size_out_down"),style="float:right")
                              # ),
                            )
+                       )
+                ),
+                column(width = 12,
+                       box(title = "Wrong marker types",
+                           width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                           DT::dataTableOutput("wrong_mks_types_out") 
+                           # hr(),
+                           # div(downloadButton("disper_depth_out_down"),style="float:right")
+                           # ),
                        )
                 )
               )
@@ -1967,7 +1984,7 @@ Reads2MapApp <- function(...) {
                                                "P.tremula empirical maps without contaminant" = "populus_emp",
                                                "Eucalyptus empirical SNP calling" = "eucalyptus_snpcalling",
                                                "Eucalyptus empirical maps" = "eucalyptus_map",
-                                               "P. tremula simulation 37cM of chromosome 10 -  5 families pop size 200 depth 20" = "populus_simu_fam5_pop200_depth20"
+                                               "P. tremula simulation 37cM of chromosome 10 -  5 families pop size 200 depth 20" = "populus_simu_5fam_pop200_depth20"
                                 ), 
                                 selected = "populus_emp"),
                 )
@@ -2485,7 +2502,7 @@ Reads2MapApp <- function(...) {
         
         if(length(which(is.na(data$ref))) > 0)
           data <- data[-which(is.na(data$ref)),]
-        
+
         list(data, alpha)
       })
     })
@@ -2494,45 +2511,15 @@ Reads2MapApp <- function(...) {
       errorProb_graph(button1()[[1]], input$real1, button1()[[2]])
     })
     
-    ## download
-    output$disper_depth_out_down <- downloadHandler(
-      filename =  function() {
-        paste("snp_genoype_call.eps")
-      },
-      # content is a function with argument file. content writes the plot to the device
-      content = function(file) {
-        withProgress(message = 'Building left graphic', value = 0, {
-          incProgress(0, detail = paste("Doing part", 1))
-          #see utils.R
-          geno <- test_geno_with_gus(input$Global0.05.1, input$ErrorProb1)
-          stop_bam(input$CountsFrom1, input$ErrorProb1)
-          
-          # The plot with depths does not differentiate fake markers, 
-          # they receive NA value in the simulated genotype field 
-          data <- datas_simu()[[1]] %>% filter(GenoCall == geno) %>%
-            filter(SNPCall == input$SNPCall1) %>%
-            filter(seed == datas_simu()[[7]][[2]][as.numeric(input$seed1)]) %>%
-            filter(CountsFrom == input$CountsFrom1) %>%
-            filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed1)])
-          data[,8:9] <- apply(data[,8:9], 2, as.character)
-          
-          data <- perfumaria(data)
-          
-          if(length(which(is.na(data$ref))) > 0)
-            data <- data[-which(is.na(data$ref)),]
-          
-          incProgress(0.5, detail = paste("Doing part", 2))
-          p <- errorProb_graph(data, input$real1)
-          p <- p + theme(legend.title=element_text(size=20, hjust=0.5),
-                         legend.text = element_text(size=17),
-                         axis.title=element_text(size=17),
-                         axis.text = element_text(size=17), 
-                         strip.text = element_text(size=17))
-          
-          ggsave(file, p, width = 400, height = 200, units="mm")
-        })
-      } 
-    )
+    output$wrong_mks1_out <- DT::renderDataTable({
+      if(input$real1 == "simulated_genotypes"){
+        stop("Simulated genotypes option is set. All genotypes are correct.")
+      } else {
+        DT::datatable(button1()[[1]][which(button1()[[1]]$gabGT != button1()[[1]]$gt.onemap.alt.ref),
+                                     c(1,2,3,18,9,10,17,20)], 
+                      options = list(scrollX = TRUE))
+      }
+    })
     
     button2 <- eventReactive(input$go2, {
       withProgress(message = 'Building right graphic', value = 0, {
@@ -2569,6 +2556,16 @@ Reads2MapApp <- function(...) {
     output$disper_depth2_out <- renderPlot({
       errorProb_graph(button2()[[1]], input$real2, button2()[[2]])
     })
+    
+    output$wrong_mks2_out <- DT::renderDataTable(
+      if(input$real2 == "simulated_genotypes"){
+        stop("Simulated genotypes option is set. All genotypes are correct.")
+      } else {
+        DT::datatable(button2()[[1]][which(button2()[[1]]$gabGT != button2()[[1]]$gt.onemap.alt.ref),
+                                     c(1,2,3,18,9,10,17,20)], 
+                      options = list(scrollX = TRUE))
+      }
+    )
     
     #######################
     # Map size each family
@@ -2609,6 +2606,12 @@ Reads2MapApp <- function(...) {
     output$ind_size_out <- renderPlot({
       ind_size_graph(button3()[[1]], button3()[[2]])
     })
+    
+    output$wrong_mks_types_out <- DT::renderDataTable(
+        DT::datatable(button3()[[1]][which(button3()[[1]]$type != button3()[[1]]$real.type),
+                                     ], 
+                      options = list(scrollX = TRUE))
+    )
     
     ## download
     output$ind_size_out_down <- downloadHandler(
@@ -3307,7 +3310,7 @@ Reads2MapApp <- function(...) {
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
           data <- readList(datas_simu()[[10]], index = idx)
-          data <- data[[1]]
+          if (!is.vector(data[[1]][[1]])) data <- data[[1]][[1]] else data <- data[[1]] # bugfix
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
         }
@@ -3394,7 +3397,6 @@ Reads2MapApp <- function(...) {
     })
     
     output$haplot_out <- renderPlot({
-      plot(progeny_haplotypes(data, ind = idx, most_likely = input$Most_likely12))
       plot(progeny_haplotypes(button12()[[1]], ind = button12()[[2]], most_likely = input$Most_likely12))
     })
     
@@ -4817,11 +4819,9 @@ Reads2MapApp <- function(...) {
           paste(system.file("ext","eucalyptus/biallelics/euc.log", package = "Reads2MapApp"))
           
           # Simulations
-        } else if(input$example_wf=="populus_simu_fam5_pop200_depth10"){
-          paste(system.file("ext","simulations/popsize50/biallelics/slurm-67454631_depth20.out", package = "Reads2MapApp"))
-        } else if(input$example_wf=="populus_simu_fam5_pop200_depth20"){
-          paste(system.file("ext","simulations/popsize150/biallelics/slurm-67465833_depth10.out", package = "Reads2MapApp"))
-        } 
+        } else if(input$example_wf=="populus_simu_5fam_pop200_depth20"){
+          paste(system.file("ext","simulations/RADinitio37/biallelics/SimulatedReads.bi.200.20.log", package = "Reads2MapApp"))
+        }
       })
     })
     
@@ -4861,7 +4861,7 @@ Reads2MapApp <- function(...) {
               # Simulations
               ## pop size 50
             } else if(input$example_wf=="populus_simu_5fam_pop200_depth20"){
-              sele_file <- paste(system.file("ext","simulations/biallelics/RADinitio37/SimulatedReads.bi.200.20.log", package = "Reads2MapApp"))
+              sele_file <- paste(system.file("ext","simulations/RADinitio37/biallelics/SimulatedReads.bi.200.20.log", package = "Reads2MapApp"))
             } 
           }
           p <-workflow_times(sele_file, interactive = T)
