@@ -4,7 +4,7 @@
 \alias{errorProb_graph}
 \title{Functions to build graphics for the data from simulations}
 \usage{
-errorProb_graph(data, genotypes)
+errorProb_graph(data, genotypes, alpha)
 }
 \description{
 Functions to build graphics for the data from simulations

@@ -22,8 +22,8 @@ workflow_times <- function(log.file, interactive=FALSE){
   file.remove(c("temp.starting", "temp.done"))
   
   tot.df <- merge(done.df, start.df)
-  
-  tot.df <- cbind(tot.df, diff=tot.df[,2] - tot.df[,3])
+
+  tot.df <- cbind(tot.df, diff=difftime(tot.df[,2], tot.df[,3], units='mins'))
   
   tot.df <- cbind(task=sapply(strsplit(as.character(tot.df$id), ":"), "[", 1), tot.df)
   means <- aggregate(diff ~  task, tot.df, mean)
@@ -31,8 +31,10 @@ workflow_times <- function(log.file, interactive=FALSE){
   means$diff <- round(means$diff,2)
   max.value <- max(as.numeric(tot.df$diff))
   
+  tot.df$task <- sapply(strsplit(tot.df$task, "[.]"), "[[",2)
+  
   p <- ggplot(tot.df, aes(x=task, y=diff)) + geom_boxplot() +
-    guides(fill=FALSE) + coord_flip() + ylab("Time in seconds") + scale_y_continuous() 
+    guides(fill=FALSE) + coord_flip() + ylab("Time in minutes") + scale_y_continuous() 
   #  geom_text(data = means, aes(label =  paste0("mean: ",diff), y = diff + max.value/2))
   
   if(interactive){

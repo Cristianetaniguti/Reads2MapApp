@@ -16,8 +16,5 @@ Joint simulations with same depth and different seed
 }
 \examples{
 
-joint_same_depth("depth10_file1/SimulatedReads_results_depth10.tar.gz", 
-                 "depth10_file2/SimulatedReads_results_depth10.tar.gz", 
-                 out_name = "SimulatedReads_results_depth10_joint")
 
 }

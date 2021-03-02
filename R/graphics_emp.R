@@ -16,7 +16,7 @@ errorProb_graph_emp <- function(data, genotypes, from){
     data %>% ggplot(aes(x=ref, y=alt, color=geno)) + 
       geom_point(alpha = 0.2) +
       labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
-      scale_colour_manual(name="Genotypes", values = colors)
+      scale_colour_manual(name="Genotypes", values = colors) + theme_bw()
   } else if(genotypes == "estimated_errors"){
     errors <- apply(data[,10:13], 1, function(x) {
       if(all(is.na(x))){
@@ -29,7 +29,7 @@ errorProb_graph_emp <- function(data, genotypes, from){
     data %>% ggplot(aes(x=ref, y=alt, color=errors)) + 
       geom_point(alpha = 0.2) +
       labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
-      scale_colour_gradient(low = "#70ED57", high = "#F62A2C")
+      scale_colour_gradient(low = "#70ED57", high = "#F62A2C") + theme_bw()
   }
 }
 
@@ -41,11 +41,21 @@ ind_size_graph_emp <- function(data){
   colors <- rainbow(2)
   names(colors) <- levels(data$SNPCall)
   
-  data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
-    geom_boxplot() + geom_hline(yintercept=0, color="red") +
-    labs(x="Genotype call", y = "centimorgan") +
-    facet_wrap(key~., ncol=1, scales = "free", strip.position = "right") +
-    scale_fill_manual(name="SNP call", values = colors) 
+  p1 <- data %>% filter(key == "n markers") %>% 
+    ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
+    geom_bar(stat="identity", position=position_dodge())  +
+    geom_text(aes(label= value), position=position_dodge(width=0.9), vjust=-0.25) +
+    scale_y_continuous(expand = c(.1,.1)) +
+    labs(x="Genotype call", y = "Number of markers", fill = "SNP call", title = "Number of markers") +
+    scale_fill_viridis_d() + facet_grid(CountsFrom~.) + theme_bw()
+  
+  p2 <- data %>% filter(key == "Distance between markers (cM)") %>% 
+    ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
+    geom_point(position=position_dodge(width = 0.5)) + 
+    labs(x="Genotype call", y = "Distance between markers (cM)", fill = "SNP call", title = "Genetic distances") +
+    scale_color_viridis_d() + facet_grid(CountsFrom~.) + theme_bw()
+                          
+  ggarrange(p1,p2, common.legend=T)  
 }
 
 all_size_graph_emp <- function(data, stat){
@@ -61,56 +71,43 @@ all_size_graph_emp <- function(data, stat){
 
 marker_type_graph_emp <- function(data){
   
-  colors <- rainbow(length(levels(as.factor(data$value))))
-  names(colors) <- levels(as.factor(data$value))
-  
   data %>% ggplot(aes(x=GenoCall, y = n, fill=value)) +
     geom_bar(stat="identity", position=position_dodge())  +
-    scale_fill_manual(name="Marker type", values = colors) + 
-    labs(x = "Genotyping method", y = "Number of markers") +
-    facet_grid(SNPCall~.) 
+    scale_fill_viridis_d() + 
+    labs(x = "Genotyping method", y = "Number of markers", fill="Marker type") +
+    facet_grid(CountsFrom~SNPCall) + theme_bw()
 }
 
 times_graph_emp <- function(data){
-  
-  colors <- rainbow(2)
-  names(colors) <- levels(data$SNPCall)
-  
-  data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
+
+  p1 <- data %>% filter(key == "number of markers") %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
     geom_bar(stat="identity", position=position_dodge())  +
     geom_text(aes(label= round(value,3)), position=position_dodge(width=0.9), vjust=-0.25) +
     scale_y_continuous(expand = c(.1,.1)) +
-    scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = "") +
-    facet_grid(key~., scales = "free")
-}
-
-coverage_graph_emp <- function(data){
+    scale_fill_viridis_d(begin=0, end = 0.6) + 
+    labs(x = "Genotyping method", y = "", fill="SNP call", title = "Number of markers") +
+    facet_grid(CountsFrom~., scales = "free") + theme_bw()
   
-  colors <- rainbow(2)
-  names(colors) <- levels(data$SNPCall)
-  
-  data %>% ggplot(aes(x=GenoCall, y=coverage, fill=SNPCall)) +
+  p2 <- data %>% filter(key == "time (seconds)") %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
     geom_bar(stat="identity", position=position_dodge())  +
-    geom_text(aes(label= round(coverage,2)), position=position_dodge(width=0.9), vjust=-0.25) +
+    geom_text(aes(label= round(value,3)), position=position_dodge(width=0.9), vjust=-0.25) +
     scale_y_continuous(expand = c(.1,.1)) +
-    scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = "percent covered") 
+    scale_fill_viridis_d(begin=0, end = 0.6) + 
+    labs(x = "Genotyping method", y = "", fill="SNP call", title = "Time spent") +
+    facet_grid(CountsFrom~., scales = "free") + theme_bw()
+  
+  ggarrange(p2, p1, common.legend = T)
 }
 
 filters_graph_emp <- function(data){
-  
-  colors <- rainbow(length(levels(data$GenoCall)))
-  names(colors) <- levels(data$GenoCall)
-  
   data %>% ggplot(aes(x= key, y=value, fill= GenoCall)) +
     geom_bar(stat="identity", position=position_dodge())  +
     geom_text(aes(label= round(value,2)), position=position_dodge(width=0.9), vjust=-0.25) +
     scale_y_continuous(expand = c(.1,.1)) +
-    scale_fill_manual(name="Genotype method", values = colors) + 
-    labs(x = "", y = "Number of markers") +
-    facet_grid(SNPCall~., scales = "free") +
-    theme(axis.text.x = element_text(angle = 35, hjust=1))
+    scale_fill_viridis_d() + 
+    labs(x = "", y = "Number of markers", fill = "Genotype method") +
+    facet_grid(CountsFrom~SNPCall, scales = "free") +
+    theme(axis.text.x = element_text(angle = 35, hjust=1)) + theme_bw()
 }
 
 
