@@ -31,7 +31,7 @@ RUN Rscript -e 'remotes::install_github("tpbilton/GUSMap")'
 RUN Rscript -e 'remotes::install_github("Cristianetaniguti/onemap")'
 
 RUN R -e 'remotes::install_local("/tmp/app")'
-EXPOSE 80/tcp
+EXPOSE 8085/tcp
 RUN rm /srv/shiny-server/index.html
 COPY ./inst/app /srv/shiny-server/
 COPY ./inst/app/shiny-server.conf /etc/shiny-server/shiny-server.conf

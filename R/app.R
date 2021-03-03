@@ -263,7 +263,7 @@ Reads2MapApp <- function(...) {
     tabItems(
       ##########################################################
       tabItem(tabName = "about",
-              includeMarkdown("about.Rmd")
+              includeMarkdown(system.file("ext", "about.Rmd", package = "Reads2MapApp")
       ),
       ####################################################################################
       # tabItem(tabName = "parallel", # Se eu deixo isso funcional o menu deixa de ser dinamico
