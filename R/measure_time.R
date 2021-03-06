@@ -7,20 +7,19 @@
 #' @return ggplot boxplot with time spent by each task
 #' 
 workflow_times <- function(log.file, interactive=FALSE){
-  system(paste("grep 'job id'",log.file, "> temp.starting"))
-  system(paste("grep 'to Done'",log.file, "> temp.done"))
+  path_dir <- tempdir()
+  system(paste0("grep 'job id' ",log.file, " > ",path_dir, "/temp.starting"))
+  system(paste0("grep 'to Done' ",log.file, " > ",path_dir, "/temp.done"))
   
-  start <- read.table("temp.starting")
+  start <- read.table(paste0(path_dir,"/temp.starting"))
   gsub(pattern = "[[]", replacement = "", x = start$V2)
   dates.start <- as.POSIXct(paste(start$V2, start$V3), format="[%m/%d/%Y %H:%M:%OS]")
   start.df <- data.frame(dates.start, id=factor(start$V7, levels = unique(as.character(start$V7))))
   
-  done <- read.table("temp.done")
+  done <- read.table(paste0(path_dir,"/temp.done"))
   dates.done <- as.POSIXct(paste(done$V2, done$V3), format="[%m/%d/%Y %H:%M:%OS]")
   done.df <- data.frame(dates.done, id= factor(done$V7, levels = unique(as.character(done$V7))))
-  
-  file.remove(c("temp.starting", "temp.done"))
-  
+
   tot.df <- merge(done.df, start.df)
 
   tot.df <- cbind(tot.df, diff=difftime(tot.df[,2], tot.df[,3], units='mins'))

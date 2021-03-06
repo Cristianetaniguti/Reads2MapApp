@@ -2,7 +2,7 @@
 #' 
 errorProb_graph <- function(data, genotypes, alpha){
   data <- data.frame(data)
-  if(dim(data)[1] == 0) stop("This marker does not exists in this dataset.")
+  if(dim(data)[1] == 0) stop(safeError("This marker does not exists in this dataset."))
   
   colors <- c("gray", "#5289C7", "#4EB265", "#882E72", "#F6C141")
   names(colors) <-  c("missing", "homozygous-alt","homozygous-ref", "heterozygous", "homozygous-alt == ref")
@@ -78,7 +78,8 @@ ind_size_graph <- function(data, data_n){
 all_size_graph <- function(data, data_n,stat, fake){
   
   if(stat == "euclidean_dist" & fake == "with-false")
-    stop("In the presence of false positives, euclidean distance can not be calculated. Please, select other option.")
+    stop(safeError("In the presence of false positives, euclidean distance can not be calculated. 
+                   Please, select other option."))
   
   p1 <- data %>% ggplot(aes(x=GenoCall, y=.[[dim(data)[2]]], color=SNPCall)) +
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5)  +
@@ -331,9 +332,9 @@ cmbymb <- function(data){
 }
 
 marker_type_probs <- function(data_plot_par){
-  if(!is.data.frame(data_plot_par)) stop("The probabilities can not be calculated in the presence of false positives.\n
+  if(!is.data.frame(data_plot_par)) stop(safeError("The probabilities can not be calculated in the presence of false positives.\n
                               If you set option without-false, then there are no biallelic/multiallelic marker in this dataset. 
-                              Please, select other option.")
+                              Please, select other option."))
   
   labels_real <- c("Real: B3.7", "Real: D1.10", "Real: D2.15")
   labels_est <-  c("Est: B3.7", "Est: D1.10", "Est: D2.15")
