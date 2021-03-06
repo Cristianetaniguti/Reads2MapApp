@@ -4,7 +4,7 @@ test_geno <- function(global, error){
     if(any(error %in% "OneMap_version2"))
       geno[which(error == "OneMap_version2")] <- "SNPCaller0.05"
     if(any(error %in% "gusmap"))
-      stop("Gusmap do not allow to change the error rate. Please, select other option.")
+      stop(safeError("Gusmap do not allow to change the error rate. Please, select other option."))
   } else {
     geno <- error
   }
@@ -26,7 +26,9 @@ test_geno_with_gus <- function(global, error){
 
 stop_bam <- function(countsfrom, error){
   if(countsfrom == "bam" & (error == "OneMap_version2" | error == "SNPCaller")){
-    stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+    stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                   and genotype calling using the same read counts, we did not find a way to 
+                   substitute the depths already used. Please select other option."))
   }
 }
 
@@ -133,6 +135,18 @@ map_name <- function(depth, seed, geno, fake, snpcall, countsfrom, data_names){
   bugfix <- lapply(strsplit(data_names[1], "_"), "[[", 1) # exclusive for 20cM dataset
   if(bugfix == "map"){
     temp_n <- paste0("map_",seed, "_", depth, "_", snpcall, "_", 
+                     countsfrom, "_", geno, "_", fake)
+  } else {
+    temp_n <- paste0(seed, "_", depth, "_map_", snpcall, "_", 
+                     countsfrom, "_", geno, "_", fake)
+  }
+}
+
+map_name_gus <- function(geno, fake, snpcall, countsfrom, data_names){
+  
+  bugfix <- lapply(strsplit(data_names[1], "_"), "[[", 1) # exclusive for 20cM dataset
+  if(bugfix == "map"){
+    temp_n <- paste0("map_", snpcall, "_", 
                      countsfrom, "_", geno, "_", fake)
   } else {
     temp_n <- paste0(seed, "_", depth, "_map_", snpcall, "_", 

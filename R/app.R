@@ -14,7 +14,6 @@
 ##'@import vroom
 ##'@import pROC
 ##'@import shinymanager
-##'@import DT
 ##'@importFrom htmlwidgets saveWidget
 ##'
 ##'@export
@@ -76,16 +75,37 @@ Reads2MapApp <- function(...) {
   #####################
   # Credentials
   ####################
+  passwords <- c(Cris = "DanaBrisa%2021", # Author
+                 Marcelo = "z8*R@3X1",  # committee
+                 Alexandre = "Lw2c5UQ&", # committee
+                 Felipe = "I8DP8#g7", # committee
+                 Estela = "@Ts0xJ@0", # committee
+                 Benicio = "%uH5XA64", # committee
+                 Augusto = "uTm93C#C", # supervisor
+                 Gabriel = "swb$sS66", # lab member
+                 Wellingson = "a*9F13cP", # lab member  
+                 Camila = "^5T*22Hh", # lab member
+                 Lucas = "E5!YY1dR",  # co-author
+                 Thiago = "8Qgp!t13", # co-author
+                 Veri = "jP!K5FE0",  # design appraiser
+                 Guilherme = "3UKy%2ED",
+                 Leticia = "4v#@8fSR") # lab member
+  
   credentials <- data.frame(
-    user = c("Cris", "Marcelo", "Alexandre", "Augusto", "Gabriel", "Wellingson", "Lucas", "Thiago"), # mandatory
-    password = c("9LKTc!Q3", "z8*R@3X1", "Lw2c5UQ&", "uTm93C#C", "swb$sS66", "a*9F13cP", "E5!YY1dR", "8Qgp!t13"), # mandatory
-    start = c(rep("2021-02-28", 8)), # optinal (all others)
-    expire = c(rep(NA,8)),
-    admin = c(TRUE, rep(FALSE, 7)),
+    user =     names(passwords), # mandatory
+    password = as.vector(passwords), # mandatory
+    start = c(rep("2021-02-28", length(passwords))), # optinal (all others)
+    expire = c(rep(NA,length(passwords))),
+    admin = c(TRUE, rep(FALSE, length(passwords)-1)),
     comment = "Simple and secure authentification mechanism 
   for single ‘Shiny’ applications.",
     stringsAsFactors = FALSE
   )
+  
+  #####################
+  # temp directory
+  #####################
+  temp_dir <- tempdir()
   
   #####################
   # Choices
@@ -164,7 +184,7 @@ Reads2MapApp <- function(...) {
       menuItem("About", tabName = "about", icon = icon("lightbulb")),
       #menuItem("Parallel map", icon = icon("dot-circle"), tabName = "parallel"), 
       menuItem("Upload data", icon = icon("upload"), tabName= "upload"),
-      menuItem("SimulatedReads2Map", icon = icon("dot-circle"), tabName= "simulations",
+      menuItem("SimulatedReads2Map results", icon = icon("dot-circle"), tabName= "simulations",
                menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall"),
                #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage"),
                menuSubItem("Filters", icon = icon("circle"), tabName = "filters"),
@@ -182,7 +202,7 @@ Reads2MapApp <- function(...) {
                menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb")),
       #menuSubItem("Overview", icon = icon("circle"), tabName = "overview")),
       
-      menuItem("EmpiricalReads2Map", icon = icon("dot-circle" ), tabName = "empirical",
+      menuItem("EmpiricalReads2Map results", icon = icon("dot-circle" ), tabName = "empirical",
                #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
                menuSubItem("Filters", icon = icon("circle"), tabName = "filters_emp"),
                menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type_emp"),
@@ -264,7 +284,7 @@ Reads2MapApp <- function(...) {
     tabItems(
       ##########################################################
       tabItem(tabName = "about",
-              includeMarkdown(system.file("vignettes", "about.Rmd", package = "Reads2MapApp"))
+              includeMarkdown(system.file("ext", "about.Rmd", package = "Reads2MapApp"))
       ),
       ####################################################################################
       # tabItem(tabName = "parallel", # Se eu deixo isso funcional o menu deixa de ser dinamico
@@ -340,12 +360,12 @@ Reads2MapApp <- function(...) {
                      It is possible to access all other arguments used in the analysis in the metadata produced by the workflows.", hr(),
                      box(width = NULL,  solidHeader = TRUE, 
                          collapsible = FALSE, status="primary", title= "SimulatedReads2Map results available",
-                         DT::dataTableOutput("simulated_datasets", width = "100%"),
+                         DT::dataTableOutput("simulated_datasets"),
                      ), 
                      hr(),
                      box(width = NULL,  solidHeader = TRUE, 
                          collapsible = FALSE, status="primary", title= "EmpiricalReads2Map results available",
-                         DT::dataTableOutput("empirical_datasets", width = "100%"),
+                         DT::dataTableOutput("empirical_datasets"),
                      )
               )
       ),
@@ -1257,7 +1277,7 @@ Reads2MapApp <- function(...) {
                                  choices = CountsFrom_choice,
                                  selected = "vcf"),
                 ),
-                box(solidHeader = T, collapsible = T, collapsed = T,
+                box(solidHeader = T, collapsible = T, collapsed = F,
                     checkboxGroupInput("inds12", label = p("Individuals from progeny"),
                                        choices = "It will be updated",
                                        selected = "It will be updated"),
@@ -2038,23 +2058,23 @@ Reads2MapApp <- function(...) {
           data.gz <- "Wait"
         } else { ######## Only the toy_sample in the package - the rest in server
           if(input$example_simu == "populus_200_bi_radinitio20"){
-            data.gz <- c("inst/ext/simulations/RADinitio20/SimulatedReads_results_depth10pop200_bi_up.tar.gz",
-                         "inst/ext/simulations/RADinitio20/SimulatedReads_results_depth20pop200_bi_up.tar.gz")
+            data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_bi_up.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_bi_up.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "populus_200_multi_radinitio20"){
-            data.gz <- c("inst/ext/simulations/RADinitio20/SimulatedReads_results_depth10pop200_multi_up.tar.gz",
-                         "inst/ext/simulations/RADinitio20/SimulatedReads_results_depth20pop200_multi_up.tar.gz")
+            data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_multi_up.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_multi_up.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "populus_200_bi_radinitio37"){
-            data.gz <- c("inst/ext/simulations/RADinitio37/biallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/simulations/RADinitio37/biallelics/SimulatedReads_results_depth20.tar.gz")
+            data.gz <- c(system.file("ext", "simulations/RADinitio37/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio37/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "populus_200_multi_radinitio37"){
-            data.gz <- c("inst/ext/simulations/RADinitio37/multiallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/simulations/RADinitio37/multiallelics/SimulatedReads_results_depth20.tar.gz")
+            data.gz <- c(system.file("ext", "simulations/RADinitio37/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio37/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "toy_sample_bi"){
-            data.gz <- c("inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz")
+            data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "toy_sample_multi"){
-            data.gz <- c("inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz",
-                         "inst/ext/toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz")
+            data.gz <- c(system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           }
         }
         
@@ -2272,17 +2292,17 @@ Reads2MapApp <- function(...) {
           data.gz <- "Wait"
         } else { ######## Available examples
           if(input$example_emp == "populus"){
-            data.gz <- "inst/ext/empirical/populus/multiallelics/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "populus/biallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else  if(input$example_emp == "populus_multi"){
-            data.gz <- "inst/ext/populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else  if(input$example_emp == "populus_cont"){
-            data.gz <- "inst/ext/populus/biallelics/with_contaminants/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "populus/biallelics/with_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else if(input$example_emp == "eucalyptus"){
-            data.gz <- "inst/ext/eucalyptus/biallelics/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "eucalyptus/biallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else if(input$example_emp == "toy_sample"){
-            data.gz <- "inst/ext/toy_sample_emp/temp/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "toy_sample_emp/temp/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else if(input$example_emp == "toy_sample_multi"){
-            data.gz <- "inst/ext/toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz"
+            data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           }
         }
         
@@ -2513,7 +2533,7 @@ Reads2MapApp <- function(...) {
     
     output$wrong_mks1_out <- DT::renderDataTable({
       if(input$real1 == "simulated_genotypes"){
-        stop("Simulated genotypes option is set. All genotypes are correct.")
+        stop(safeError("Simulated genotypes option is set. All genotypes are correct."))
       } else {
         DT::datatable(button1()[[1]][which(button1()[[1]]$gabGT != button1()[[1]]$gt.onemap.alt.ref),
                                      c(1,2,3,18,9,10,17,20)], 
@@ -2559,7 +2579,7 @@ Reads2MapApp <- function(...) {
     
     output$wrong_mks2_out <- DT::renderDataTable(
       if(input$real2 == "simulated_genotypes"){
-        stop("Simulated genotypes option is set. All genotypes are correct.")
+        stop(safeError("Simulated genotypes option is set. All genotypes are correct."))
       } else {
         DT::datatable(button2()[[1]][which(button2()[[1]]$gabGT != button2()[[1]]$gt.onemap.alt.ref),
                                      c(1,2,3,18,9,10,17,20)], 
@@ -3241,7 +3261,7 @@ Reads2MapApp <- function(...) {
       } 
     )
     #######################
-    # Maps
+    # Maps simu
     #######################
     button11 <- eventReactive(input$go11, {
       withProgress(message = 'Building draw', value = 0, {
@@ -3258,7 +3278,8 @@ Reads2MapApp <- function(...) {
           filter(depth == datas_simu()[[7]][[1]][as.numeric(input$seed11)]) %>%
           filter(fake == input$fake11)
         
-        filename <- paste0(data$SNPCall, "_", data$CountsFrom, "_", geno, ".png")
+        temp_path <- tempdir()
+        filename <- paste0(temp_path, "/", data$SNPCall, "_", data$CountsFrom, "_", geno, ".png")
         filename <- unique(filename)
         
         incProgress(0.5, detail = paste("Doing part", 3))
@@ -3298,16 +3319,19 @@ Reads2MapApp <- function(...) {
         seed <- datas_simu()[[7]][[2]][as.numeric(input$seed11)]
         if(input$fake11 == "with-false") fake <- T else fake <- F
         
-        temp_n <- map_name(depth, seed, geno, fake, 
-                           snpcall = input$SNPCall11, countsfrom = input$CountsFrom11, 
-                           data_names = datas_simu()[[8]])
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
+          temp_n <- map_name_gus(geno, fake, 
+                                 snpcall = input$SNPCall11, countsfrom = input$CountsFrom11, 
+                                 data_names = names(datas_simu()[[6]]))
           data <- datas_simu()[[6]][[temp_n]]
           data$rf_2pt()
           incProgress(0.5, detail = paste("Doing part", 3))
         } else {
+          temp_n <- map_name(depth, seed, geno, fake, 
+                             snpcall = input$SNPCall11, countsfrom = input$CountsFrom11, 
+                             data_names = datas_simu()[[8]])
           idx <- which(datas_simu()[[8]] == temp_n)
           data <- readList(datas_simu()[[10]], index = idx)
           if (!is.vector(data[[1]][[1]])) data <- data[[1]][[1]] else data <- data[[1]] # bugfix
@@ -3329,35 +3353,39 @@ Reads2MapApp <- function(...) {
     ## download
     output$map1_out_down <- downloadHandler(
       filename =  function() {
-        paste("map.RData")
+        tempfile("file",tmpdir = tempdir(), fileext = ".RData")
       },
       # content is a function with argument file. content writes the plot to the device
       content = function(file) {
         withProgress(message = 'Loading data', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
           geno <- test_geno(input$Global0.05.11, input$ErrorProb11)
-          
-          if(input$CountsFrom11 == "bam" & (input$ErrorProb11 == "OneMap_version2" | input$ErrorProb11 == "SNPCaller")){
-            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
-          }
+          stop_bam(input$CountsFrom11, input$ErrorProb11)
           
           depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed11)])
           seed <- datas_simu()[[7]][[2]][as.numeric(input$seed11)]
           if(input$fake11 == "with-false") fake <- T else fake <- F
           
-          temp_n <- map_name(depth, seed, geno, fake, 
-                             input$SNPCall11, input$CountsFrom11, datas_simu()[[8]])
-          
+          incProgress(0.25, detail = paste("Doing part", 2))
           if(geno == "gusmap"){
+            temp_n <- map_name_gus(geno, fake, 
+                                   snpcall = input$SNPCall11, countsfrom = input$CountsFrom11, 
+                                   data_names = names(datas_simu()[[6]]))
             data <- datas_simu()[[6]][[temp_n]]
+            data$rf_2pt()
+            incProgress(0.5, detail = paste("Doing part", 3))
+            save(data, file = file)
           } else {
+            temp_n <- map_name(depth, seed, geno, fake, 
+                               snpcall = input$SNPCall11, countsfrom = input$CountsFrom11, 
+                               data_names = datas_simu()[[8]])
             idx <- which(datas_simu()[[8]] == temp_n)
             data <- readList(datas_simu()[[10]], index = idx)
+            if (!is.vector(data[[1]][[1]])) data <- data[[1]][[1]] else data <- data[[1]] # bugfix
             class(data) <- "sequence"
+            incProgress(0.5, detail = paste("Doing part", 3))
+            save(data, file = file)
           }
-          incProgress(0.5, detail = paste("Doing part", 2))
-          outfile <- paste0(temp_n, ".RData")
-          save(data, file = outfile)
         })
       } 
     )
@@ -3372,7 +3400,9 @@ Reads2MapApp <- function(...) {
         geno <- test_geno(input$Global0.05.12, input$ErrorProb12)
         
         if(input$CountsFrom12 == "bam" & (input$ErrorProb12 == "OneMap_version2" | input$ErrorProb12 == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          stop(safeError("This option is not available. The SNP callers performs together the SNP and genotype calling 
+                         using the same read counts, we did not find a way to substitute the depths already used. 
+                         Please select other option."))
         }
         
         depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
@@ -3383,7 +3413,8 @@ Reads2MapApp <- function(...) {
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
-          stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+          stop(safeError("We do not include in this app support to do it with GUSMap. 
+                         Please, choose other option."))
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
           data <- readList(datas_simu()[[10]], index = idx)
@@ -3413,7 +3444,6 @@ Reads2MapApp <- function(...) {
     })
     
     output$haplot_simu_out <- renderPlot({
-      plot(sub_dat)
       plot(button12.1())
     })
     
@@ -3429,7 +3459,9 @@ Reads2MapApp <- function(...) {
           geno <- test_geno(input$Global0.05.12, input$ErrorProb12)
           
           if(input$CountsFrom12 == "bam" & (input$ErrorProb12 == "OneMap_version2" | input$ErrorProb12 == "SNPCaller")){
-            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+            stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                           and genotype calling using the same read counts, we did not find a way to 
+                           substitute the depths already used. Please select other option."))
           }
           
           depth <- paste0(datas_simu()[[7]][[1]][as.numeric(input$seed12)])
@@ -3440,7 +3472,8 @@ Reads2MapApp <- function(...) {
           
           incProgress(0.25, detail = paste("Doing part", 2))
           if(geno == "gusmap"){
-            stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+            stop(safeError("We do not include in this app support to do it with GUSMap. 
+                           Please, choose other option."))
           } else {
             idx <- which(datas_simu()[[8]] == temp_n)
             data <- readList(datas_simu()[[10]], index = idx)
@@ -3472,7 +3505,8 @@ Reads2MapApp <- function(...) {
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
-          stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+          stop(safeError("We do not include in this app support to do it with GUSMap. 
+                         Please, choose other option."))
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
           data <- readList(datas_simu()[[10]], index = idx)
@@ -3527,7 +3561,8 @@ Reads2MapApp <- function(...) {
           
           incProgress(0.25, detail = paste("Doing part", 2))
           if(geno == "gusmap"){
-            stop("We do not include in this app support to do it with GUSMap. Please, choose other option.")
+            stop(safeError("We do not include in this app support to do it with GUSMap. 
+                           Please, choose other option."))
           } else {
             idx <- which(datas_simu()[[8]] == temp_n)
             data <- readList(datas_simu()[[10]], index = idx)
@@ -3842,7 +3877,9 @@ Reads2MapApp <- function(...) {
         }
         
         if(input$CountsFrom1_emp == "bam" & (input$ErrorProb1_emp == "OneMap_version2" | input$ErrorProb1_emp == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                         and genotype calling using the same read counts, we did not find a way to substitute 
+                         the depths already used. Please select other option."))
         }
         data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
           filter(SNPCall == input$SNPCall1_emp) %>%
@@ -3881,7 +3918,9 @@ Reads2MapApp <- function(...) {
           }
           
           if(input$CountsFrom1_emp == "bam" & (input$ErrorProb1_emp == "OneMap_version2" | input$ErrorProb1_emp == "SNPCaller")){
-            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+            stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                           and genotype calling using the same read counts, we did not find a way to 
+                           substitute the depths already used. Please select other option."))
           }
           data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
             filter(SNPCall == input$SNPCall1_emp) %>%
@@ -3912,7 +3951,9 @@ Reads2MapApp <- function(...) {
         }
         
         if(input$CountsFrom2_emp == "bam" & (input$ErrorProb2_emp == "OneMap_version2" | input$ErrorProb2_emp == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                         and genotype calling using the same read counts, we did not find a way to 
+                         substitute the depths already used. Please select other option."))
         }
         data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
           filter(SNPCall == input$SNPCall2_emp) %>%
@@ -3946,7 +3987,8 @@ Reads2MapApp <- function(...) {
           if(any(input$ErrorProb3_emp %in% "OneMap_version2"))
             geno[which(input$ErrorProb3_emp == "OneMap_version2")] <- "SNPCaller0.05"
           if(any(input$ErrorProb3_emp %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            stop(safeError("Gusmap do not allow to change the error rate. 
+                           Please, select other option."))
         } else {
           geno <- input$ErrorProb3_emp
         }
@@ -4001,7 +4043,8 @@ Reads2MapApp <- function(...) {
             if(any(input$ErrorProb3_emp %in% "OneMap_version2"))
               geno[which(input$ErrorProb3_emp == "OneMap_version2")] <- "SNPCaller0.05"
             if(any(input$ErrorProb3_emp %in% "gusmap"))
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+              stop(safeError("Gusmap do not allow to change the error rate. 
+                             Please, select other option."))
           } else {
             geno <- input$ErrorProb3_emp
           }
@@ -4093,7 +4136,8 @@ Reads2MapApp <- function(...) {
           if(any(input$ErrorProb9_emp %in% "OneMap_version2"))
             geno[which(input$ErrorProb9_emp == "OneMap_version2")] <- "SNPCaller0.05"
           if(any(input$ErrorProb9_emp %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            stop(safeError("Gusmap do not allow to change the error rate. 
+                           Please, select other option."))
         } else {
           geno <- input$ErrorProb9_emp
         }
@@ -4146,7 +4190,8 @@ Reads2MapApp <- function(...) {
             if(any(input$ErrorProb9_emp %in% "OneMap_version2"))
               geno[which(input$ErrorProb9_emp == "OneMap_version2")] <- "SNPCaller0.05"
             if(any(input$ErrorProb9_emp %in% "gusmap"))
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+              stop(safeError("Gusmap do not allow to change the error rate. 
+                             Please, select other option."))
           } else {
             geno <- input$ErrorProb9_emp
           }
@@ -4194,7 +4239,8 @@ Reads2MapApp <- function(...) {
           } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
             geno <- geno[-which(choosed %in% "OneMap_version2")]
           } else if (any(choosed %in% "gusmap")){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            stop(safeError("Gusmap do not allow to change the error rate. 
+                           Please, select other option."))
           } 
         } else {
           geno <- choosed
@@ -4247,7 +4293,8 @@ Reads2MapApp <- function(...) {
             } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
               geno <- geno[-which(choosed %in% "OneMap_version2")]
             } else if (any(choosed %in% "gusmap")){
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+              stop(safeError("Gusmap do not allow to change the error rate. 
+                             Please, select other option."))
             } 
           } else {
             geno <- choosed
@@ -4280,7 +4327,8 @@ Reads2MapApp <- function(...) {
           if(input$ErrorProb8_emp == "OneMap_version2" | input$ErrorProb8_emp == "SNPCaller"){
             geno <- paste0("default", 0.05)
           } else if (input$ErrorProb8_emp == "gusmap"){
-            stop("Gusmap do not build plotly heatmaps. Please, select other option.")
+            stop(safeError("Gusmap do not build plotly heatmaps. 
+                           Please, select other option."))
           } else {
             geno <- paste0(input$ErrorProb8_emp, 0.05)
           }
@@ -4302,7 +4350,7 @@ Reads2MapApp <- function(...) {
     output$heatmaps_emp_out <- renderPlotly({
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0.75, detail = paste("Doing part", 4))
-        rf_graph_table(button23(), inter = T, html.file = tempfile(patter="file", fileext = ".html"),display = F) 
+        rf_graph_table(button23(), inter = T, html.file = tempfile(patter="file",tmpdir = tempdir(),fileext = ".html"),display = F) 
       })
     })
     
@@ -4320,7 +4368,8 @@ Reads2MapApp <- function(...) {
             if(input$ErrorProb8_emp == "OneMap_version2"){
               geno <- paste0("SNPCaller", 0.05)
             } else if (input$ErrorProb8_emp == "gusmap"){
-              stop("Gusmap do not build plotly heatmaps. Please, select other option.")
+              stop(safeError("Gusmap do not build plotly heatmaps. 
+                             Please, select other option."))
             } else {
               geno <- paste0(input$ErrorProb8_emp, 0.05)
             }
@@ -4329,7 +4378,9 @@ Reads2MapApp <- function(...) {
           }
           
           if(input$CountsFrom8_emp == "bam" & (input$ErrorProb8_emp == "OneMap_version2" | input$ErrorProb8_emp == "SNPCaller")){
-            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+            stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                           and genotype calling using the same read counts, we did not find a way to 
+                           substitute the depths already used. Please select other option."))
           }
           
           temp_n <- paste0("map_",input$SNPCall8_emp, "_", input$CountsFrom8_emp, "_", geno, ".RData")
@@ -4348,7 +4399,7 @@ Reads2MapApp <- function(...) {
     ################################################################# 
     
     ############
-    # Maps
+    # Maps emp
     ############
     button24 <- eventReactive(input$go24, {
       withProgress(message = 'Building draw', value = 0, {
@@ -4358,7 +4409,8 @@ Reads2MapApp <- function(...) {
           if(input$ErrorProb11_emp == "OneMap_version2"){
             geno <- paste0("SNPCaller", 0.05)
           } else if (input$ErrorProb11_emp == "gusmap"){
-            stop("Gusmap do not build plotly heatmaps. Please, select other option.")
+            stop(safeError("Gusmap do not build plotly heatmaps. 
+                           Please, select other option."))
           } else {
             geno <- paste0(input$ErrorProb11_emp, 0.05)
           }
@@ -4367,7 +4419,10 @@ Reads2MapApp <- function(...) {
         }
         
         if(input$CountsFrom11_emp == "bam" & (input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          stop(safeError("This option is not available. 
+                         The SNP callers performs together the SNP and genotype calling using
+                         the same read counts, we did not find a way to substitute the depths 
+                         already used. Please select other option."))
         }
         
         incProgress(0.25, detail = paste("Doing part", 2))
@@ -4377,7 +4432,7 @@ Reads2MapApp <- function(...) {
         
         incProgress(0.5, detail = paste("Doing part", 3))
         data <-   data.frame(data$mks, data$cm)
-        outfile <- tempfile(pattern="file", fileext = ".png")
+        outfile <- tempfile(pattern="file", tmpdir = tempdir(), fileext = ".png")
         list(data, outfile)
       })
     })
@@ -4398,7 +4453,8 @@ Reads2MapApp <- function(...) {
           if(input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller"){
             geno <- paste0("default", 0.05)
           } else if (input$ErrorProb11_emp == "gusmap"){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            stop(safeError("Gusmap do not allow to change the error rate. 
+                           Please, select other option."))
           } else {
             geno <- paste0(input$ErrorProb11_emp, 0.05)
           }
@@ -4411,7 +4467,9 @@ Reads2MapApp <- function(...) {
         }
         
         if(input$CountsFrom11_emp == "bam" & (input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                         and genotype calling using the same read counts, we did not find a way to 
+                         substitute the depths already used. Please select other option."))
         }
         
         temp_n <- paste0("map_",input$SNPCall11_emp, "_", input$CountsFrom11_emp, "_", geno, ".RData")
@@ -4444,22 +4502,23 @@ Reads2MapApp <- function(...) {
     ## download
     output$map_emp_out_down <- downloadHandler(
       filename =  function() {
-        paste("map.RData")
+        tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".RData")
       },
       # content is a function with argument file. content writes the plot to the device
       content = function(file) {
         withProgress(message = 'Building heatmap', value = 0, {
           incProgress(0, detail = paste("Doing part", 1))
           if(input$Global0.05.11_emp){
-            if( input$ErrorProb11_emp == "OneMap_version2"){
+            if(input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller"){
               geno <- paste0("default", 0.05)
             } else if (input$ErrorProb11_emp == "gusmap"){
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+              stop(safeError("Gusmap do not allow to change the error rate. 
+                             Please, select other option."))
             } else {
               geno <- paste0(input$ErrorProb11_emp, 0.05)
             }
           } else {
-            if( input$ErrorProb11_emp == "OneMap_version2"){
+            if(input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller"){
               geno <- "default"
             } else {
               geno <- input$ErrorProb11_emp
@@ -4467,18 +4526,25 @@ Reads2MapApp <- function(...) {
           }
           
           if(input$CountsFrom11_emp == "bam" & (input$ErrorProb11_emp == "OneMap_version2" | input$ErrorProb11_emp == "SNPCaller")){
-            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+            stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                           and genotype calling using the same read counts, we did not find a way to 
+                           substitute the depths already used. Please select other option."))
           }
           
           temp_n <- paste0("map_",input$SNPCall11_emp, "_", input$CountsFrom11_emp, "_", geno, ".RData")
+          
+          incProgress(0.25, detail = paste("Doing part", 2))
           if(geno == "gusmap"){
             data <- datas_emp()[[5]][[temp_n]]
+            data$rf_2pt()
+            incProgress(0.5, detail = paste("Doing part", 3))
             save(data, file=file)
           } else {
             idx <- which(datas_emp()[[6]] == temp_n)
             data <- readList(datas_emp()[[8]], index = idx)
             data <- data[[1]]
             class(data) <- "sequence"
+            incProgress(0.5, detail = paste("Doing part", 3))
             save(data, file=file)
           }
         })
@@ -4493,7 +4559,8 @@ Reads2MapApp <- function(...) {
           if( input$ErrorProb12_emp == "OneMap_version2"){
             geno <- paste0("default", 0.05)
           } else if (input$ErrorProb12_emp == "gusmap"){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            stop(safeError("Gusmap do not allow to change the error rate. 
+                           Please, select other option."))
           } else {
             geno <- paste0(input$ErrorProb12_emp, 0.05)
           }
@@ -4506,12 +4573,15 @@ Reads2MapApp <- function(...) {
         }
         
         if(input$CountsFrom12_emp == "bam" & (input$ErrorProb12_emp == "OneMap_version2" | input$ErrorProb12_emp == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                         and genotype calling using the same read counts, we did not find a way to 
+                         substitute the depths already used. Please select other option."))
         }
         
         temp_n <- paste0("map_",input$SNPCall12_emp, "_", input$CountsFrom12_emp, "_", geno, ".RData")
         if(geno == "gusmap"){
-          stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
+          stop(safeError("We do not include in this app support to do it with GUSMap. 
+                         Please, select other option."))
         } else {
           idx <- which(datas_emp()[[6]] == temp_n)
           data <- readList(datas_emp()[[8]], index = idx)
@@ -4539,7 +4609,8 @@ Reads2MapApp <- function(...) {
             if( input$ErrorProb12_emp == "OneMap_version2"){
               geno <- paste0("default", 0.05)
             } else if (input$ErrorProb12_emp == "gusmap"){
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+              stop(safeError("Gusmap do not allow to change the error rate. 
+                             Please, select other option."))
             } else {
               geno <- paste0(input$ErrorProb12_emp, 0.05)
             }
@@ -4552,12 +4623,15 @@ Reads2MapApp <- function(...) {
           }
           
           if(input$CountsFrom12_emp == "bam" & (input$ErrorProb12_emp == "OneMap_version2" | input$ErrorProb12_emp == "SNPCaller")){
-            stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+            stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                           and genotype calling using the same read counts, we did not find a way to 
+                           substitute the depths already used. Please select other option."))
           }
           
           temp_n <- paste0("map_",input$SNPCall12_emp, "_", input$CountsFrom12_emp, "_", geno, ".RData")
           if(geno == "gusmap"){
-            stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
+            stop(safeError("We do not include in this app support to do it with GUSMap. 
+                           Please, select other option."))
           } else {
             idx <- which(datas_emp()[[6]] == temp_n)
             data <- readList(datas_emp()[[8]], index = idx)
@@ -4579,7 +4653,7 @@ Reads2MapApp <- function(...) {
           if(input$ErrorProb13_emp == "OneMap_version2" | input$ErrorProb13_emp == "SNPCaller"){
             geno <- paste0("default", 0.05)
           } else if (input$ErrorProb13_emp == "gusmap"){
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            stop(safeError("Gusmap do not allow to change the error rate. Please, select other option."))
           } else {
             geno <- paste0(input$ErrorProb13_emp, 0.05)
           }
@@ -4592,12 +4666,15 @@ Reads2MapApp <- function(...) {
         }
         
         if(input$CountsFrom13_emp == "bam" & (input$ErrorProb13_emp == "OneMap_version2" | input$ErrorProb13_emp == "SNPCaller")){
-          stop("This option is not available. The SNP callers performs together the SNP and genotype calling using the same read counts, we did not find a way to substitute the depths already used. Please select other option.")
+          stop(safeError("This option is not available. The SNP callers performs together the SNP 
+                         and genotype calling using the same read counts, we did not find a way to 
+                         substitute the depths already used. Please select other option."))
         }
         
         temp_n <- paste0("map_",input$SNPCall13_emp, "_", input$CountsFrom13_emp, "_", geno, ".RData")
         if(geno == "gusmap"){
-          stop("We do not include in this app support to do it with GUSMap. Please, select other option.")
+          stop(safeError("We do not include in this app support to do it with GUSMap. 
+                         Please, select other option."))
         } else {
           idx <- which(datas_emp()[[6]] == temp_n)
           data <- readList(datas_emp()[[8]], index = idx)
@@ -4637,7 +4714,8 @@ Reads2MapApp <- function(...) {
           if(any(input$ErrorProb14_emp %in% "OneMap_version2"))
             geno[which(input$ErrorProb14_emp == "OneMap_version2")] <- "SNPCaller0.05"
           if(any(input$ErrorProb14_emp %in% "gusmap"))
-            stop("Gusmap do not allow to change the error rate. Please, select other option.")
+            stop(safeError("Gusmap do not allow to change the error rate. 
+                           Please, select other option."))
         } else {
           geno <- input$ErrorProb14_emp
         }
@@ -4671,7 +4749,8 @@ Reads2MapApp <- function(...) {
             if(any(input$ErrorProb14_emp %in% "OneMap_version2"))
               geno[which(input$ErrorProb14_emp == "OneMap_version2")] <- "SNPCaller0.05"
             if(any(input$ErrorProb14_emp %in% "gusmap"))
-              stop("Gusmap do not allow to change the error rate. Please, select other option.")
+              stop(safeError("Gusmap do not allow to change the error rate. 
+                             Please, select other option."))
           } else {
             geno <- input$ErrorProb14_emp
           }
