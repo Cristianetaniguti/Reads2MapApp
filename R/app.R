@@ -88,8 +88,10 @@ Reads2MapApp <- function(...) {
                  Lucas = "E5!YY1dR",  # co-author
                  Thiago = "8Qgp!t13", # co-author
                  Veri = "jP!K5FE0",  # design appraiser
-                 Guilherme = "3UKy%2ED",
-                 Leticia = "4v#@8fSR") # lab member
+                 Guilherme = "3UKy%2ED", # lab member
+                 Leticia = "4v#@8fSR", # lab member
+                 Getulio = "^i%S03!zJ5Gm",
+                 Oscar   ="fzPI6$3%y") # lab member
   
   credentials <- data.frame(
     user =     names(passwords), # mandatory
@@ -601,12 +603,45 @@ Reads2MapApp <- function(...) {
       ),
       ##########################################################
       tabItem(tabName = "roc",
-              "To summarize each genotype caller model predictive power we used \textit{receiver operating characteristic} (ROC) curves.",
+              tags$head(
+                tags$link(rel="stylesheet", 
+                          href="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.css", 
+                          integrity="sha384-dbVIfZGuN1Yq7/1Ocstc1lUEm+AT+/rCkibIcC/OmWo5f0EA48Vf8CytHzGrSwbQ",
+                          crossorigin="anonymous"),
+                HTML('<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.js" integrity="sha384-2BKqo+exmr9su6dir+qCw08N2ZKRucY4PrGQPPWU1A7FtlCGjmEGFqXCv5nyM5Ij" crossorigin="anonymous"></script>'),
+                HTML('<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"></script>'),
+                HTML('
+    <script>
+      document.addEventListener("DOMContentLoaded", function(){
+        renderMathInElement(document.body, {
+          delimiters: [{left: "$", right: "$", display: false}]
+        });
+      })
+    </script>')
+              ),
+              helpText("To summarize each genotype caller model predictive power we used 
+              receiver operating characteristic (ROC) curves.  
+              It plots the sensitivity ($\\frac{true\\ positives}{true\\ positives + false\\ negatives}$) 
+              in the vertical axis versus (1 - specificity) ($\\frac{false\ positives}{false\\ positives + true\\ negatives}$) 
+              on the horizontal axis for all possible thresholds $\\pi_0$ in a logistic regression (Berkson 1944):"),
+              helpText("$ logit[\\pi(x)] = log[\\frac{\\pi(x)}{1-\\pi(x)}] = \\alpha + \\beta x$"),
+              helpText("or"),
+              helpText("$ \\pi(x) = \\frac{e^{\\alpha + \\beta x}}{1 + e^{\\alpha + \\beta x}}$"),
+              helpText("
+              where x is the error rate of the genotypes and the binary response variable is if they were called 
+              correctly or wrongly. The formula implies that $\\pi(x)$ changes as an S-shaped function of $x$. 
+              Parameter $\\beta$ determines the rate of increase or decrease of the S-shaped curve for $\\pi(x)$ (Sloane and Morgan 1996).
+              Higher is the sensitivity value for each (1 - specificity), better is the predictive power of the selected 
+              error rate threshold. In other words, better this particular error rate threshold can differentiate wrong 
+              and correct genotypes. The best threshold would be the one more close to the left superior corner of the graphic. 
+              Therefore, the better the predictive power, the higher is the ROC curve. Because of this, the area under 
+              the curve provides a single value that summarizes predictive power. The greater the area, the better 
+              the predictive power of the outputted error rate from the genotype call model used (Bradley 1997)."),
               hr(),
               fluidRow(
-                column(width = 12,
-                       box(title= "ROC curves",
-                           width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                         column(width = 12,
+                                box(title= "ROC curves",
+                                    width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                            plotOutput("roc_out", width = "100%", height = "500px"),
                            hr(),
                            "Best thresholds:",
@@ -3268,6 +3303,7 @@ Reads2MapApp <- function(...) {
         incProgress(0, detail = paste("Doing part", 1))
         
         geno <- test_geno(input$Global0.05.11, input$ErrorProb11)
+        stop_bam(input$CountsFrom11, input$ErrorProb11)
         
         incProgress(0.25, detail = paste("Doing part", 2))
         
@@ -3319,10 +3355,9 @@ Reads2MapApp <- function(...) {
         seed <- datas_simu()[[7]][[2]][as.numeric(input$seed11)]
         if(input$fake11 == "with-false") fake <- T else fake <- F
         
-        
         incProgress(0.25, detail = paste("Doing part", 2))
         if(geno == "gusmap"){
-          temp_n <- map_name_gus(geno, fake, 
+          temp_n <- map_name_gus(geno, seed, depth, fake, 
                                  snpcall = input$SNPCall11, countsfrom = input$CountsFrom11, 
                                  data_names = names(datas_simu()[[6]]))
           data <- datas_simu()[[6]][[temp_n]]

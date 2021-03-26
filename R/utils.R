@@ -137,12 +137,13 @@ map_name <- function(depth, seed, geno, fake, snpcall, countsfrom, data_names){
     temp_n <- paste0("map_",seed, "_", depth, "_", snpcall, "_", 
                      countsfrom, "_", geno, "_", fake)
   } else {
+    if(geno == "OneMap_version2") geno <- "default"
     temp_n <- paste0(seed, "_", depth, "_map_", snpcall, "_", 
                      countsfrom, "_", geno, "_", fake)
   }
 }
 
-map_name_gus <- function(geno, fake, snpcall, countsfrom, data_names){
+map_name_gus <- function(geno, seed, depth, fake, snpcall, countsfrom, data_names){
   
   bugfix <- lapply(strsplit(data_names[1], "_"), "[[", 1) # exclusive for 20cM dataset
   if(bugfix == "map"){
