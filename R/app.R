@@ -346,12 +346,15 @@ Reads2MapApp <- function(...) {
                            # Copy the line below to make a select box 
                            "See description of each dataset in the tables bellow.",
                            selectInput("example_emp", label = h4(tags$b("EmpiricalReads2Map.wdl results")), 
-                                       choices = list("P. tremula - with contaminants; without multiallelics" = "populus_cont",
-                                                      "P. tremula - without multiallelics	" = "populus",
-                                                      "P. tremula - with multiallics" = "populus_multi",
-                                                      #"Eucalyptus - without multiallelics" = "eucalyptus",
-                                                      "Toy sample without multiallelics " = "toy_sample",
-                                                      "Toy sample with multiallelics" = "toy_sample_multi"), 
+                                       choices = list(
+                                         "P. tremula - without multiallelics	" = "populus_bi8.5",
+                                         "P. tremula - with multiallelics	" = "populus_multi8.5"),
+                                         # "P. tremula - with contaminants; without multiallelics" = "populus_cont",
+                                         # "P. tremula - without multiallelics	" = "populus",
+                                         # "P. tremula - with multiallics" = "populus_multi",
+                                         # #"Eucalyptus - without multiallelics" = "eucalyptus",
+                                         # "Toy sample without multiallelics " = "toy_sample",
+                                         # "Toy sample with multiallelics" = "toy_sample_multi"), 
                                        selected = "populus_multi8.5"),
                          )
                      )
@@ -638,9 +641,9 @@ Reads2MapApp <- function(...) {
               the predictive power of the outputted error rate from the genotype call model used (Bradley 1997)."),
               hr(),
               fluidRow(
-                         column(width = 12,
-                                box(title= "ROC curves",
-                                    width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                column(width = 12,
+                       box(title= "ROC curves",
+                           width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                            plotOutput("roc_out", width = "100%", height = "500px"),
                            hr(),
                            "Best thresholds:",
@@ -2325,23 +2328,27 @@ Reads2MapApp <- function(...) {
           cat("Wait credentials\n")
           data.gz <- "Wait"
         } else { ######## Available examples
-          if(input$example_emp == "populus"){
-            data.gz <- system.file("ext", "populus/biallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-          } else  if(input$example_emp == "populus_multi"){
-            data.gz <- system.file("ext", "populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-          } else  if(input$example_emp == "populus_cont"){
-            data.gz <- system.file("ext", "populus/biallelics/with_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-          } else  if(input$example_emp == "populus_bi8.5"){
+          # if(input$example_emp == "populus"){
+          #   data.gz <- system.file("ext", "populus/biallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+          # } else  if(input$example_emp == "populus_multi"){
+          #   data.gz <- system.file("ext", "populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+          # } else  if(input$example_emp == "populus_cont"){
+          #   data.gz <- system.file("ext", "populus/biallelics/with_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+          #} else  
+          
+          if(input$example_emp == "populus_bi8.5"){
             data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/biallelics/EmpiricalReads_results.tar.gz"
           } else  if(input$example_emp == "populus_multi8.5"){
             data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/multiallelics/EmpiricalReads_results.tar.gz"
-          } else if(input$example_emp == "eucalyptus"){
-            data.gz <- system.file("ext", "eucalyptus/biallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-          } else if(input$example_emp == "toy_sample"){
-            data.gz <- system.file("ext", "toy_sample_emp/temp/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-          } else if(input$example_emp == "toy_sample_multi"){
-            data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-          }
+          } 
+          
+          # else if(input$example_emp == "eucalyptus"){
+          #   data.gz <- system.file("ext", "eucalyptus/biallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+          # } else if(input$example_emp == "toy_sample"){
+          #   data.gz <- system.file("ext", "toy_sample_emp/temp/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+          # } else if(input$example_emp == "toy_sample_multi"){
+          #   data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+          # }
         }
         
         if(data.gz == "Wait"){
@@ -2561,7 +2568,7 @@ Reads2MapApp <- function(...) {
         
         if(length(which(is.na(data$ref))) > 0)
           data <- data[-which(is.na(data$ref)),]
-
+        
         list(data, alpha)
       })
     })
@@ -2667,9 +2674,9 @@ Reads2MapApp <- function(...) {
     })
     
     output$wrong_mks_types_out <- DT::renderDataTable(
-        DT::datatable(button3()[[1]][which(button3()[[1]]$type != button3()[[1]]$real.type),
-                                     ], 
-                      options = list(scrollX = TRUE))
+      DT::datatable(button3()[[1]][which(button3()[[1]]$type != button3()[[1]]$real.type),
+      ], 
+      options = list(scrollX = TRUE))
     )
     
     ## download
