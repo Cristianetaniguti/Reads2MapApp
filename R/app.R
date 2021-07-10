@@ -6,7 +6,6 @@
 ##'@import dplyr
 ##'@import tidyr
 ##'@import GUSMap
-##'@import patchwork
 ##'@importFrom plotly plotlyOutput renderPlotly ggplotly
 ##'@import ggplot2
 ##'@import ggpubr
@@ -353,7 +352,7 @@ Reads2MapApp <- function(...) {
                                                       #"Eucalyptus - without multiallelics" = "eucalyptus",
                                                       "Toy sample without multiallelics " = "toy_sample",
                                                       "Toy sample with multiallelics" = "toy_sample_multi"), 
-                                       selected = "toy_sample"),
+                                       selected = "populus_multi8.5"),
                          )
                      )
               ),
@@ -930,7 +929,7 @@ Reads2MapApp <- function(...) {
               hr(),
               fluidRow(
                 column(width = 12,
-                       box(title = "Markers type",
+                       box(title = "Markers types according with Wu et. al 2002",
                            width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
                            plotOutput("marker_type_out", width = "100%", height = "550px"),
                            hr(),
@@ -2099,11 +2098,11 @@ Reads2MapApp <- function(...) {
             data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_multi_up.tar.gz", package = "Reads2MapApp"),
                          system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_multi_up.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "populus_200_bi_radinitio37"){
-            data.gz <- c(system.file("ext", "simulations/RADinitio37/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-                         system.file("ext", "simulations/RADinitio37/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+            data.gz <- c(system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "populus_200_multi_radinitio37"){
-            data.gz <- c(system.file("ext", "simulations/RADinitio37/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-                         system.file("ext", "simulations/RADinitio37/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+            data.gz <- c(system.file("ext", "simulations/RADinitio37_afterDef/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                         system.file("ext", "simulations/RADinitio37_afterDef/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
           } else if(input$example_simu == "toy_sample_bi"){
             data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
                          system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
@@ -2332,6 +2331,10 @@ Reads2MapApp <- function(...) {
             data.gz <- system.file("ext", "populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else  if(input$example_emp == "populus_cont"){
             data.gz <- system.file("ext", "populus/biallelics/with_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+          } else  if(input$example_emp == "populus_bi8.5"){
+            data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/biallelics/EmpiricalReads_results.tar.gz"
+          } else  if(input$example_emp == "populus_multi8.5"){
+            data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/multiallelics/EmpiricalReads_results.tar.gz"
           } else if(input$example_emp == "eucalyptus"){
             data.gz <- system.file("ext", "eucalyptus/biallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
           } else if(input$example_emp == "toy_sample"){
@@ -2378,12 +2381,13 @@ Reads2MapApp <- function(...) {
             multi_names <- base::get(multi_names)
           } else { multi_names = 0}
           
-          names_rdatas <- readRDS(datas[[grep("names.rds", datas)]])
+          names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t")
+          names_rdatas <- as.data.frame(names_rdatas)[,1]
           names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
-          result_list <- list("data1" = readRDS(datas[[grep("data1_depths_geno_prob.rds", datas)]]), 
-                              "data2" = readRDS(datas[[grep("data2_maps.rds", datas)]]), 
-                              "data3" = readRDS(datas[[grep("data3_filters.rds", datas)]]), 
-                              "data4" = readRDS(datas[[grep("data4_times.rd", datas)]]), 
+          result_list <- list("data1" = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]]), 
+                              "data2" = vroom(datas[[grep("data2_maps.tsv.gz", datas)]]), 
+                              "data3" = vroom(datas[[grep("data3_filters.tsv.gz", datas)]]), 
+                              "data4" = vroom(datas[[grep("data4_times.tsv.gz", datas)]]), 
                               "data5" = data5, 
                               "names" = names_rdatas, 
                               "ind_names" = inds_list,

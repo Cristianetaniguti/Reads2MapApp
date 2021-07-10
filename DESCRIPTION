@@ -1,6 +1,6 @@
 Package: Reads2MapApp
 Title: Reads2Map Workflows App
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: 
     person(given = "Cristiane Hayumi",
            family = "Taniguti",
@@ -29,7 +29,6 @@ Imports:
     vroom,
     RColorBrewer,
     htmlwidgets,
-    patchwork,
     pROC,
     DT,
     shinymanager,
