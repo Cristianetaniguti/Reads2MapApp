@@ -331,6 +331,9 @@ cmbymb <- function(data){
     theme_bw() 
 }
 
+#' @importFrom ggpubr ggarrange
+#' @import ggplot2
+#' @import dplyr
 marker_type_probs <- function(data_plot_par){
   if(!is.data.frame(data_plot_par)) stop(safeError("The probabilities can not be calculated in the presence of false positives.\n
                               If you set option without-false, then there are no biallelic/multiallelic marker in this dataset. 
@@ -385,8 +388,7 @@ marker_type_probs <- function(data_plot_par){
           legend.text=element_text(size=12))
   p3_comb <- ggarrange(p3, widths = 13, heights = 16)
   
-  
-  p_comb[[1]]/p_comb[[2]]/p_comb[[3]]/p3_comb
+  ggarrange(p_comb[[1]],p_comb[[2]],p_comb[[3]],p3_comb, ncol = 1)
 }
 
 geno_probs <- function(data_plot_par){
@@ -431,7 +433,7 @@ geno_probs <- function(data_plot_par){
     p_comb[[i]] <- ggarrange(p1, p2, common.legend = T, widths = c(4,8), heights = c(16,16))
   }
 
-  p_comb[[1]]/p_comb[[2]]/p_comb[[3]]
+  ggarrange(p_comb[[1]],p_comb[[2]],p_comb[[3]], ncol = 1)
 }
 
 roc_graph <- function(data){
