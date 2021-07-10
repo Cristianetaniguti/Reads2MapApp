@@ -325,7 +325,7 @@ Reads2MapApp <- function(...) {
                                                       "P. tremula 37cM of chromosome 10 - without multiallelics" = "populus_200_bi_radinitio37",
                                                       "P. tremula 37cM of chromosome 10 - with multiallelics" = "populus_200_multi_radinitio37",
                                                       "Toy sample without multiallelics" = "toy_sample_bi",
-                                                      "Toy sample with multiallelics" = "toy_sample_multi"), 
+                                                      "Toy sample with multiallelics" = "toy_sample_multi"),
                                        selected = "toy_sample_multi"),
                          )
                      )
