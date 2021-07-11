@@ -1,3 +1,131 @@
+#' Read input data
+#' 
+#' @import vroom
+#' @import largeList
+#' 
+prepare_datas_simu <- function(x, example_simu){
+  # This function makes adjustments in the input tar.gz file to be processed inside the app
+  # It returns six data objects and the app options in a list format
+    if(!is.null(x)){
+      data.gz <- x[,4]
+      path = "data/"
+    } else if(is.null(example_simu)) {
+      cat("Wait credentials\n")
+      data.gz <- "Wait"
+    } else { ######## Only the toy_sample in the package - the rest in server
+      if(example_simu == "populus_200_bi_radinitio20"){
+        data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_bi_up.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_bi_up.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "populus_200_multi_radinitio20"){
+        data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_multi_up.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_multi_up.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "populus_200_bi_radinitio37"){
+        data.gz <- c(system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "populus_200_multi_radinitio37"){
+        data.gz <- c(system.file("ext", "simulations/RADinitio37_afterDef/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simulations/RADinitio37_afterDef/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "toy_sample_bi"){
+        data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "toy_sample_multi"){
+        data.gz <- c(system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+      }
+    }
+    
+    if(data.gz == "Wait"){
+      cat("Waiting...\n")
+    } else {
+      path_dir <- tempdir()
+      list_files <- list()
+      for(i in 1:length(data.gz)){
+        untar(data.gz[i], exdir = path_dir)
+        list_files[[i]] <- untar(data.gz[i], list = T)
+      }
+      
+      list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
+      for_rm <- sapply(list_files, "[", 1)
+      list_files <- lapply(list_files, "[", -1)
+      list_files <- lapply(list_files, sort)
+      
+      # Data
+      datas <- list()
+      for(i in 1:length(list_files[[1]])){
+        datas[[i]] <- sapply(list_files, "[", i)
+      }
+      
+      ## Tables
+      data1_depths_geno_prob <- data2_maps <- data3_filters <- vector()
+      data4_times <- data5_SNPCall_efficiency <- simu_haplo <- vector()
+      data6 <- names_rdatas  <- list()
+      #seeds <- depths <- seeds_choices <- depths_choices <- vector()
+      
+      temp_name <- tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".llo")
+      for(i in 1:length(datas)){
+        for(j in 1:length(datas[[i]])){
+          if(all(grepl("gusmap_RDatas.RData", datas[[i]]))){
+            temp1 <- load(datas[[i]][[j]])
+            temp1 <- base::get(temp1)
+            data6 <- c(data6, temp1)
+          } else if(all(grepl("sequences.llo", datas[[i]]))){
+            temp1 <- readList(datas[[i]][[j]])
+            if(j == 1){
+              saveList(temp1, file = temp_name, append = F, compress = T)
+              inds <- rownames(temp1[[1]]$data.name$geno)
+            } else {
+              saveList(temp1, file = temp_name, append = T, compress = T)
+            }
+          } else if(all(grepl("names.tsv.gz", datas[[i]]))){
+            temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
+            names_rdatas <- c(names_rdatas, temp1)
+          } else {
+            temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
+            name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
+            name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
+            assign(name_temp, rbind(base::get(name_temp), temp1))
+          }
+        }
+      }
+      
+      temp <- unique(paste0(data2_maps$depth, "_", data2_maps$seed))
+      seeds <- sapply(strsplit(temp, "_"), "[", 2)
+      depths <- sapply(strsplit(temp, "_"), "[", 1)
+      depths_choices <- as.list(depths)
+      names(depths_choices) <- depths
+      seed_depth <- unique(paste("Depth",data2_maps$depth, "seed", data2_maps$seed))
+      temp_names <- seed_depth
+      seeds_choices <- as.list(1:length(seed_depth))
+      names(seeds_choices) <- temp_names
+      inds_choices <- sort(inds)
+      names(inds_choices) <- sort(inds)
+      names_rdatas <- unlist(names_rdatas)
+      names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+      
+      data2_maps$fake[data2_maps$fake == "TRUE"] <- "with-false"
+      data2_maps$fake[data2_maps$fake == "FALSE"] <- "without-false"
+      
+      data4_times$fake[data4_times$fake == "TRUE"] <- "with-false"
+      data4_times$fake[data4_times$fake == "FALSE"] <- "without-false"
+      
+      result_list <- list("data1"=data1_depths_geno_prob, 
+                          "data2"=data2_maps, 
+                          "data3"=data3_filters, 
+                          "data4"=data4_times, 
+                          "data5"=data5_SNPCall_efficiency, 
+                          "data6"=data6, 
+                          "choices"=list(depths, seeds, seeds_choices, depths_choices, inds_choices),
+                          "names"=names_rdatas, 
+                          "haplo"=simu_haplo,
+                          "sequence.llo"=temp_name)
+      
+      system(paste("rm -r", paste(for_rm, collapse = " ")))
+      
+      result_list
+    }
+}
+
+
 #' Functions to build graphics for the data from simulations
 #' 
 errorProb_graph <- function(data, genotypes, alpha){
