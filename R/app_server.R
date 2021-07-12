@@ -52,14 +52,58 @@ app_server <- function( input, output, session ) {
   # simulations
   callModule(mod_simu_SNPCalling_efficiency_server,
              "simu_SNPCalling_efficiency_ui_1", 
-             datas_simu=datas$datas_simu)
+             datas_simu = datas$datas_simu)
   
   callModule(mod_simu_filters_server,
              "simu_filters_ui_1",
-             datas_simu=datas$datas_simu)
+             datas_simu = datas$datas_simu)
   
   callModule(mod_simu_markers_type_server, 
              "simu_markers_type_ui_1", 
-             datas_simu=datas$datas_simu)
+             datas_simu = datas$datas_simu)
   
+  callModule(mod_simu_times_server,
+             "simu_times_ui_1", 
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_depths_and_genotyping_server, 
+             "simu_depths_and_genotyping_ui_1",
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_genotype_probabilities_server,
+             "simu_genotype_probabilities_ui_1", 
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_roc_curves_server,
+             "simu_roc_curves_ui_1", 
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_map_size_each_family_server,
+             "simu_map_size_each_family_ui_1", 
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_overview_map_size_server,
+             "simu_overview_map_size_ui_1", 
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_phases_server,
+             "simu_phases_ui_1", 
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_maps_server,
+             "simu_maps_ui_1", 
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_progeny_haplotypes_server, 
+             "simu_progeny_haplotypes_ui_1", 
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_breakpoints_counts_server, 
+             "simu_breakpoints_counts_ui_1", 
+             datas_simu = datas$datas_simu)
+  
+  callModule(mod_simu_cM_Mb_server, 
+             "simu_cM_Mb_ui_1", 
+             datas_simu = datas$datas_simu)
+
 }

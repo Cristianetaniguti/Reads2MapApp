@@ -141,26 +141,37 @@ app_ui <- function(request) {
                   mod_simu_markers_type_ui("simu_markers_type_ui_1")
           ),
           tabItem(tabName = "times",
+                  mod_simu_times_ui("simu_times_ui_1")
           ),
           tabItem(tabName = "disper_depth",
+                  mod_simu_depths_and_genotyping_ui("simu_depths_and_genotyping_ui_1")
           ),
           tabItem(tabName = "probs",
+                  mod_simu_genotype_probabilities_ui("simu_genotype_probabilities_ui_1")
           ),
           tabItem(tabName = "roc",
+                  mod_simu_roc_curves_ui("simu_roc_curves_ui_1")
           ),
           tabItem(tabName = "ind_size",
+                  mod_simu_map_size_each_family_ui("simu_map_size_each_family_ui_1")
           ),
           tabItem(tabName = "all_size",
+                  mod_simu_overview_map_size_ui("simu_overview_map_size_ui_1")
           ),
           tabItem(tabName = "phases",
+                  mod_simu_phases_ui("simu_phases_ui_1")
           ),
           tabItem(tabName = "map",
+                  mod_simu_maps_ui("simu_maps_ui_1")
           ),
           tabItem(tabName = "haplo",
+                  mod_simu_progeny_haplotypes_ui("simu_progeny_haplotypes_ui_1")
           ),
           tabItem(tabName = "counts",
+                  mod_simu_breakpoints_counts_ui("simu_breakpoints_counts_ui_1")
           ),
           tabItem(tabName = "cmxmb",
+                  mod_simu_cM_Mb_ui("simu_cM_Mb_ui_1")
           ),
           # Empirical
           tabItem(tabName = "filters_emp",

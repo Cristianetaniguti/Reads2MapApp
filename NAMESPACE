@@ -2,9 +2,11 @@
 
 export(joint_same_depth)
 export(run_app)
+import(GUSMap)
 import(dplyr)
 import(ggplot2)
 import(largeList)
+import(onemap)
 import(shiny)
 import(shinydashboard)
 import(shinymanager)
