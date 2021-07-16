@@ -175,25 +175,38 @@ app_ui <- function(request) {
           ),
           # Empirical
           tabItem(tabName = "filters_emp",
+                  mod_emp_filters_ui("emp_filters_ui_1")
           ),
           tabItem(tabName = "marker_type_emp",
+                  mod_emp_markers_type_ui("emp_markers_type_ui_1")
           ),
           tabItem(tabName = "times_emp",
+                  mod_emp_times_ui("emp_times_ui_1")
           ),
           tabItem(tabName = "disper_depth_emp",
+                  mod_emp_depth_and_genotyping_ui("emp_depth_and_genotyping_ui_1")
           ),
           tabItem(tabName = "ind_size_emp",
+                  mod_emp_ind_size_ui("emp_ind_size_ui_1")
+          ),
+          tabItem(tabName = "heatmaps_emp",
+                  mod_emp_plotly_heatmaps_ui("emp_plotly_heatmaps_ui_1")
           ),
           tabItem(tabName = "map_emp",
+                  mod_emp_maps_ui("emp_maps_ui_1")
           ),
           tabItem(tabName = "haplo_emp",
+                  mod_emp_progeny_haplotypes_ui("emp_progeny_haplotypes_ui_1")
           ),
           tabItem(tabName = "counts_emp",
+                  mod_emp_breakpoints_count_ui("emp_breakpoints_count_ui_1")
           ),
           tabItem(tabName = "cmxmb_emp",
+                  mod_emp_cM_Mb_ui("emp_cM_Mb_ui_1")
           ),
           # workflow times
           tabItem(tabName = "wf_times",
+                  mod_workflow_tasks_times_ui("workflow_tasks_times_ui_1")
           )
         )
       )

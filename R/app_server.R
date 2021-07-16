@@ -105,5 +105,47 @@ app_server <- function( input, output, session ) {
   callModule(mod_simu_cM_Mb_server, 
              "simu_cM_Mb_ui_1", 
              datas_simu = datas$datas_simu)
-
+  
+  callModule(mod_emp_filters_server, 
+             "emp_filters_ui_1", 
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_emp_markers_type_server, 
+             "emp_markers_type_ui_1", 
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_emp_times_server,
+             "emp_times_ui_1",
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_emp_depth_and_genotyping_server,
+             "emp_depth_and_genotyping_ui_1",
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_emp_maps_server,
+             "emp_maps_ui_1", 
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_emp_ind_size_server, 
+             "emp_ind_size_ui_1",
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_emp_plotly_heatmaps_server,
+             "emp_plotly_heatmaps_ui_1",
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_emp_progeny_haplotypes_server, 
+             "emp_progeny_haplotypes_ui_1",
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_emp_breakpoints_count_server, 
+             "emp_breakpoints_count_ui_1",
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_emp_cM_Mb_server,"emp_cM_Mb_ui_1",
+             datas_emp = datas$datas_emp)
+  
+  callModule(mod_workflow_tasks_times_server, 
+             "workflow_tasks_times_ui_1")
+  
 }
