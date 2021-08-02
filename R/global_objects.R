@@ -55,11 +55,6 @@ colnames(empirical_datasets) <- c("ID", "FASTQ files",
 
 
 #####################
-# temp directory
-#####################
-temp_dir <- tempdir()
-
-#####################
 # Choices
 #####################
 ## Permanently choices - If add more softwares in workflow comparision this part requires update

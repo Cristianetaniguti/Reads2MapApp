@@ -49,6 +49,10 @@ prepare_datas_simu <- function(x, example_simu){
       list_files <- lapply(list_files, "[", -1)
       list_files <- lapply(list_files, sort)
       
+      # Remove GATK Qual plots
+      if(length(grep("QualPlots", list_files)) > 0)
+        list_files <- lapply(list_files, function(x) x[-grep("QualPlots", x)])
+      
       # Data
       datas <- list()
       for(i in 1:length(list_files[[1]])){
@@ -56,7 +60,7 @@ prepare_datas_simu <- function(x, example_simu){
       }
       
       ## Tables
-      data1_depths_geno_prob <- data2_maps <- data3_filters <- vector()
+      data1_depths_geno_prob <- data2_maps <- data3_filters <- data10_counts <- vector()
       data4_times <- data5_SNPCall_efficiency <- simu_haplo <- vector()
       data6 <- names_rdatas  <- list()
       #seeds <- depths <- seeds_choices <- depths_choices <- vector()

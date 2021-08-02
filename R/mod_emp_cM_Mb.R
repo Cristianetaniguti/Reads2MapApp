@@ -89,7 +89,7 @@ mod_emp_cM_Mb_server <- function(input, output, session, datas_emp){
     })
     
     output$cmxmb_emp_out <- renderPlot({
-      ggplot(button(), aes(x=cm, y=pos)) +
+      ggplot(button, aes(x=rf, y=pos)) +
         geom_point(size=2, shape=20) + facet_grid(SNPCall + CountsFrom~GenoCall, scales = "free") +
         xlab("cM") + ylab("Mb") + theme_bw()
     })
