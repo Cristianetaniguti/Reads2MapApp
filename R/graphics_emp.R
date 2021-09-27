@@ -1,15 +1,108 @@
+#' Read empirical input data
+#' 
+#' @import vroom
+#' @import largeList
+prepare_datas_emp <- function(x, example_emp){
+  # This function makes adjustments in the input tar.gz file to be processed inside the app
+  # It returns six data objects and the app options in a list format
+    if(!is.null(x)){
+      data.gz <- x[,4]
+      path = "data/"
+    } else if(is.null(example_emp)){
+      cat("Wait credentials\n")
+      data.gz <- "Wait"
+    } else { ######## Available examples
+      # if(example_emp == "populus"){
+      #   data.gz <- system.file("ext", "populus/biallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else  if(example_emp == "populus_multi"){
+      #   data.gz <- system.file("ext", "populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else  if(example_emp == "populus_cont"){
+      #   data.gz <- system.file("ext", "populus/biallelics/with_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      #} else  
+      # 
+      # if(example_emp == "populus_bi8.5"){
+      #   data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/biallelics/EmpiricalReads_results.tar.gz"
+      # } else  if(example_emp == "populus_multi8.5"){
+      #   data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/multiallelics/EmpiricalReads_results.tar.gz"
+      # } 
+      
+      # else if(example_emp == "eucalyptus"){
+      #   data.gz <- system.file("ext", "eucalyptus/biallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "toy_sample"){
+      #   data.gz <- system.file("ext", "toy_sample_emp/temp/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      if(example_emp == "toy_sample_multi"){
+         data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      }
+    }
+    
+    if(data.gz == "Wait"){
+      cat("Waiting...\n")
+    } else {
+      path_dir <- tempdir()
+      list_files <- list()
+      for(i in 1:length(data.gz)){
+        untar(data.gz[i], exdir = path_dir)
+        list_files[[i]] <- untar(data.gz[i], list = T)
+      }
+
+      list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
+      list_files <- lapply(list_files, "[", -1)
+      
+      # Data
+      datas <- list()
+      for(i in 1:length(list_files[[1]])){
+        datas[[i]] <- sapply(list_files, "[", i)
+      }
+      
+      for_rm <- sapply(list_files, "[", -grep("sequences",datas))
+      
+      temp_dat <- readList(datas[[grep("sequences",datas)]], index = 1)
+      inds <- rownames(temp_dat[[1]]$data.name$geno)
+      inds_list <- as.list(1:length(inds))
+      names(inds_list) <- paste0(inds, " (", inds, ")")
+      
+      data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
+      data5 <- base::get(data5)
+      
+      ## Tables
+      idx <- grep("multi_names", datas)
+      if(length(idx) > 0){
+        multi_names <- load(datas[[idx]])
+        multi_names <- base::get(multi_names)
+      } else { multi_names = 0}
+      
+      names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t")
+      names_rdatas <- as.data.frame(names_rdatas)[,1]
+      names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+      result_list <- list("data1" = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]]), 
+                          "data2" = vroom(datas[[grep("data2_maps.tsv.gz", datas)]]), 
+                          "data3" = vroom(datas[[grep("data3_filters.tsv.gz", datas)]]), 
+                          "data4" = vroom(datas[[grep("data4_times.tsv.gz", datas)]]), 
+                          "data5" = data5, 
+                          "names" = names_rdatas, 
+                          "ind_names" = inds_list,
+                          "sequence.llo" = datas[[grep("sequences",datas)]],
+                          "multi_names" = multi_names)
+      
+      system(paste("rm -r", paste(for_rm, collapse = " ")))
+      
+      result_list
+    }
+}
+
 #' Functions to build graphics for the empirical datas
 #' 
 errorProb_graph_emp <- function(data, genotypes, from){
   
   if(from == "vcf"){
     geno <- data$gt.vcf
-    colors <- rainbow(length(levels(geno)))
+    colors <- rainbow(length(levels(as.factor(geno))))
     names(colors) <- levels(geno)
   } else {
-    colors <- rainbow(3)
-    names(colors) <-  c("missing", "homozygous", "heterozygote")
     geno <- data$gt.onemap
+    geno <- data$gt.vcf
+    colors <- rainbow(length(levels(as.factor(geno))))
+    names(colors) <- levels(geno)
   }
   
   if(genotypes == "estimated_genotypes"){

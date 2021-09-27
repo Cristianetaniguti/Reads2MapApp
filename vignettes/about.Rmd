@@ -56,7 +56,8 @@ By now, only one chromosome is evaluated in both workflows. However, the Empiric
 To not overload this server, we limited the upload size to 500Mb by a user, but if you have larger result files you can run the App locally via GitHub using:
 
 ```{r, eval=FALSE}
-runGitHub('Cristianetaniguti/Reads2MapApp')
+devtools::install_github('Cristianetaniguti/Reads2MapApp')
+Reads2MapApp::run_app()
 ```
 
 It will also install all R packages dependencies needed for the App. If you do not want to install anything on your computer, you can access the App running the docker container:
