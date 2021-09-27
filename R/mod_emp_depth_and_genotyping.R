@@ -153,7 +153,7 @@ mod_emp_depth_and_genotyping_server <- function(input, output, session, datas_em
                          and genotype calling using the same read counts, we did not find a way to substitute
                          the depths already used. Please select other option."))
         }
-        data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
+        data <- result_list[[1]] %>% filter(GenoCall == geno) %>%
           filter(SNPCall == input$SNPCall1) %>%
           filter(CountsFrom == input$CountsFrom1)
         incProgress(0.5, detail = paste("Doing part", 2))
@@ -188,7 +188,7 @@ mod_emp_depth_and_genotyping_server <- function(input, output, session, datas_em
                          and genotype calling using the same read counts, we did not find a way to
                          substitute the depths already used. Please select other option."))
         }
-        data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
+        data <- result_list[[1]] %>% filter(GenoCall == geno) %>%
           filter(SNPCall == input$SNPCall2) %>%
           filter(CountsFrom == input$CountsFrom2)
         incProgress(0.5, detail = paste("Doing part", 2))

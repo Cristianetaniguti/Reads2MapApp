@@ -62,7 +62,7 @@ mod_emp_markers_type_server <- function(input, output, session, datas_emp){
         data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb) %>%
           filter(SNPCall %in% input$SNPCall) %>%
           filter(CountsFrom %in% input$CountsFrom) %>%
-          group_by(mk.type, GenoCall, SNPCall, CountsFrom) %>%
+          group_by(type, GenoCall, SNPCall, CountsFrom) %>%
           summarise(n = n()) %>%
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
         perfumaria(data)

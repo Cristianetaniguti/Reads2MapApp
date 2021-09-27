@@ -12,27 +12,27 @@ prepare_datas_emp <- function(x, example_emp){
       cat("Wait credentials\n")
       data.gz <- "Wait"
     } else { ######## Available examples
-      # if(input$example_emp == "populus"){
+      # if(example_emp == "populus"){
       #   data.gz <- system.file("ext", "populus/biallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else  if(input$example_emp == "populus_multi"){
+      # } else  if(example_emp == "populus_multi"){
       #   data.gz <- system.file("ext", "populus/multiallelics/without_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else  if(input$example_emp == "populus_cont"){
+      # } else  if(example_emp == "populus_cont"){
       #   data.gz <- system.file("ext", "populus/biallelics/with_contaminants/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
       #} else  
+      # 
+      # if(example_emp == "populus_bi8.5"){
+      #   data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/biallelics/EmpiricalReads_results.tar.gz"
+      # } else  if(example_emp == "populus_multi8.5"){
+      #   data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/multiallelics/EmpiricalReads_results.tar.gz"
+      # } 
       
-      if(example_emp == "populus_bi8.5"){
-        data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/biallelics/EmpiricalReads_results.tar.gz"
-      } else  if(example_emp == "populus_multi8.5"){
-        data.gz <- "/home/rstudio/Reads2MapApp/inst/ext/populus8.5/multiallelics/EmpiricalReads_results.tar.gz"
-      } 
-      
-      # else if(input$example_emp == "eucalyptus"){
+      # else if(example_emp == "eucalyptus"){
       #   data.gz <- system.file("ext", "eucalyptus/biallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(input$example_emp == "toy_sample"){
+      # } else if(example_emp == "toy_sample"){
       #   data.gz <- system.file("ext", "toy_sample_emp/temp/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(input$example_emp == "toy_sample_multi"){
-      #   data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # }
+      if(example_emp == "toy_sample_multi"){
+         data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      }
     }
     
     if(data.gz == "Wait"){
@@ -96,12 +96,13 @@ errorProb_graph_emp <- function(data, genotypes, from){
   
   if(from == "vcf"){
     geno <- data$gt.vcf
-    colors <- rainbow(length(levels(geno)))
+    colors <- rainbow(length(levels(as.factor(geno))))
     names(colors) <- levels(geno)
   } else {
-    colors <- rainbow(3)
-    names(colors) <-  c("missing", "homozygous", "heterozygote")
     geno <- data$gt.onemap
+    geno <- data$gt.vcf
+    colors <- rainbow(length(levels(as.factor(geno))))
+    names(colors) <- levels(geno)
   }
   
   if(genotypes == "estimated_genotypes"){

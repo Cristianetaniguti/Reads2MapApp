@@ -25,7 +25,8 @@ mod_upload_ui <- function(id){
                    tags$h4(tags$b("Upload SimulatesReads2Map results:")),
                    "To not overload our server, we limited the upload size to 500MB.", 
                    "If your results have larger size, please run the app locally using:", br(),
-                   tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(), br(),
+                   tags$code("devtools::install_github('Cristianetaniguti/Reads2MapApp')"), br(),
+                   tags$code("Reads2MapApp::run_app()"), br(),
                    # Copy the line below to make a file upload manager
                    "If you have more than one depth value, submit all them together.", br(),
                    fileInput(ns("simulatedreads"), label = h6("File: SimulatedReads2Map_<depth>.tar.gz"), multiple = T),
@@ -52,7 +53,8 @@ mod_upload_ui <- function(id){
                    tags$h4(tags$b("Upload EmpiricalReads2Map results:")),
                    "To not overload our server, we limited the upload size to 500MB.", 
                    "If your results have larger size, please run the app locally using:", br(),
-                   tags$code("runGitHub('Cristianetaniguti/Reads2MapApp')"), br(), br(),
+                   tags$code("devtools::install_github('Cristianetaniguti/Reads2MapApp')"), br(),
+                   tags$code("Reads2MapApp::run_app()"), br(),
                    # Copy the line below to make a file upload manager
                    "If you have more than one depth value, submit all them together.", br(),
                    fileInput(ns("empiricalreads"), label = h6("File: EmpiricalReads2Map_<depth>.tar.gz"), multiple = T, accept = ".tar.gz"),
@@ -62,15 +64,15 @@ mod_upload_ui <- function(id){
                    "See description of each dataset in the tables bellow.",
                    selectInput(ns("example_emp"), label = h4(tags$b("EmpiricalReads2Map.wdl results")), 
                                choices = list(
-                                 "P. tremula - without multiallelics	" = "populus_bi8.5",
-                                 "P. tremula - with multiallelics	" = "populus_multi8.5"),
+                               # "P. tremula - without multiallelics	" = "populus_bi8.5",
+                               # "P. tremula - with multiallelics	" = "populus_multi8.5"),
                                # "P. tremula - with contaminants; without multiallelics" = "populus_cont",
                                # "P. tremula - without multiallelics	" = "populus",
                                # "P. tremula - with multiallics" = "populus_multi",
                                # #"Eucalyptus - without multiallelics" = "eucalyptus",
                                # "Toy sample without multiallelics " = "toy_sample",
-                               # "Toy sample with multiallelics" = "toy_sample_multi"), 
-                               selected = "populus_multi8.5"),
+                                "Toy sample with multiallelics" = "toy_sample_multi"), 
+                               selected = "toy_sample_multi"),
                  )
              )
       ),

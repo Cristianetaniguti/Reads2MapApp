@@ -83,21 +83,21 @@ mod_emp_ind_size_server <- function(input, output, session, datas_emp){
         data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall) %>%
           filter(CountsFrom %in% input$CountsFrom) %>%
-          mutate(interv.diff = sqrt(c(0,cm[-1] - cm[-length(cm)])^2))
+          mutate(interv.diff = sqrt(c(0,rf[-1] - rf[-length(rf)])^2))
         
         data <- perfumaria(data)
         
         data_df <- data %>% group_by(GenoCall, SNPCall, CountsFrom) %>%
-          summarise(tot_size = round(cm[length(cm)],3),
+          summarise(tot_size = round(rf[length(rf)],3),
                     n = n())
         
-        data <- data %>% mutate(interv.diff = sqrt(c(0,cm[-1] - cm[-length(cm)])^2))
+        data <- data %>% mutate(interv.diff = sqrt(c(0,rf[-1] - rf[-length(rf)])^2))
         
         data_n <- data %>%  group_by(GenoCall, SNPCall, CountsFrom) %>%
           summarise(n = n())
         
         data<- merge(data, data_n) %>%
-          gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -mk.type, -phase, - CountsFrom, -cm)
+          gather(key, value, -GenoCall, -SNPCall, -mks, -pos, -type, -phases, - CountsFrom, -rf)
         
         incProgress(0.5, detail = paste("Doing part", 2))
         

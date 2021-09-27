@@ -90,7 +90,7 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
         filter(CountsFrom == input$CountsFrom)
       
       incProgress(0.5, detail = paste("Doing part", 3))
-      data <-   data.frame(data$mks, data$cm)
+      data <-   data.frame(data$mks, data$rf)
       outfile <- tempfile(pattern="file", tmpdir = tempdir(), fileext = ".png")
       list(data, outfile)
     })
