@@ -25,7 +25,7 @@ workflow_times <- function(log.file, interactive=FALSE){
   dates.done <- as.POSIXct(paste(done[,2], done[,3]), format="[%m/%d/%Y %H:%M:%OS]")
   done.df <- data.frame(dates.done, id= factor(done[,7], levels = unique(as.character(done[,7]))))
 
-  tot.df <- merge(done.df, start.df)
+  tot.df <- merge(done.df, start.df, by = "id")
 
   tot.df <- cbind(tot.df, diff=difftime(tot.df[,2], tot.df[,3], units='mins'))
   
