@@ -26,8 +26,7 @@ mod_emp_maps_ui <- function(id){
                  radioButtons(ns("ErrorProb"), label = p("Genotyping method"),
                               choices = maps_choice,
                               selected = "updog"),
-             ),
-             box(solidHeader = T,
+                 
                  radioButtons(ns("SNPCall"), label = p("SNP calling method"),
                               choices = SNPCall_choice,
                               selected = "gatk"),
@@ -36,19 +35,19 @@ mod_emp_maps_ui <- function(id){
                  radioButtons(ns("Global0.05"), label = p("Error rate"),
                               choices = global0.05_choices,
                               selected = "FALSE"),
-             ),
-             box(solidHeader = T,
+                 
                  radioButtons(ns("CountsFrom"), label = p("Counts from"),
                               choices = CountsFrom_choice,
-                              selected = "vcf"),
-                 div(downloadButton(ns("map_emp_out_down")),style="float:right")
+                              selected = "vcf"), hr(),
+                 div(downloadButton(ns("map_emp_out_down"), label = "Download sequence"),style="float:right"), br(), br(),
+                 div(downloadButton(ns("map_emp_onemap_down"), label = "Download PDF with all onemap heatmaps"),style="float:right")
              )
       ),
       column(width = 4,
              box(title = "Genetic map",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  actionButton(ns("go2"), "Update",icon("refresh")),
-                 imageOutput(ns("map_emp_out"), width = "100%", height = "100%")
+                 imageOutput(ns("map_emp_out"), width = "100%", height = "100%"),
              )
       )
     )
@@ -56,6 +55,10 @@ mod_emp_maps_ui <- function(id){
 }
 
 #' emp_maps Server Functions
+#' 
+#' @importFrom ggpubr ggarrange
+#' @import onemap
+#' @import GUSMap
 #'
 #' @noRd 
 mod_emp_maps_server <- function(input, output, session, datas_emp){
@@ -65,7 +68,7 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
       incProgress(0, detail = paste("Doing part", 1))
       
       if(input$Global0.05){
-        if(input$ErrorProb == "OneMap_version2"){
+        if(input$ErrorProb == "SNPCallerdefault"){
           geno <- paste0("SNPCaller", 0.05)
         } else if (input$ErrorProb == "gusmap"){
           stop(safeError("Gusmap do not build plotly heatmaps.
@@ -77,12 +80,7 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
         geno <- input$ErrorProb
       }
       
-      if(input$CountsFrom == "bam" & (input$ErrorProb == "OneMap_version2" | input$ErrorProb == "SNPCaller")){
-        stop(safeError("This option is not available.
-                         The SNP callers performs together the SNP and genotype calling using
-                         the same read counts, we did not find a way to substitute the depths
-                         already used. Please select other option."))
-      }
+      stop_bam(input$CountsFrom, input$ErrorProb)
       
       incProgress(0.25, detail = paste("Doing part", 2))
       data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
@@ -92,13 +90,14 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
       incProgress(0.5, detail = paste("Doing part", 3))
       data <-   data.frame(data$mks, data$rf)
       outfile <- tempfile(pattern="file", tmpdir = tempdir(), fileext = ".png")
+      print(outfile)
       list(data, outfile)
     })
   })
   
   output$map_emp_out <- renderImage({
     draw_map2(button2()[[1]], output = button2()[[2]], col.tag = "darkblue", pos = T, id = F)
-    
+    print(button2()[[2]])
     list(src = button2()[[2]],
          contentType = 'image/png',
          width = 200,
@@ -108,28 +107,9 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
   button1 <- eventReactive(input$go1, {
     withProgress(message = 'Building heatmap', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
-      if(input$Global0.05){
-        if(input$ErrorProb == "OneMap_version2" | input$ErrorProb == "SNPCaller"){
-          geno <- paste0("default", 0.05)
-        } else if (input$ErrorProb == "gusmap"){
-          stop(safeError("Gusmap do not allow to change the error rate.
-                           Please, select other option."))
-        } else {
-          geno <- paste0(input$ErrorProb, 0.05)
-        }
-      } else {
-        if(input$ErrorProb == "OneMap_version2" | input$ErrorProb == "SNPCaller"){
-          geno <- "default"
-        } else {
-          geno <- input$ErrorProb
-        }
-      }
       
-      if(input$CountsFrom == "bam" & (input$ErrorProb == "OneMap_version2" | input$ErrorProb == "SNPCaller")){
-        stop(safeError("This option is not available. The SNP callers performs together the SNP
-                         and genotype calling using the same read counts, we did not find a way to
-                         substitute the depths already used. Please select other option."))
-      }
+      geno <- test_geno_emp(input$Global0.05, input$ErrorProb)
+      stop_bam(input$CountsFrom, input$ErrorProb)
       
       temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", geno, ".RData")
       
@@ -158,7 +138,7 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
     }
   })
   
-  ## download
+  ## download sequence
   output$map_emp_out_down <- downloadHandler(
     filename =  function() {
       tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".RData")
@@ -167,29 +147,9 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
     content = function(file) {
       withProgress(message = 'Building heatmap', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05){
-          if(input$ErrorProb == "OneMap_version2" | input$ErrorProb == "SNPCaller"){
-            geno <- paste0("default", 0.05)
-          } else if (input$ErrorProb == "gusmap"){
-            stop(safeError("Gusmap do not allow to change the error rate.
-                             Please, select other option."))
-          } else {
-            geno <- paste0(input$ErrorProb, 0.05)
-          }
-        } else {
-          if(input$ErrorProb == "OneMap_version2" | input$ErrorProb == "SNPCaller"){
-            geno <- "default"
-          } else {
-            geno <- input$ErrorProb
-          }
-        }
         
-        if(input$CountsFrom == "bam" & (input$ErrorProb == "OneMap_version2" | input$ErrorProb == "SNPCaller")){
-          stop(safeError("This option is not available. The SNP callers performs together the SNP
-                           and genotype calling using the same read counts, we did not find a way to
-                           substitute the depths already used. Please select other option."))
-        }
-        
+        geno <- test_geno_emp(input$Global0.05, input$ErrorProb)
+        stop_bam(input$CountsFrom, input$ErrorProb)
         temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", geno, ".RData")
         
         incProgress(0.25, detail = paste("Doing part", 2))
@@ -206,6 +166,78 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
           incProgress(0.5, detail = paste("Doing part", 3))
           save(data, file=file)
         }
+      })
+    }
+  )
+  
+  # with bug!!
+  # ## download all gusmap heatmaps
+  # output$map_emp_gusmap_down <- downloadHandler(
+  #   filename =  function() {
+  #     tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".pdf")
+  #   },
+  #   # content is a function with argument file. content writes the plot to the device
+  #   content = function(file) {
+  #     withProgress(message = 'Building heatmap', value = 0, {
+  #       incProgress(0, detail = paste("Doing part", 1))
+  #       
+  #       part_plus <- 1/(length(datas_emp()[[5]]))
+  #       part <- 0
+  #       part.n <- 2
+  #       pdf(file = file)
+  #       for(i in 1:length(datas_emp()[[5]])){
+  #         part <- part + part_plus
+  #         part.n <- part.n + 1
+  #         data <- datas_emp()[[5]][[i]]
+  #         data$rf_2pt()
+  #         data$plotChr(mat="rf", parent = "both")
+  #         #text(x=0.9, y=.1,names(datas_emp()[[5]])[i])
+  #         incProgress(part, detail = paste("Doing part", part.n))
+  #       } 
+  #       dev.off()
+  #     })
+  #   }
+  # )
+  
+  ## download all onemap heatmaps
+  output$map_emp_onemap_down <- downloadHandler(
+    filename =  function() {
+      tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      withProgress(message = 'Building heatmap', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        idx.0.05 <- grep("0.05", datas_emp()[[6]])
+        idx.rest <- c(1:length(datas_emp()[[6]]))[-idx.0.05]
+        
+        part_plus <- 1/(length(datas_emp()[[6]][-idx.0.05]))
+    
+        part <- 0
+        part.n <- 2
+        p <- list()
+        for(i in 1:length(idx.rest)){
+          part <- part + part_plus
+          part.n <- part.n + 1
+          data <- readList(datas_emp()[[8]], index = idx.rest[i])
+          data <- data[[1]]
+          class(data) <- "sequence"
+          name <- strsplit(datas_emp()[[6]][idx.rest[i]], "[.]")
+          name <- paste0(name[[1]][1:(length(name[[1]])-1)],collapse = ".")
+          
+          p[[i]] <- rf_graph_table(data, inter = F, mrk.axis = "none",main = name)
+          print(part)
+          incProgress(part, detail = paste("Doing part", part.n))
+        }
+        
+        int <- sort(unique(c(seq(0,length(p),6), length(p))))
+        
+        pdf(file = file, onefile = T)
+        for(i in 2:length(int)){
+          print(ggarrange(plotlist = p[(int[i-1]+1):int[i]], common.legend = T, ncol = 2, nrow = 3))
+        }
+        dev.off()
       })
     }
   )

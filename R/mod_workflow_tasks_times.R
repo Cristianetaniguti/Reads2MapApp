@@ -23,14 +23,12 @@ mod_workflow_tasks_times_ui <- function(id){
       box(solidHeader = T,
           # Copy the line below to make a select box
           selectInput(ns("example_wf"), label = h4(tags$b("Examples")),
-                      choices = list("P.tremula empirical SNP calling" = "populus_snpcalling",
-                                     "P.tremula empirical maps with contaminant" = "populus_emp_cont",
-                                     "P.tremula empirical maps without contaminant" = "populus_emp",
-                                     "Eucalyptus empirical SNP calling" = "eucalyptus_snpcalling",
-                                     "Eucalyptus empirical maps" = "eucalyptus_map",
-                                     "P. tremula simulation 37cM of chromosome 10 -  5 families pop size 200 depth 20" = "populus_simu_5fam_pop200_depth20"
+                      choices = list("Roses SNP calling" = "roses_snpcalling",
+                                     "Roses genotype calling + maps" = "roses_maps",
+                                     "Acca SNP calling" = "acca_snpcalling",
+                                     "Eucalyptus SNP calling" = "euc_snpcalling"
                       ),
-                      selected = "populus_emp"),
+                      selected = "roses_snpcalling"),
       )
     ),
     box(solidHeader = T, collapsible = FALSE, status="primary",
@@ -54,27 +52,22 @@ mod_workflow_tasks_times_server <- function(input, output, session){
     withProgress(message = 'Building heatmap', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       # Empiricals
-      ## Populus snpcalling
-      if(input$example_wf=="populus_snpcalling"){
-        paste(system.file("ext","populus/biallelics/slurm-67440032_snpcalling_popu.out", package = "Reads2MapApp"))
+      ## Roses snpcalling
+      if(input$example_wf=="roses_snpcalling"){
+        paste(system.file("ext","workflow_times/cromwell_snpcalling_rose_fam2.log", package = "Reads2MapApp"))
         
-        ## Populus maps
-      } else if(input$example_wf=="populus_emp_cont"){
-        paste(system.file("ext","populus/biallelics/with_contaminants/maps_emp_populus.log", package = "Reads2MapApp"))
-      } else if(input$example_wf=="populus_emp"){
-        paste(system.file("ext","populus/biallelics/without_contaminants/populus_rmind.log", package = "Reads2MapApp"))
+        # Roses maps
+      } else if(input$example_wf=="roses_maps"){
+        paste(system.file("ext","workflow_times/maps_rose.log", package = "Reads2MapApp"))
         
         ## Eucalyptus snpcalling
-      } else if(input$example_wf=="eucalyptus_snpcalling"){
-        paste(system.file("ext","eucalyptus/biallelics/slurm-67472436_snpcalling_euc.out", package = "Reads2MapApp"))
+      } else if(input$example_wf=="euc_snpcalling"){
+        paste(system.file("ext","workflow_times/cromwell_snpcalling_euc.log", package = "Reads2MapApp"))
         
-        ## Eucalyptus maps
-      } else if(input$example_wf=="eucalyptus_map"){
-        paste(system.file("ext","eucalyptus/biallelics/euc.log", package = "Reads2MapApp"))
+        ## Acca snpcalling
+      } else if(input$example_wf=="acca_snpcalling"){
+        paste(system.file("ext","workflow_times/cromwell_snpcalling_acca.log", package = "Reads2MapApp"))
         
-        # Simulations
-      } else if(input$example_wf=="populus_simu_5fam_pop200_depth20"){
-        paste(system.file("ext","simulations/RADinitio37/biallelics/SimulatedReads.bi.200.20.log", package = "Reads2MapApp"))
       }
     })
   })

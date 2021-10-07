@@ -7,18 +7,23 @@
 #' @return ggplot boxplot with time spent by each task
 #' 
 workflow_times <- function(log.file, interactive=FALSE){
-  path_dir <- tempdir()
-  system(paste0("grep 'job id' ",log.file, " > ",path_dir, "/temp.starting"))
-  system(paste0("grep 'to Done' ",log.file, " > ",path_dir, "/temp.done"))
+
+  input.file <- read.table(log.file, header = F, sep = "~")
+  input.file <- t(input.file)
   
-  start <- read.table(paste0(path_dir,"/temp.starting"))
-  gsub(pattern = "[[]", replacement = "", x = start$V2)
-  dates.start <- as.POSIXct(paste(start$V2, start$V3), format="[%m/%d/%Y %H:%M:%OS]")
-  start.df <- data.frame(dates.start, id=factor(start$V7, levels = unique(as.character(start$V7))))
+  start <- input.file[grep("job id", input.file)]
+  start <- sapply(start, function(x) strsplit(x, " "))
+  names(start) <- NULL
+  start <- do.call(rbind, start)
+  dates.start <- as.POSIXct(paste(start[,2], start[,3]), format="[%m/%d/%Y %H:%M:%OS]")
+  start.df <- data.frame(dates.start, id=factor(start[,7], levels = unique(as.character(start[,7]))))
   
-  done <- read.table(paste0(path_dir,"/temp.done"))
-  dates.done <- as.POSIXct(paste(done$V2, done$V3), format="[%m/%d/%Y %H:%M:%OS]")
-  done.df <- data.frame(dates.done, id= factor(done$V7, levels = unique(as.character(done$V7))))
+  done <- input.file[grep("to Done", input.file)]
+  done <- sapply(done, function(x) strsplit(x, " "))
+  names(done) <- NULL
+  done <- do.call(rbind, done)
+  dates.done <- as.POSIXct(paste(done[,2], done[,3]), format="[%m/%d/%Y %H:%M:%OS]")
+  done.df <- data.frame(dates.done, id= factor(done[,7], levels = unique(as.character(done[,7]))))
 
   tot.df <- merge(done.df, start.df)
 

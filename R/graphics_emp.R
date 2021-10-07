@@ -30,7 +30,9 @@ prepare_datas_emp <- function(x, example_emp){
       #   data.gz <- system.file("ext", "eucalyptus/biallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
       # } else if(example_emp == "toy_sample"){
       #   data.gz <- system.file("ext", "toy_sample_emp/temp/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      if(example_emp == "toy_sample_multi"){
+      if(example_emp == "rose"){
+        data.gz <- system.file("ext", "rose/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "toy_sample_multi"){
          data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
       }
     }
@@ -45,7 +47,7 @@ prepare_datas_emp <- function(x, example_emp){
         list_files[[i]] <- untar(data.gz[i], list = T)
       }
 
-      list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
+      list_files <- lapply(list_files, function(x) file.path(path_dir, x,sep="")) 
       list_files <- lapply(list_files, "[", -1)
       
       # Data
@@ -64,13 +66,6 @@ prepare_datas_emp <- function(x, example_emp){
       data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
       data5 <- base::get(data5)
       
-      ## Tables
-      idx <- grep("multi_names", datas)
-      if(length(idx) > 0){
-        multi_names <- load(datas[[idx]])
-        multi_names <- base::get(multi_names)
-      } else { multi_names = 0}
-      
       names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t")
       names_rdatas <- as.data.frame(names_rdatas)[,1]
       names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
@@ -81,8 +76,7 @@ prepare_datas_emp <- function(x, example_emp){
                           "data5" = data5, 
                           "names" = names_rdatas, 
                           "ind_names" = inds_list,
-                          "sequence.llo" = datas[[grep("sequences",datas)]],
-                          "multi_names" = multi_names)
+                          "sequence.llo" = datas[[grep("sequences",datas)]])
       
       system(paste("rm -r", paste(for_rm, collapse = " ")))
       
@@ -93,6 +87,10 @@ prepare_datas_emp <- function(x, example_emp){
 #' Functions to build graphics for the empirical datas
 #' 
 errorProb_graph_emp <- function(data, genotypes, from){
+  
+  # Not consider NA
+  if(length(which(is.na(data$gt.vcf))) > 0)
+    data <- data[-which(is.na(data$gt.vcf)),]
   
   if(from == "vcf"){
     geno <- data$gt.vcf
@@ -105,11 +103,17 @@ errorProb_graph_emp <- function(data, genotypes, from){
     names(colors) <- levels(geno)
   }
   
+  # Parents
+  parents <- apply(data[,10:13], 1, function(x) all(is.na(x)))
+  
   if(genotypes == "estimated_genotypes"){
-    data %>% ggplot(aes(x=ref, y=alt, color=geno)) + 
+    data %>% ggplot(aes(x=ref, y=alt, color=geno, shape = parents)) + 
       geom_point(alpha = 0.2) +
       labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
-      scale_colour_manual(name="Genotypes", values = colors) + theme_bw()
+      scale_colour_manual(name="Genotypes", values = colors) + 
+      scale_shape_manual(values=c(1, 3)) + 
+      guides(colour = guide_legend(override.aes = list(alpha = 1))) + 
+      theme_bw()
   } else if(genotypes == "estimated_errors"){
     errors <- apply(data[,10:13], 1, function(x) {
       if(all(is.na(x))){
@@ -122,7 +126,9 @@ errorProb_graph_emp <- function(data, genotypes, from){
     data %>% ggplot(aes(x=ref, y=alt, color=errors)) + 
       geom_point(alpha = 0.2) +
       labs(title= "Depths",x="ref", y = "alt", color="Genotypes") +
-      scale_colour_gradient(low = "#70ED57", high = "#F62A2C") + theme_bw()
+      scale_colour_gradient(low = "#70ED57", high = "#F62A2C") + 
+      guides(colour = guide_legend(override.aes = list(alpha = 1))) + 
+      theme_bw()
   }
 }
 
@@ -140,13 +146,13 @@ ind_size_graph_emp <- function(data){
     geom_text(aes(label= value), position=position_dodge(width=0.9), vjust=-0.25) +
     scale_y_continuous(expand = c(.1,.1)) +
     labs(x="Genotype call", y = "Number of markers", fill = "SNP call", title = "Number of markers") +
-    scale_fill_viridis_d() + facet_grid(CountsFrom~.) + theme_bw()
+    scale_fill_viridis_d(begin=0, end = 0.6) + facet_grid(CountsFrom~.) + theme_bw()
   
   p2 <- data %>% filter(key == "Distance between markers (cM)") %>% 
     ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
     geom_point(position=position_dodge(width = 0.5)) + 
     labs(x="Genotype call", y = "Distance between markers (cM)", fill = "SNP call", title = "Genetic distances") +
-    scale_color_viridis_d() + facet_grid(CountsFrom~.) + theme_bw()
+    scale_color_viridis_d(begin=0, end = 0.6) + facet_grid(CountsFrom~.) + theme_bw()
                           
   ggarrange(p1,p2, common.legend=T)  
 }
@@ -186,7 +192,7 @@ times_graph_emp <- function(data){
     geom_text(aes(label= round(value,3)), position=position_dodge(width=0.9), vjust=-0.25) +
     scale_y_continuous(expand = c(.1,.1)) +
     scale_fill_viridis_d(begin=0, end = 0.6) + 
-    labs(x = "Genotyping method", y = "", fill="SNP call", title = "Time spent") +
+    labs(x = "Genotyping method", y = "", fill="SNP call", title = "Time spent (seconds)") +
     facet_grid(CountsFrom~., scales = "free") + theme_bw()
   
   ggarrange(p2, p1, common.legend = T)

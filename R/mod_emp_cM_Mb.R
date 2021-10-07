@@ -69,16 +69,7 @@ mod_emp_cM_Mb_server <- function(input, output, session, datas_emp){
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         
-        if(input$Global0.05){
-          geno <- paste0(input$ErrorProb, 0.05)
-          if(any(input$ErrorProb %in% "OneMap_version2"))
-            geno[which(input$ErrorProb == "OneMap_version2")] <- "SNPCaller0.05"
-          if(any(input$ErrorProb %in% "gusmap"))
-            stop(safeError("Gusmap do not allow to change the error rate.
-                           Please, select other option."))
-        } else {
-          geno <- input$ErrorProb
-        }
+        geno <- test_geno(input$Global0.05, input$ErrorProb)
         
         data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall) %>%

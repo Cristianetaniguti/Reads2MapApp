@@ -29,14 +29,7 @@ mod_emp_filters_ui <- function(id){
                fluidPage(
                  checkboxGroupInput(ns("ErrorProb"), label = p("Genotyping method"),
                                     choices = ErrorProb_choice,
-                                    selected = unlist(ErrorProb_choice)),
-                 hr()
-               ),
-               fluidPage(
-                 radioButtons(ns("Global0.05"), label = p("Error rate"),
-                              choices = global0.05_choices,
-                              selected = "FALSE"),
-                 hr()
+                                    selected = unlist(ErrorProb_choice))
                )
              )
       ),
@@ -68,22 +61,8 @@ mod_emp_filters_server <- function(input, output, session, datas_emp){
   button <- eventReactive(input$go, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
-      
-      choosed <- input$ErrorProb
-      if(input$Global0.05){
-        geno <- paste0(choosed, 0.05)
-        if(any(choosed %in% "OneMap_version2") & !any(choosed %in% "SNPCaller") ){
-          geno[which(choosed %in% "OneMap_version2")] <- paste0("SNPCaller", 0.05)
-        } else if(any(choosed %in% "OneMap_version2") & any(choosed %in% "SNPCaller")){
-          geno <- geno[-which(choosed %in% "OneMap_version2")]
-        } else if (any(choosed %in% "gusmap")){
-          stop(safeError("Gusmap do not allow to change the error rate.
-                           Please, select other option."))
-        }
-      } else {
-        geno <- choosed
-      }
-      data <- datas_emp()[[3]] %>% filter(GenoCall %in% geno) %>%
+
+      data <- datas_emp()[[3]] %>% filter(GenoCall %in% input$ErrorProb) %>%
         filter(SNPCall %in% input$SNPCall) %>%
         filter(CountsFrom %in% input$CountsFrom)  %>%
         gather(key, value, -CountsFrom, -GenoCall, -SNPCall) %>%

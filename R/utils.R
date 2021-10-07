@@ -1,8 +1,8 @@
 test_geno <- function(global, error){
   if(global){
     geno <- paste0(error, 0.05)
-    if(any(error %in% "OneMap_version2"))
-      geno[which(error == "OneMap_version2")] <- "SNPCaller0.05"
+    if(any(error %in% "SNPCallerdefault"))
+      geno[which(error == "SNPCallerdefault")] <- "SNPCaller0.05"
     if(any(error %in% "gusmap"))
       stop(safeError("Gusmap do not allow to change the error rate. Please, select other option."))
   } else {
@@ -11,9 +11,24 @@ test_geno <- function(global, error){
   return(geno)
 }
 
+test_geno_emp <- function(global, error){
+  if(global){
+    if(error == "SNPCallerdefault" | error == "SNPCaller"){
+      geno <- paste0("SNPCaller", 0.05)
+    } else if (error == "gusmap"){
+      stop(safeError("Gusmap do not allow to change the error rate. Please, select other option."))
+    } else {
+      geno <- paste0(error, 0.05)
+    }
+  } else {
+    geno <- error
+  }
+  return(geno)
+}
+
 test_geno_with_gus <- function(global, error){
   if(global){
-    if(error == "OneMap_version2"){
+    if(error == "SNPCallerdefault"){
       geno <- paste0("SNPCaller", 0.05)
     } else {
       geno <- paste0(error, 0.05)
@@ -25,7 +40,7 @@ test_geno_with_gus <- function(global, error){
 }
 
 stop_bam <- function(countsfrom, error){
-  if(countsfrom == "bam" & (error == "OneMap_version2" | error == "SNPCaller")){
+  if(countsfrom == "bam" & (error == "SNPCallerdefault" | error == "SNPCaller")){
     stop(safeError("This option is not available. The SNP callers performs together the SNP 
                    and genotype calling using the same read counts, we did not find a way to 
                    substitute the depths already used. Please select other option."))
@@ -44,7 +59,7 @@ perfumaria <- function(data){
                   SuperMASSA = "supermassa", 
                   GUSMap = "gusmap", 
                   updog = "updog", 
-                  OneMap_version2 = "OneMap_version2", 
+                  OneMap_version2 = "SNPCallerdefault", 
                   `freebayes/GATK` = "SNPCaller",
                   `polyRAD (5%)` = "polyrad0.05", 
                   `updog (5%)` = "updog0.05", 
@@ -137,7 +152,7 @@ map_name <- function(depth, seed, geno, fake, snpcall, countsfrom, data_names){
     temp_n <- paste0("map_",seed, "_", depth, "_", snpcall, "_", 
                      countsfrom, "_", geno, "_", fake)
   } else {
-    if(geno == "OneMap_version2") geno <- "default"
+    if(geno == "SNPCallerdefault") geno <- "SNPCallerdefault"
     temp_n <- paste0(seed, "_", depth, "_map_", snpcall, "_", 
                      countsfrom, "_", geno, "_", fake)
   }

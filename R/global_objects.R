@@ -78,7 +78,7 @@ names(overview_choices) <- c("Kappa's coefficient for genotypes",
                              "Kendall's coefficient of correlation for breakpoints",
                              "Time spent (s)")
 
-ErrorProb_choice <- list("OneMap_version2" = "OneMap_version2",
+ErrorProb_choice <- list("OneMap_version2" = "SNPCallerdefault",
                          "polyRAD"="polyrad",
                          "freebayes/GATK"="SNPCaller",
                          "SuperMASSA"="supermassa",
@@ -93,7 +93,7 @@ global0.05_choices <- list("global error of 0.05"=TRUE,
                            "variable error" = FALSE)
 
 maps_choice <- list("GUSMap" = "gusmap",
-                    "OneMap_version2" = "OneMap_version2",
+                    "OneMap_version2" = "SNPCallerdefault",
                     "polyRAD"="polyrad",
                     "freebayes/GATK"="SNPCaller",
                     "SuperMASSA"="supermassa",

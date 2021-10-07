@@ -5,10 +5,14 @@
 #' @import shiny
 #' @noRd
 app_server <- function( input, output, session ) {
+  ####################
+  # Upload size
+  options(shiny.maxRequestSize=200*1024^2)
+  
   #####################
   # Credentials
   ####################
-  passwords <- c(Cris = "DanaBrisa%2021", # Author
+  passwords <- c(Cris = "1", # Author
                  Marcelo = "z8*R@3X1",  # committee
                  Alexandre = "Lw2c5UQ&", # committee
                  Felipe = "I8DP8#g7", # committee

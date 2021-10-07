@@ -9,4 +9,5 @@ inst/ext/toy_sample_simu
 inst/ext/populus
 inst/ext/eucalyptus
 inst/ext/populus8.5
-for_tests.R
+tests/
+rose/

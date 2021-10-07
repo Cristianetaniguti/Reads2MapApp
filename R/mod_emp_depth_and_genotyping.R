@@ -123,6 +123,7 @@ mod_emp_depth_and_genotyping_ui <- function(id){
                               selected = "vcf"),
                  hr()
                )
+               #downloadButton(ns('downloadData'), 'Download data')
              )
       )
     )
@@ -138,22 +139,11 @@ mod_emp_depth_and_genotyping_server <- function(input, output, session, datas_em
     button1 <- eventReactive(input$go1, {
       withProgress(message = 'Building left graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.1){
-          if(input$ErrorProb1 == "OneMap_version2"){
-            geno <- paste0("SNPCaller", 0.05)
-          } else {
-            geno <- paste0(input$ErrorProb1, 0.05)
-          }
-        } else {
-          geno <- input$ErrorProb1
-        }
         
-        if(input$CountsFrom1 == "bam" & (input$ErrorProb1 == "OneMap_version2" | input$ErrorProb1 == "SNPCaller")){
-          stop(safeError("This option is not available. The SNP callers performs together the SNP
-                         and genotype calling using the same read counts, we did not find a way to substitute
-                         the depths already used. Please select other option."))
-        }
-        data <- result_list[[1]] %>% filter(GenoCall == geno) %>%
+        geno <- test_geno_with_gus(input$Global0.05.1, input$ErrorProb1)
+        stop_bam(input$CountsFrom1, input$ErrorProb1)
+
+        data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
           filter(SNPCall == input$SNPCall1) %>%
           filter(CountsFrom == input$CountsFrom1)
         incProgress(0.5, detail = paste("Doing part", 2))
@@ -167,28 +157,29 @@ mod_emp_depth_and_genotyping_server <- function(input, output, session, datas_em
     
     output$disper_depth_emp_table <- renderTable({
       sum_depth <- button1()$alt + button1()$ref
-      data.frame("mean" = mean(sum_depth), "se" = sd(sum_depth)/sqrt(length(sum_depth)))
+      
+      # Parents
+      parents.idx <- which(apply(button1()[,10:13], 1, function(x) all(is.na(x))))
+      parents <- sum_depth[parents.idx]
+      progeny <- sum_depth[-parents.idx]
+      
+      if(length(which(is.na(sum_depth)) > 0)){
+        parents <- parents[-which(is.na(parents))]
+        progeny <- progeny[-which(is.na(progeny))]
+      }
+      
+      data.frame("progeny mean" = mean(progeny), "progeny se" = sd(progeny)/sqrt(length(progeny)),
+                 "parents mean" = mean(parents), "parents se" = sd(parents)/sqrt(length(parents)))
     })
     
     button2 <- eventReactive(input$go2, {
       withProgress(message = 'Building right graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05.2){
-          if( input$ErrorProb2 == "OneMap_version2"){
-            geno <- paste0("SNPCaller", 0.05)
-          } else {
-            geno <- paste0(input$ErrorProb2, 0.05)
-          }
-        } else {
-          geno <- input$ErrorProb2
-        }
+
+        geno <- test_geno_with_gus(input$Global0.05.2, input$ErrorProb2)
+        stop_bam(input$CountsFrom2, input$ErrorProb2)
         
-        if(input$CountsFrom2 == "bam" & (input$ErrorProb2 == "OneMap_version2" | input$ErrorProb2 == "SNPCaller")){
-          stop(safeError("This option is not available. The SNP callers performs together the SNP
-                         and genotype calling using the same read counts, we did not find a way to
-                         substitute the depths already used. Please select other option."))
-        }
-        data <- result_list[[1]] %>% filter(GenoCall == geno) %>%
+        data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
           filter(SNPCall == input$SNPCall2) %>%
           filter(CountsFrom == input$CountsFrom2)
         incProgress(0.5, detail = paste("Doing part", 2))
@@ -204,6 +195,16 @@ mod_emp_depth_and_genotyping_server <- function(input, output, session, datas_em
       sum_depth <- button2()$alt + button2()$ref
       data.frame("mean" = mean(sum_depth), "se" = sd(sum_depth)/sqrt(length(sum_depth)))
     })
+    
+    # output$downloadData <- downloadHandler(
+    #   filename = function() { 
+    #     paste("alleles_depths-", Sys.Date(), ".png", sep="")
+    #   },
+    #   content = function(file) {
+    #     for(i in 1:length())
+    #     graphics[[i]] <- errorProb_graph_emp(button1(), input$real1, input$geno_from1)
+    #   })
+    
 }
 
 ## To be copied in the UI
