@@ -39,6 +39,7 @@ app_ui <- function(request) {
           
           menuItem("EmpiricalReads2Map results", icon = icon("dot-circle" ), tabName = "empirical",
                    #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
+                   menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall_emp"),
                    menuSubItem("Filters", icon = icon("circle"), tabName = "filters_emp"),
                    menuSubItem("Markers type", icon = icon("circle"), tabName = "marker_type_emp"),
                    menuSubItem("Times", icon = icon("circle"), tabName = "times_emp"),
@@ -174,6 +175,9 @@ app_ui <- function(request) {
                   mod_simu_cM_Mb_ui("simu_cM_Mb_ui_1")
           ),
           # Empirical
+          tabItem(tabName = "snpcall_emp",
+                  mod_emp_SNPCalling_efficiency_ui("emp_SNPCalling_efficiency_ui_1")
+          ),
           tabItem(tabName = "filters_emp",
                   mod_emp_filters_ui("emp_filters_ui_1")
           ),

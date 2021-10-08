@@ -169,3 +169,5 @@ map_name_gus <- function(geno, seed, depth, fake, snpcall, countsfrom, data_name
                      countsfrom, "_", geno, "_", fake)
   }
 }
+
+

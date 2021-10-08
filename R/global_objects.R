@@ -98,6 +98,7 @@ maps_choice <- list("GUSMap" = "gusmap",
                     "freebayes/GATK"="SNPCaller",
                     "SuperMASSA"="supermassa",
                     "updog"="updog")
+
 SNPCall_choice <- list("freebayes"="freebayes",
                        "GATK" = "gatk")
 CountsFrom_choice <- list("BAM"="bam",

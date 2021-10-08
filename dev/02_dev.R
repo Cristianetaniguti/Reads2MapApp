@@ -71,7 +71,6 @@ golem::add_module( name = "emp_cM_Mb" )
 golem::add_module( name = "workflow_tasks_times" )
 
 
-
 ## Add helper functions ----
 ## Creates ftc_* and utils_*
 golem::add_fct( "helpers" ) 

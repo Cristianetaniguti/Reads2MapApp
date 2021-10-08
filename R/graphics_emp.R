@@ -250,3 +250,20 @@ overview_graph_emp <- function(df_overview, reescale = NULL){
 
   return(p1)
 }
+
+#' Performs comparisons between maximum datasets:
+#' 1) Venn diagram with exactly matching markers positions;
+#' 
+#' @param data_list list with marker names (chr_pos) of each dataset
+#' @param data_names character defining the name of each vcf data
+#' @param out_prefix character defining the prefix of image files names
+#' 
+#' @import ggVennDiagram
+#' @import ggplot2
+#' 
+SNPCalling_efficiency_graph_emp <- function(data, data_names){
+  ggVennDiagram(data, label = "both", color = 1) + 
+    scale_color_grey() + scale_fill_viridis_c() + theme_bw() + coord_sf(clip = "off") 
+}
+
+

@@ -110,6 +110,10 @@ app_server <- function( input, output, session ) {
              "simu_cM_Mb_ui_1", 
              datas_simu = datas$datas_simu)
   
+  callModule(mod_emp_SNPCalling_efficiency_server, 
+             "emp_SNPCalling_efficiency_ui_1", 
+             datas_emp = datas$datas_emp)
+  
   callModule(mod_emp_filters_server, 
              "emp_filters_ui_1", 
              datas_emp = datas$datas_emp)

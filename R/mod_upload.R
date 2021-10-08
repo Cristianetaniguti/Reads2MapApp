@@ -64,7 +64,7 @@ mod_upload_ui <- function(id){
                    "See description of each dataset in the tables bellow.",
                    selectInput(ns("example_emp"), label = h4(tags$b("EmpiricalReads2Map.wdl results")), 
                                choices = list(
-                               # "P. tremula - without multiallelics	" = "populus_bi8.5",
+                               "Roses Chr01	" = "rose",
                                # "P. tremula - with multiallelics	" = "populus_multi8.5"),
                                # "P. tremula - with contaminants; without multiallelics" = "populus_cont",
                                # "P. tremula - without multiallelics	" = "populus",
