@@ -56,6 +56,7 @@ golem::add_module( name = "simu_progeny_haplotypes" )
 golem::add_module( name = "simu_breakpoints_counts" )
 golem::add_module( name = "simu_cM_Mb" )
 
+golem::add_module( name = "emp_SNPCalling_efficiency" )
 golem::add_module( name = "emp_filters" )
 golem::add_module( name = "emp_markers_type" )
 golem::add_module( name = "emp_times" )
