@@ -112,7 +112,6 @@ mod_simu_genotype_probabilities_server <- function(input, output, session, datas
         incProgress(0, detail = paste("Doing part", 1))
         
         ## parents
-        
         data <- datas_simu()[[2]] %>% filter(GenoCall %in% input$ErrorProb) %>%
           filter(SNPCall %in% input$SNPCall) %>%
           filter(CountsFrom %in% input$CountsFrom) %>%
@@ -128,9 +127,13 @@ mod_simu_genotype_probabilities_server <- function(input, output, session, datas
         
         data <- mutate_if(data, is.character, as.factor)
         
-        real.mks.sele <-c("true marker", "multiallelic")
+        real.mks.sele <-c("B3.7", "D1.10", "D2.15")
         for(i in 1:2){
-          data_prob <- data %>% filter(real.mks == real.mks.sele[i])
+          if(i == 1)
+            data_prob <- data %>% filter(type %in% real.mks.sele)
+          else data_prob <- data %>% filter(!(type %in% real.mks.sele))
+          
+          data_prob <- droplevels(data_prob)
           if(dim(data_prob)[1] == 0){
             probs_plot[[i]] <- 0
           } else {
@@ -150,7 +153,7 @@ mod_simu_genotype_probabilities_server <- function(input, output, session, datas
                                           prob = probs_df$V1)
             
             probs_plot[[i]]$GenoCall <- as.character(probs_plot[[i]]$GenoCall)
-            probs_plot[[i]]$GenoCall[probs_plot[[i]]$GenoCall == "OneMap"] <- "OneMap_version2"
+            probs_plot[[i]]$GenoCall[probs_plot[[i]]$GenoCall == "SNPCallerdefault"] <- "OneMap_version2"
           }
         }
         
@@ -211,7 +214,7 @@ mod_simu_genotype_probabilities_server <- function(input, output, session, datas
     }, width = 1152, height = 1536)
     
     output$probs_pare_multi_out <- renderPlot({
-      marker_type_probs(button()[[2]])
+      marker_type_probs_multi(button()[[2]])
     }, width = 1152, height = 1536)
     
     output$probs_prog_out <- renderPlot({

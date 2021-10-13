@@ -90,14 +90,14 @@ mod_simu_phases_server <- function(input, output, session, datas_simu){
           filter(SNPCall %in% input$SNPCall) %>%
           filter(CountsFrom %in% input$CountsFrom) %>%
           filter(depth %in% input$depth) %>%
-          filter(fake == "without-false") %>%
-          filter(real.mks == "true marker") # This graphic do not consider multiallelic markers because their were not simulated
+          filter(fake == "without-false") 
         
         data_n <- data %>%  group_by(GenoCall, SNPCall, seed, depth) %>%
           summarise(`n markers` = n())
         
         data1 <- data %>% group_by(seed,GenoCall, SNPCall, CountsFrom, depth) %>%
-          summarise(`% correct`= 100*sum(est.phases == real.phases)/length(real.phases))
+          summarise(`% correct`= 100*sum(est.phases == real.phases, na.rm = T)/length(real.phases))
+        # This graphic do not consider multiallelic markers because their were not simulated
         
         data <- merge(data1, data_n) %>%
           gather(key, value, -GenoCall, -SNPCall, -CountsFrom, -seed, -depth)

@@ -6,127 +6,126 @@
 prepare_datas_simu <- function(x, example_simu){
   # This function makes adjustments in the input tar.gz file to be processed inside the app
   # It returns six data objects and the app options in a list format
-    if(!is.null(x)){
-      data.gz <- x[,4]
-      path = "data/"
-    } else if(is.null(example_simu)) {
-      cat("Wait credentials\n")
-      data.gz <- "Wait"
-    } else { ######## Only the toy_sample in the package - the rest in server
-      if(example_simu == "populus_200_bi_radinitio20"){
-        data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_bi_up.tar.gz", package = "Reads2MapApp"),
-                     system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_bi_up.tar.gz", package = "Reads2MapApp"))
-      } else if(example_simu == "populus_200_multi_radinitio20"){
-        data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_multi_up.tar.gz", package = "Reads2MapApp"),
-                     system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_multi_up.tar.gz", package = "Reads2MapApp"))
-      } else if(example_simu == "populus_200_bi_radinitio37"){
-        data.gz <- c(system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-                     system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
-      } else if(example_simu == "populus_200_multi_radinitio37"){
-        data.gz <- c(system.file("ext", "simulations/RADinitio37_afterDef/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-                     system.file("ext", "simulations/RADinitio37_afterDef/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
-      } else if(example_simu == "toy_sample_bi"){
-        data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-                     system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
-      } else if(example_simu == "toy_sample_multi"){
-        data.gz <- c(system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-                     system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+  if(!is.null(x)){
+    data.gz <- x[,4]
+    path = "data/"
+  } else if(is.null(example_simu)) {
+    cat("Wait credentials\n")
+    data.gz <- "Wait"
+  } else { ######## Only the toy_sample in the package - the rest in server
+    if(example_simu == "populus_200_bi_radinitio20"){
+      data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_bi_up.tar.gz", package = "Reads2MapApp"),
+                   system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_bi_up.tar.gz", package = "Reads2MapApp"))
+    } else if(example_simu == "populus_200_multi_radinitio20"){
+      data.gz <- c(system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth10pop200_multi_up.tar.gz", package = "Reads2MapApp"),
+                   system.file("ext", "simulations/RADinitio20/SimulatedReads_results_depth20pop200_multi_up.tar.gz", package = "Reads2MapApp"))
+    } else if(example_simu == "populus_200_bi_radinitio37"){
+      data.gz <- c(system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                   system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+    } else if(example_simu == "populus_200_multi_radinitio37"){
+      data.gz <- c(system.file("ext", "simulations/RADinitio37_afterDef/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                   system.file("ext", "simulations/RADinitio37_afterDef/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+    } else if(example_simu == "toy_sample_bi"){
+      data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                   system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+    } else if(example_simu == "toy_sample_multi"){
+      data.gz <- c(system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+    }
+  }
+  
+  if(data.gz == "Wait"){
+    cat("Waiting...\n")
+  } else {
+    path_dir <- tempdir()
+    list_files <- list()
+    for(i in 1:length(data.gz)){
+      untar(data.gz[i], exdir = path_dir)
+      list_files[[i]] <- untar(data.gz[i], list = T)
+    }
+    
+    list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
+    for_rm <- sapply(list_files, "[", 1)
+    list_files <- lapply(list_files, "[", -1)
+    list_files <- lapply(list_files, sort)
+    
+    # Remove GATK Qual plots
+    if(length(grep("QualPlots", list_files)) > 0)
+      list_files <- lapply(list_files, function(x) x[-grep("QualPlots", x)])
+    
+    # Data
+    datas <- list()
+    for(i in 1:length(list_files[[1]])){
+      datas[[i]] <- sapply(list_files, "[", i)
+    }
+    
+    ## Tables
+    data1_depths_geno_prob <- data2_maps <- data3_filters <- data10_counts <- vector()
+    data4_times <- data5_SNPCall_efficiency <- simu_haplo <- vector()
+    data6 <- names_rdatas  <- list()
+    #seeds <- depths <- seeds_choices <- depths_choices <- vector()
+    
+    temp_name <- tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".llo")
+    for(i in 1:length(datas)){
+      for(j in 1:length(datas[[i]])){
+        if(all(grepl("gusmap_RDatas.RData", datas[[i]]))){
+          temp1 <- load(datas[[i]][[j]])
+          temp1 <- base::get(temp1)
+          data6 <- c(data6, temp1)
+        } else if(all(grepl("sequences.llo", datas[[i]]))){
+          temp1 <- readList(datas[[i]][[j]])
+          if(j == 1){
+            saveList(temp1, file = temp_name, append = F, compress = T)
+            inds <- rownames(temp1[[1]]$data.name$geno)
+          } else {
+            saveList(temp1, file = temp_name, append = T, compress = T)
+          }
+        } else if(all(grepl("names.tsv.gz", datas[[i]]))){
+          temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
+          names_rdatas <- c(names_rdatas, temp1)
+        } else {
+          temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
+          name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
+          name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
+          assign(name_temp, rbind(base::get(name_temp), temp1))
+        }
       }
     }
     
-    if(data.gz == "Wait"){
-      cat("Waiting...\n")
-    } else {
-      path_dir <- tempdir()
-      list_files <- list()
-      for(i in 1:length(data.gz)){
-        untar(data.gz[i], exdir = path_dir)
-        list_files[[i]] <- untar(data.gz[i], list = T)
-      }
-      
-      list_files <- lapply(list_files, function(x) paste0(path_dir,"/", x))
-      for_rm <- sapply(list_files, "[", 1)
-      list_files <- lapply(list_files, "[", -1)
-      list_files <- lapply(list_files, sort)
-      
-      # Remove GATK Qual plots
-      if(length(grep("QualPlots", list_files)) > 0)
-        list_files <- lapply(list_files, function(x) x[-grep("QualPlots", x)])
-      
-      # Data
-      datas <- list()
-      for(i in 1:length(list_files[[1]])){
-        datas[[i]] <- sapply(list_files, "[", i)
-      }
-      
-      ## Tables
-      data1_depths_geno_prob <- data2_maps <- data3_filters <- data10_counts <- vector()
-      data4_times <- data5_SNPCall_efficiency <- simu_haplo <- vector()
-      data6 <- names_rdatas  <- list()
-      #seeds <- depths <- seeds_choices <- depths_choices <- vector()
-      
-      temp_name <- tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".llo")
-      for(i in 1:length(datas)){
-        for(j in 1:length(datas[[i]])){
-          if(all(grepl("gusmap_RDatas.RData", datas[[i]]))){
-            temp1 <- load(datas[[i]][[j]])
-            temp1 <- base::get(temp1)
-            data6 <- c(data6, temp1)
-          } else if(all(grepl("sequences.llo", datas[[i]]))){
-            temp1 <- readList(datas[[i]][[j]])
-            if(j == 1){
-              saveList(temp1, file = temp_name, append = F, compress = T)
-              inds <- rownames(temp1[[1]]$data.name$geno)
-            } else {
-              saveList(temp1, file = temp_name, append = T, compress = T)
-            }
-          } else if(all(grepl("names.tsv.gz", datas[[i]]))){
-            temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
-            names_rdatas <- c(names_rdatas, temp1)
-          } else {
-            temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
-            name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
-            name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
-            assign(name_temp, rbind(base::get(name_temp), temp1))
-          }
-        }
-      }
-      
-      temp <- unique(paste0(data2_maps$depth, "_", data2_maps$seed))
-      seeds <- sapply(strsplit(temp, "_"), "[", 2)
-      depths <- sapply(strsplit(temp, "_"), "[", 1)
-      depths_choices <- as.list(depths)
-      names(depths_choices) <- depths
-      seed_depth <- unique(paste("Depth",data2_maps$depth, "seed", data2_maps$seed))
-      temp_names <- seed_depth
-      seeds_choices <- as.list(1:length(seed_depth))
-      names(seeds_choices) <- temp_names
-      inds_choices <- sort(inds)
-      names(inds_choices) <- sort(inds)
-      names_rdatas <- unlist(names_rdatas)
-      names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
-      
-      data2_maps$fake[data2_maps$fake == "TRUE"] <- "with-false"
-      data2_maps$fake[data2_maps$fake == "FALSE"] <- "without-false"
-      
-      data4_times$fake[data4_times$fake == "TRUE"] <- "with-false"
-      data4_times$fake[data4_times$fake == "FALSE"] <- "without-false"
-      
-      result_list <- list("data1"=data1_depths_geno_prob, 
-                          "data2"=data2_maps, 
-                          "data3"=data3_filters, 
-                          "data4"=data4_times, 
-                          "data5"=data5_SNPCall_efficiency, 
-                          "data6"=data6, 
-                          "choices"=list(depths, seeds, seeds_choices, depths_choices, inds_choices),
-                          "names"=names_rdatas, 
-                          "haplo"=simu_haplo,
-                          "sequence.llo"=temp_name)
-      
-      system(paste("rm -r", paste(for_rm, collapse = " ")))
-      
-      result_list
-    }
+    temp <- unique(paste0(data2_maps$depth, "_", data2_maps$seed))
+    seeds <- sapply(strsplit(temp, "_"), "[", 2)
+    depths <- sapply(strsplit(temp, "_"), "[", 1)
+    depths_choices <- as.list(depths)
+    names(depths_choices) <- depths
+    seed_depth <- unique(paste("Depth",data2_maps$depth, "seed", data2_maps$seed))
+    temp_names <- seed_depth
+    seeds_choices <- as.list(1:length(seed_depth))
+    names(seeds_choices) <- temp_names
+    inds_choices <- sort(inds)
+    names(inds_choices) <- sort(inds)
+    names_rdatas <- unlist(names_rdatas)
+    names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+    
+    data2_maps$fake[data2_maps$fake == "TRUE"] <- "with-false"
+    data2_maps$fake[data2_maps$fake == "FALSE"] <- "without-false"
+    
+    data4_times$fake[data4_times$fake == "TRUE"] <- "with-false"
+    data4_times$fake[data4_times$fake == "FALSE"] <- "without-false"
+    
+    result_list <- list("data1"=data1_depths_geno_prob, 
+                        "data2"=data2_maps, 
+                        "data3"=data3_filters, 
+                        "data4"=data4_times, 
+                        "data5"=data5_SNPCall_efficiency, 
+                        "data6"=data6, 
+                        "choices"=list(depths, seeds, seeds_choices, depths_choices, inds_choices),
+                        "names"=names_rdatas, 
+                        "haplo"=simu_haplo,
+                        "sequence.llo"=temp_name)
+    
+    system(paste("rm -r", paste(for_rm, collapse = " ")))
+    
+    result_list
+  }
 }
 
 
@@ -217,7 +216,7 @@ all_size_graph <- function(data, data_n,stat, fake){
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5)  +
     labs(y = colnames(data)[dim(data)[2]], x = "Genotyping method", title = "Statistic") + 
     facet_wrap(depth~CountsFrom, ncol=1, scales = "fixed") + theme_bw()
-
+  
   p2 <- data_n %>% ggplot(aes(x=GenoCall, y=`n markers`, color=SNPCall)) +
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5)  +
     labs(x = "Genotyping method", y = "Number of markers", title= "Number of markers") + 
@@ -274,7 +273,7 @@ times_graph <- function(data){
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5) + 
     labs(x = "Genotyping method", y = "minutes", title = "Time spent") +
     facet_grid(depth + CountsFrom ~.) 
-
+  
   p2 <- data %>% filter(key == "n markers") %>% ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5) + 
     labs(x = "Genotyping method", y = "number of markers", title = "Number of markers") +
@@ -292,15 +291,28 @@ times_graph <- function(data){
 }
 
 avalSNPs_graph <- function(data){
-  p <- data %>% ggplot(aes(x=name, y=value, color= SNPCall)) +
+  p <- data %>% filter(counts == TRUE) %>% ggplot(aes(x=name, y=value, color= SNPCall)) +
     scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5) + 
-    labs(x = "Genotyping method", y = "number of markers") + 
-    facet_grid(depth ~.) +
+    labs(x = "", y = "Number of markers") + 
+    facet_grid(depth ~ .) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + theme_bw()
+  
+  p2 <- data %>% filter(counts == FALSE) %>% ggplot(aes(x=name, y=value, color= SNPCall)) +
+    scale_color_viridis_d(name="SNP call", begin = 0, end = 0.5) + 
+    labs(x = "", y = "Percentage") + 
+    facet_grid(depth ~ .) +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + theme_bw()
   
   n_fam <- length(unique(paste0(data$seed,data$depth)))
-  if(n_fam < 20)   p + geom_point(position=position_dodge(width=0.5))  
-  else p + geom_boxplot(position=position_dodge(width=0.5))
+  if(n_fam < 20)   {
+    p <- p + geom_point(position=position_dodge(width=0.5))
+    p2 <- p2 + geom_point(position=position_dodge(width=0.5))
+  } else {
+    p <- p + geom_boxplot(position=position_dodge(width=0.5))
+    p2 <- p2 + geom_boxplot(position=position_dodge(width=0.5))
+  }
+  
+  ggarrange(p, p2, common.legend = T)
 }
 
 filters_graph <- function(data){
@@ -403,7 +415,7 @@ overview_graph <- function(df_overview, depth_select, reescale = NULL){
     select(SNPCall, GenoCall, seed, CountsFrom,
            "Number of non-informative markers in map", "Number of informative markers in map") %>%
     rename(., "Non-informative" = "Number of non-informative markers in map",
-                  "Informative"= "Number of informative markers in map") %>%
+           "Informative"= "Number of informative markers in map") %>%
     gather(key, value, - SNPCall, -GenoCall, -seed,    -CountsFrom)  %>%
     group_by(., SNPCall, GenoCall, CountsFrom, key) %>%
     summarise(mean = mean(value),
@@ -482,7 +494,7 @@ marker_type_probs <- function(data_plot_par){
   p_comb <- list()
   for(i in 1:3){
     p1 <- data_plot_par %>% pivot_longer(cols=8) %>% filter(simu == labels_real[i] & 
-                                                            est == labels_est[i] ) %>%
+                                                              est == labels_est[i] ) %>%
       ggplot(aes(x=GenoCall, y = value, color = depth)) +
       geom_point(position = position_dodge(width=0.7)) +
       scale_color_viridis_d(begin = 0, end = 0.5)+
@@ -494,7 +506,7 @@ marker_type_probs <- function(data_plot_par){
             legend.text=element_text(size=12))
     
     p2 <- data_plot_par %>% pivot_longer(cols=8) %>% filter(simu == labels_real[i] & 
-                                                            est != labels_est[i]) %>%
+                                                              est != labels_est[i]) %>%
       ggplot(aes(x=GenoCall, y = value, color = depth)) +
       geom_point(position = position_dodge(width=0.7)) +
       scale_color_viridis_d(begin = 0, end = 0.5)+
@@ -523,6 +535,60 @@ marker_type_probs <- function(data_plot_par){
   ggarrange(p_comb[[1]],p_comb[[2]],p_comb[[3]],p3_comb, ncol = 1)
 }
 
+
+#' @importFrom ggpubr ggarrange
+#' @import ggplot2
+#' @import dplyr
+marker_type_probs_multi <- function(data_plot_par){
+  if(!is.data.frame(data_plot_par)) stop(safeError("The probabilities can not be calculated in the presence of false positives.\n
+                              If you set option without-false, then there are no biallelic/multiallelic marker in this dataset. 
+                              Please, select other option."))
+  
+  labels_real <- c("Real: B3.7", "Real: D1.10", "Real: D2.15")
+  labels_est <-  c("Est: A.1", "Est: A.2", "Est: D2.14", "Est: D1.09")
+  labels_title1 <- c(expression("P(E= A.1|M"*intersect("R=B3.7)")), 
+                     expression("P(E=A.2|M"*intersect("R=D1.10)")),
+                     expression("P(E=D2.14|M"*intersect("R=D2.15)")),
+                     expression("P(E=D1.09|M"*intersect("R=D2.15)")))
+  labels_title2 <- c(expression("P(E|M"*intersect("R=B3.7)")), 
+                     expression("P(E|M"*intersect("R=D1.10)")),
+                     expression("P(E|M"*intersect("R=D2.15)")))
+  p_comb <- list()
+  for(i in 1:3){
+    data_set <- data_plot_par %>% pivot_longer(cols=8) %>% filter(simu == labels_real[i] & 
+                                                                    est != labels_real[i])
+    if(dim(data_set)[1] == 0) next
+    
+    p <- data_set %>%
+      ggplot(aes(x=GenoCall, y = value, color = depth)) +
+      geom_point(position = position_dodge(width=0.7)) +
+      scale_color_viridis_d(begin = 0, end = 0.5)+
+      theme_bw() + 
+      facet_grid(SNPCall + CountsFrom ~simu + est, scales = "fixed") +
+      labs(title= labels_title2[i], x = "Genotype caller", color = "mean depth")+
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
+            axis.title.y = element_blank(), legend.position = "top",
+            legend.text=element_text(size=12))
+    
+    p_comb[[i]] <- p
+  }
+  
+  p3 <- data_plot_par %>% pivot_longer(cols=8) %>% filter(simu == "Real: non-informative") %>%
+    ggplot(aes(x=GenoCall, y = value, color = depth)) +
+    geom_point(position = position_dodge(width=0.7)) +
+    scale_color_viridis_d(begin = 0, end = 0.5)+
+    theme_bw() + 
+    facet_grid(SNPCall + CountsFrom ~simu + est, scales = "fixed") +
+    labs(title= expression("P(E|M"*intersect("R=non-informative)")), x = "Genotype caller", color = "mean depth")+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), 
+          axis.title.y = element_blank(), legend.position = "top",
+          legend.text=element_text(size=12))
+  
+  p_comb[[length(p_comb) + 1]] <- p3
+    
+  ggarrange(plotlist = p_comb, ncol = 1)
+}
+
 geno_probs <- function(data_plot_par){
   labels_real <- c("Real: heterozygous", "Real: homozygous-ref", "Real: homozygous-alt")
   labels_est <-  c("Est: heterozygous", "Est: homozygous-ref", "Est: homozygous-alt")
@@ -535,7 +601,7 @@ geno_probs <- function(data_plot_par){
   p_comb <- list()
   for(i in 1:3){
     p1 <- data_plot_par %>% pivot_longer(cols=8:9) %>% filter(simu == labels_real[i] & 
-                                                              est == labels_est[i] ) %>%
+                                                                est == labels_est[i] ) %>%
       ggplot(aes(x=GenoCall, y = value, color = name, shape = depth)) +
       geom_point(position = position_dodge(width=0.8)) +
       scale_shape_manual(values=c(1, 3))+
@@ -549,7 +615,7 @@ geno_probs <- function(data_plot_par){
             legend.text=element_text(size=11))
     
     p2 <- data_plot_par %>% pivot_longer(cols=8:9) %>% filter(simu == labels_real[i] & 
-                                                              est != labels_est[i]) %>%
+                                                                est != labels_est[i]) %>%
       ggplot(aes(x=GenoCall, y = value, color = name, shape = depth)) +
       geom_point(position = position_dodge(width=0.8)) +
       scale_shape_manual(values=c(1, 3)) +
@@ -564,7 +630,7 @@ geno_probs <- function(data_plot_par){
     
     p_comb[[i]] <- ggarrange(p1, p2, common.legend = T, widths = c(4,8), heights = c(16,16))
   }
-
+  
   ggarrange(p_comb[[1]],p_comb[[2]],p_comb[[3]], ncol = 1)
 }
 

@@ -10,8 +10,13 @@
 mod_simu_SNPCalling_efficiency_ui <- function(id){
   ns <- NS(id)
   tagList(
-    "The graphic here show some characteristics of SNP calling. The x axis contain the different
-            characteristics indexed according with section `Options`, and y axis shows the number of markers.",
+    "The graphic here show some characteristics of SNP calling provided by VariantEval (GATK):", br(),
+     "nEvalVariants - the number of variants in the eval file", br(),
+     "novelSites - the number of variants in the eval considered to be novel in comparison to dbsnp (same as novel row of nEvalVariants column)", br(),
+     "nVariantsAtComp - the number of variants present in eval that match the location of a variant in the comparison file (same as known row of nEvalVariants)", br(),
+     "compRate - nVariantsAtComp divided by nEvalVariants", br(),
+     "nConcordant - the number of variants present in eval that exactly match the genotype present in the comparison file", br(),
+     "concordantRate - nConcordant divided by nVariantsAtComp",
     hr(),
     fluidRow(
       column(width = 12,
@@ -60,22 +65,16 @@ mod_simu_SNPCalling_efficiency_server <- function(input, output, session, datas_
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
-      
-      data <- datas_simu()[[5]][,-c(8,9)]  %>%
-        filter(SNPCall %in% input$SNPCall) %>%
-        filter(depth %in% input$depth)
-      
-      colnames(data)[4:7] <- c("real", "estimated", "true positives", "false positives")
-      data$`false negatives` <- data$real - data$`true positives`
-      
-      data <- data  %>% pivot_longer(cols=c(4:8))
-      
+      data <- datas_simu()[[5]][,-c(4:7)]  %>%
+        filter(tolower(SNPCall) %in% input$SNPCall) %>%
+        filter(depth %in% input$depth) %>% 
+        filter(Novelty == "all")
+
+      data <- data[,-4]
+      data <- data  %>% pivot_longer(cols=c(4:9))
+      data$counts <- !(data$name %in% c("compRate", "concordantRate"))
+
       incProgress(0.5, detail = paste("Doing part", 2))
-      # perfurmaria
-      snpcall <- c(GATK = "gatk", freebayes = "freebayes")
-      data$SNPCall <- names(snpcall)[match(data$SNPCall, snpcall)]
-      
-      data$name <- factor(data$name, levels = c("real", "estimated", "true positives", "false positives", "false negatives"))
       
       data
     })
