@@ -10,8 +10,8 @@
 mod_simu_markers_type_ui <- function(id){
   ns <- NS(id)
   tagList(
-    "These bar plots describes the number of markers of each type according with Wu et. al 2002a that remained in the built maps of each method.
-            The upper graphics show the simulated marker types (real.type) and below they show the estimated (type). ",
+    "This bar plot describes the number of markers of each type according with Wu et. al 2002a that remained in the built maps of each method.
+          If only real markers are considered real and estimated types are shown, if false positive markers are included, the real type would not be available.",
     hr(),
     fluidRow(
       column(width = 12,
@@ -106,12 +106,12 @@ mod_simu_markers_type_server <- function(input, output, session, datas_simu){
         data1 <- data1[which(data1$key == "estimated"),]
       }
       
-      list(data1)
+      data1
     })
   })
   
   output$marker_type_out <- renderPlot({
-    marker_type_graph(button()[[1]])
+    marker_type_graph(button())
   })
 }
 

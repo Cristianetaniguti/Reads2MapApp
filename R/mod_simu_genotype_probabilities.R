@@ -210,7 +210,7 @@ mod_simu_genotype_probabilities_server <- function(input, output, session, datas
     })
     
     output$probs_pare_bi_out <- renderPlot({
-      marker_type_probs(button()[[1]])
+      marker_type_probs(data_plot_par = button()[[1]])
     }, width = 1152, height = 1536)
     
     output$probs_pare_multi_out <- renderPlot({

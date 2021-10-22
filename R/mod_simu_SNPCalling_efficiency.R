@@ -20,9 +20,13 @@ mod_simu_SNPCalling_efficiency_ui <- function(id){
     hr(),
     fluidRow(
       column(width = 12,
-             box(title = "SNP calling efficiency",
+             box(title = "SNP calling efficiency - without filters",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                 plotOutput(ns("snpcall_out")), hr(),
+                 plotOutput(ns("snpcall_out")), hr()
+             ),
+             box(title = "SNP calling efficiency - with VCFtools filters",
+                 width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                 plotOutput(ns("snpcall_filt_out")), hr(),
                  actionButton(ns("go"), "Update",icon("refresh")),
              )
       ),
@@ -48,6 +52,7 @@ mod_simu_SNPCalling_efficiency_ui <- function(id){
 #' simu_SNPCalling_efficiency Server Functions
 #'
 #' @import tidyr
+#' @import ggVennDiagram
 #' 
 #' @noRd 
 mod_simu_SNPCalling_efficiency_server <- function(input, output, session, datas_simu){
@@ -65,6 +70,7 @@ mod_simu_SNPCalling_efficiency_server <- function(input, output, session, datas_
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
+      # Unfiltered
       data <- datas_simu()[[5]][,-c(4:7)]  %>%
         filter(tolower(SNPCall) %in% input$SNPCall) %>%
         filter(depth %in% input$depth) %>% 
@@ -76,12 +82,31 @@ mod_simu_SNPCalling_efficiency_server <- function(input, output, session, datas_
 
       incProgress(0.5, detail = paste("Doing part", 2))
       
-      data
+      # VCFtools filters
+      names_files <- names(unlist(datas_simu()[[11]], recursive = F))
+      idx <- which(grepl(paste(input$depth, collapse = "|"), names_files) & 
+                     grepl(paste(input$SNPCall,collapse = "|"), names_files) & 
+                     grepl("vcf", names_files))
+      
+      idx <- c(idx, grep("true", names_files))
+      seeds <- list()
+      for(i in 1:length(datas_simu()[[11]])){
+        seeds[[i]] <- datas_simu()[[11]][[i]][idx]  
+      }
+      
+      incProgress(0.75, detail = paste("Doing part", 3))
+      
+      list(data, seeds)
     })
   })
   
   output$snpcall_out <- renderPlot({
-    avalSNPs_graph(button())
+    avalSNPs_graph(button()[[1]])
+  })
+  
+  
+  output$snpcall_filt_out <- renderPlot({
+    avalSNPs_graph_filt(button()[[2]])
   })
   
 }
