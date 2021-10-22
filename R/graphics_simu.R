@@ -106,12 +106,6 @@ prepare_datas_simu <- function(x, example_simu){
     names_rdatas <- unlist(names_rdatas)
     names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
     
-    data2_maps$fake[data2_maps$fake == "TRUE"] <- "with-false"
-    data2_maps$fake[data2_maps$fake == "FALSE"] <- "without-false"
-    
-    data4_times$fake[data4_times$fake == "TRUE"] <- "with-false"
-    data4_times$fake[data4_times$fake == "FALSE"] <- "without-false"
-    
     result_list <- list("data1"=data1_depths_geno_prob, 
                         "data2"=data2_maps, 
                         "data3"=data3_filters, 
