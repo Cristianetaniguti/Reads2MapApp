@@ -149,9 +149,10 @@ mod_simu_roc_curves_server <- function(input, output, session, datas_simu){
         tot_df <- subset_df <- data.frame()
         for(i in 1:dim(methods)[1]){
           data1 <- data %>% filter(GenoCall == methods$genocall[i] &
-                                     SNPCall == methods$snpcall[i] &
-                                     CountsFrom == methods$countsfrom[i] &
-                                     depth == methods$depth[i])
+                                   SNPCall == methods$snpcall[i] &
+                                   CountsFrom == methods$countsfrom[i] &
+                                   depth == methods$depth[i] &
+                                     gt.onemap.alt.ref != "missing")
           
           if(all(data1$id == "correct")){
             df <- data.frame(threshold = Inf, specificity = 1, sensitivity=1, precision =1)
