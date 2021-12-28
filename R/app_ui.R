@@ -19,7 +19,7 @@ app_ui <- function(request) {
           menuItem("About", tabName = "about", icon = icon("lightbulb")),
           #menuItem("Parallel map", icon = icon("dot-circle"), tabName = "parallel"), 
           menuItem("Upload data", icon = icon("upload"), tabName= "upload"),
-          menuItem("SimulatedReads2Map results", icon = icon("dot-circle"), tabName= "simulations",
+          menuItem("SimulatedReads2Map", icon = icon("dot-circle"), tabName= "simulations",
                    menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall"),
                    #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage"),
                    menuSubItem("Filters", icon = icon("circle"), tabName = "filters"),
@@ -37,7 +37,7 @@ app_ui <- function(request) {
                    menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb")),
           #menuSubItem("Overview", icon = icon("circle"), tabName = "overview")),
           
-          menuItem("EmpiricalReads2Map results", icon = icon("dot-circle" ), tabName = "empirical",
+          menuItem("EmpiricalReads2Map", icon = icon("dot-circle" ), tabName = "empirical",
                    #menuSubItem("Coverage", icon = icon("circle"), tabName = "coverage_emp"),
                    menuSubItem("SNP calling efficiency", icon = icon("circle"), tabName = "snpcall_emp"),
                    menuSubItem("Filters", icon = icon("circle"), tabName = "filters_emp"),
@@ -53,8 +53,11 @@ app_ui <- function(request) {
           menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times"),
           tags$li(class = "dropdown",
                   tags$a(href="https://statgen-esalq.github.io/", target="_blank", 
-                         tags$img(height = "60px", alt="Logo", src="logo_fundo_azul.png")
-                  ))
+                         tags$img(height = "55px", alt="Logo", src="logo_fundo_azul.png")
+                  ),
+                  tags$a(href="https://www.polyploids.org/", target="_blank", 
+                         tags$img(height = "55px", alt="Logo", src="logo_white.png"))
+                  )
         )
       ),
       

@@ -13,11 +13,12 @@ prepare_datas_simu <- function(x, example_simu){
     cat("Wait credentials\n")
     data.gz <- "Wait"
   } else { ######## Only the toy_sample in the package - the rest in server
-    if(example_simu == "populus_200_bi_radinitio37"){
-      data.gz <- c(system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-                   system.file("ext", "simulations/RADinitio37_afterDef/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
-    } else if(example_simu == "populus_200_multi_radinitio37"){
-      data.gz <- c(system.file("ext", "populus_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+    if(example_simu == "bi"){
+      data.gz <- c(system.file("ext", "simu_results/depth10/biallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                   system.file("ext", "simu_results/depth20/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+    } else if(example_simu == "multi"){
+      data.gz <- c(system.file("ext", "simu_results/depth10/multiallelics/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                   system.file("ext", "simu_results/depth20/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
     } else if(example_simu == "toy_sample_bi"){
       data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
     } else if(example_simu == "toy_sample_multi"){

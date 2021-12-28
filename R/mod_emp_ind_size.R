@@ -80,9 +80,11 @@ mod_emp_ind_size_server <- function(input, output, session, datas_emp){
           geno <- input$ErrorProb
         }
         
-        data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
+        data <- datas_emp()[[2]] %>% 
+          filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall) %>%
           filter(CountsFrom %in% input$CountsFrom) %>%
+          group_by(CountsFrom, SNPCall, GenoCall) %>%
           mutate(interv.diff = sqrt(c(0,rf[-1] - rf[-length(rf)])^2))
         
         data <- perfumaria(data)

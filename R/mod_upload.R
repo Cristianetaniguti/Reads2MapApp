@@ -23,10 +23,6 @@ mod_upload_ui <- function(id){
              box(width = 12, solidHeader = TRUE, collapsible = FALSE, status="primary", title = "SimulatedReads2Map",
                  fluidPage(
                    tags$h4(tags$b("Upload SimulatesReads2Map results:")),
-                   "To not overload our server, we limited the upload size to 500MB.", 
-                   "If your results have larger size, please run the app locally using:", br(),
-                   tags$code("devtools::install_github('Cristianetaniguti/Reads2MapApp')"), br(),
-                   tags$code("Reads2MapApp::run_app()"), br(),
                    # Copy the line below to make a file upload manager
                    "If you have more than one depth value, submit all them together.", br(),
                    fileInput(ns("simulatedreads"), label = h6("File: SimulatedReads2Map_<depth>.tar.gz"), multiple = T),
@@ -36,8 +32,8 @@ mod_upload_ui <- function(id){
                    # Copy the line below to make a select box 
                    "See description of each dataset in the tables bellow.",
                    selectInput(ns("example_simu"), label = h4(tags$b("SimulatedReads2Map.wdl results")), 
-                               choices = list("P. tremula 37cM of chromosome 10 - without multiallelics" = "populus_200_bi_radinitio37",
-                                              "P. tremula 37cM of chromosome 10 - with multiallelics" = "populus_200_multi_radinitio37",
+                               choices = list("P. tremula 37cM of chromosome 10" = "bi",
+                                              "P. tremula 37cM of chromosome 10 - with multiallelics" = "multi",
                                               "Toy sample without multiallelics" = "toy_sample_bi",
                                               "Toy sample with multiallelics" = "toy_sample_multi"),
                                selected = "toy_sample_multi"),
@@ -49,10 +45,6 @@ mod_upload_ui <- function(id){
                  fluidPage(
                    
                    tags$h4(tags$b("Upload EmpiricalReads2Map results:")),
-                   "To not overload our server, we limited the upload size to 500MB.", 
-                   "If your results have larger size, please run the app locally using:", br(),
-                   tags$code("devtools::install_github('Cristianetaniguti/Reads2MapApp')"), br(),
-                   tags$code("Reads2MapApp::run_app()"), br(),
                    # Copy the line below to make a file upload manager
                    "If you have more than one depth value, submit all them together.", br(),
                    fileInput(ns("empiricalreads"), label = h6("File: EmpiricalReads2Map_<depth>.tar.gz"), multiple = T, accept = ".tar.gz"),

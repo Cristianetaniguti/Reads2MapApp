@@ -5,6 +5,7 @@
 inst/ext/empirical
 inst/ext/pirs_simulations
 inst/ext/simulations
+inst/ext/simu_results
 inst/ext/toy_sample_simu
 inst/ext/populus
 inst/ext/eucalyptus
