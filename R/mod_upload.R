@@ -32,8 +32,11 @@ mod_upload_ui <- function(id){
                    # Copy the line below to make a select box 
                    "See description of each dataset in the tables bellow.",
                    selectInput(ns("example_simu"), label = h4(tags$b("SimulatedReads2Map.wdl results")), 
-                               choices = list("P. tremula 37cM of chromosome 10" = "bi",
-                                              "P. tremula 37cM of chromosome 10 - with multiallelics" = "multi",
+                               choices = list("P. tremula 38cM of chromosome 10" = "bi",
+                                              "P. tremula 38cM of chromosome 10 - geno probs" = "bi_pl",
+                                              "P. tremula 38cM of chromosome 10 - with segregation distortion" = "bi_dev",
+                                              "P. tremula 38cM of chromosome 10 - with multiallelics" = "multi",
+                                              "P. tremula 38cM of chromosome 10 - with multiallelics and segregation distortion" = "multi_dev",
                                               "Toy sample without multiallelics" = "toy_sample_bi",
                                               "Toy sample with multiallelics" = "toy_sample_multi"),
                                selected = "toy_sample_multi"),

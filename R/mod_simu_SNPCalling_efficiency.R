@@ -22,7 +22,8 @@ mod_simu_SNPCalling_efficiency_ui <- function(id){
       column(width = 12,
              box(title = "SNP calling efficiency - without filters",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                 plotOutput(ns("snpcall_out")), hr()
+                 plotOutput(ns("snpcall_out")), hr(),
+                 actionButton(ns("go"), "Update",icon("refresh"))
              ),
              box(title = "SNP calling efficiency - with VCFtools filters",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
@@ -81,19 +82,19 @@ mod_simu_SNPCalling_efficiency_server <- function(input, output, session, datas_
       data$counts <- !(data$name %in% c("compRate", "concordantRate"))
 
       incProgress(0.5, detail = paste("Doing part", 2))
-      
-      # VCFtools filters
-      names_files <- names(unlist(datas_simu()[[11]], recursive = F))
-      idx <- which(grepl(paste(input$depth, collapse = "|"), names_files) & 
-                     grepl(paste(input$SNPCall,collapse = "|"), names_files) & 
-                     grepl("vcf", names_files))
-      
-      idx <- c(idx, grep("true", names_files))
+
       seeds <- list()
       for(i in 1:length(datas_simu()[[11]])){
-        seeds[[i]] <- datas_simu()[[11]][[i]][idx]  
+        names_files <- names(datas_simu()[[11]][[i]])
+        names_files <- gsub("freebaye_", "freebayes_", names_files)
+        idx <- which(grepl(paste(input$depth, collapse = "|"), names_files) &
+                       grepl(paste(input$SNPCall,collapse = "|"), names_files) &
+                       grepl("vcf", names_files))
+        
+        idx <- c(idx, grep("true", names_files))
+        seeds[[i]] <- datas_simu()[[11]][[i]][idx]
       }
-      
+
       incProgress(0.75, detail = paste("Doing part", 3))
       
       list(data, seeds)
@@ -103,7 +104,6 @@ mod_simu_SNPCalling_efficiency_server <- function(input, output, session, datas_
   output$snpcall_out <- renderPlot({
     avalSNPs_graph(button()[[1]])
   })
-  
   
   output$snpcall_filt_out <- renderPlot({
     avalSNPs_graph_filt(button()[[2]])

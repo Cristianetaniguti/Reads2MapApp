@@ -69,8 +69,8 @@ mod_simu_depths_and_genotyping_ui <- function(id){
                ),
                
                fluidPage(
-                 textInput(ns("marker"), label = p("By default, it plots the genotypes of all markers, you can select a specific one defining its ID here:"),
-                           value = "Ex: Chr10_1000"),
+                 textInput(ns("marker"), label = p("By default, it plots the genotypes of all markers, you can select a specific one defining its ID here. Example: Chr10_1000"),
+                           value = "all"),
                  hr(),
                  box(title = "Wrong genotypes",
                      width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
@@ -137,8 +137,8 @@ mod_simu_depths_and_genotyping_ui <- function(id){
                
                #helpText("Read counts from:"),
                fluidPage(
-                 textInput(ns("marker2"), label = p("By default, it plots the genotypes of all markers, you can select a specific one defining its ID here:"),
-                           value = "Ex: Chr10_1000"),
+                 textInput(ns("marker2"), label = p("By default, it plots the genotypes of all markers, you can select a specific one defining its ID here. Example: Chr10_1000"),
+                           value = "all"),
                  hr(),
                  box(title = "Wrong genotypes",
                      width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
@@ -194,7 +194,7 @@ mod_simu_depths_and_genotyping_server <- function(input, output, session, datas_
         
         data <- perfumaria(data)
         
-        if(input$marker != "Ex: Chr10_1000"){
+        if(input$marker != "all"){
           data <- data %>% filter(mks == input$marker)
           alpha = 1
         } else {
@@ -240,7 +240,7 @@ mod_simu_depths_and_genotyping_server <- function(input, output, session, datas_
         
         data <- perfumaria(data)
         
-        if(input$marker2 != "Ex: Chr10_1000"){
+        if(input$marker2 != "all"){
           data <- data %>% filter(mks == input$marker2)
           alpha = 1
         } else {

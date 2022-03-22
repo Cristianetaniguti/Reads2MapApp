@@ -111,16 +111,17 @@ mod_simu_maps_server <- function(input, output, session, datas_simu){
           false_mks <- as.character(data$mk.name[data$real.mks == "false positive"])
           data <- data.frame(data$mk.name, data$rf)
         } else {
+          false_mks = NULL
           data <- data.frame(data$mk.name, data$rf)
         }
-        list(data,filename)
+        list(data,filename, false_mks)
       })
     })
     
     output$map1_out <- renderImage({
       if(input$fake == "with-false"){
         draw_map2(button()[[1]], output = button()[[2]],
-                  tag = false_mks, col.tag = "darkblue",
+                  tag = button()[[3]], col.tag = "darkblue",
                   pos = T, id = F)
       } else {
         draw_map2(button()[[1]], output = button()[[2]])

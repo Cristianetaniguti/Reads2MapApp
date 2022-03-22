@@ -12,28 +12,22 @@
 #'
 #'@import largeList
 #'@import dplyr
+#'@import vroom
 #'
 #'@examples
 #' 
-# joint_same_depth("depth10_file1/SimulatedReads_results_depth10.tar.gz",
-#                  "depth10_file2/SimulatedReads_results_depth10.tar.gz",
+# joint_same_depth("depth10_file1",
+#                  "depth10_file2",
 #                  out_name = "SimulatedReads_results_depth10_joint")
 #'
 #'@export
 joint_same_depth <- function(..., out_name = "SimulatedReads_results_joint"){
   data.gz <- c(...)
-  
-  dir.create(out_name)
-  
+
   # Organizing files
   list_files <- list()
-  path_dir <- vector()
   for(i in 1:length(data.gz)){
-    path_dir <- c(path_dir,tempfile())
-    dir.create(path_dir[i])
-    untar(data.gz[i], exdir = path_dir[i])
-    list_files[[i]] <- untar(data.gz[i], list = T)
-    list_files[[i]] <- paste0(path_dir[i], "/", list_files[[i]][-1])
+    list_files[[i]] <- paste0(data.gz[i],"/",list.files(data.gz[i]))
   }
   
   list_files <- lapply(list_files, sort)
@@ -43,66 +37,54 @@ joint_same_depth <- function(..., out_name = "SimulatedReads_results_joint"){
     datas[[i]] <- sapply(list_files, "[", i)
   }
   
-  # Firsts
-  rdatas <- list()
-  mk <- 1
-  for(j in c(1,7,8)){
-    rdatas[[mk]] <- base::get(load(datas[[j]][1]))
-    mk <- mk + 1
-  }
+  datas <- datas[c(1,3,4,6,5,7,8,9,2)] # Parei aqui -- nao tem o simu_haplo, plots e positions
   
-  mk <- 1
-  datas_rds <- list()
-  for(j in c(2:6, 9, 11)){
-    datas_rds[[mk]] <- readRDS(datas[[j]][1])
-    mk <- mk + 1
-  }
-  
-  largelist_temp <- readList(datas[[10]][1])
-  saveList(largelist_temp, file= paste0(out_name,"/sequences.llo"))
-  
-  
-  if(length(unique(lengths(datas))) > 1) stop("Something is wrong.\n")
-  
-  for(i in 2:unique(lengths(datas))){
-    # choices
-    temp <- base::get(load(datas[[1]][i]))
-    rdatas[[1]][[2]] <- c(rdatas[[1]][[2]], temp[[2]])
-    temp[[3]][1] <- i
-    rdatas[[1]][[3]] <- c(rdatas[[1]][[3]], temp[[3]])
-    
-    # gusmaps
-    temp <- base::get(load(datas[[7]][i]))
-    rdatas[[2]] <- c(rdatas[[2]], temp)
-    
-    # multi_names
-    temp <- base::get(load(datas[[8]][i]))
-    rdatas[[3]] <- c(rdatas[[3]], temp)
-    
-    # datas rds
-    mk <- 1
-    for(j in c(2:6, 9, 11)){
-      datas_rds[[mk]] <- rbind(datas_rds[[mk]], readRDS(datas[[j]][i]))
-      mk <- mk +1
+  Rdata_lst <- data_lst <- datas_up <- list()
+  for(j in 1:length(datas)){
+    if(j == 6){
+      for(i in 1:length(datas[[j]])){
+        temp <- readList(datas[[j]][i])
+        if(i == 1){
+          saveList(temp, file="sequences.llo", append = F, compress = T)
+        } else {
+          saveList(temp, file="sequences.llo", append = T, compress = T)
+        }
+      }
+    } else  if(j == 7){
+      for(i in 1:length(datas[[j]])){
+        temp <- load(datas[[j]][i])
+        Rdata_lst[[i]] <- get(temp)
+      }
+      Rdatas <- do.call(c, Rdata_lst)
+      save(Rdatas, file = "gusmap_RDatas.RData")
+    } else {
+      for(i in 1:length(datas[[j]])){
+        data_lst[[i]] <- vroom(datas[[j]][i], delim = "\t")
+      }
+      if(j == 8){
+        dat <- do.call(c, data_lst)
+      } else   dat <- do.call(rbind, data_lst)
+      datas_up[[j]] <- dat
     }
-    
-    # large list
-    temp <- readList(file= datas[[10]][i])
-    saveList(temp, file= paste0(out_name,"/sequences.llo"), append = T, compress = T)
   }
   
-  # save
-  names_file <- c("choices.RData", "gusmap_RDatas.RData", "multi_names.RData")
-  for(mk in 1:3){
-    temp <- rdatas[[mk]]
-    save(temp, file = paste0(out_name, "/",names_file[mk]))
-  }
+  vroom_write(datas_up[[1]], "data1_depths_geno_prob.tsv.gz")
+  vroom_write(datas_up[[2]], "data2_maps.tsv.gz")
+  vroom_write(datas_up[[3]], "data3_filters.tsv.gz")
+  vroom_write(datas_up[[5]], "data4_times.tsv.gz")
+  vroom_write(datas_up[[4]], "data5_SNPCall_efficiency.tsv.gz")
+  vroom_write(datas_up[[9]], "simu_haplo.tsv.gz")
+  vroom_write(datas_up[[10]], "data10_counts.tsv.gz")
   
-  names_files <- c(paste0("data",1:5, ".rds"), "names.rds","simu_haplo.rds")
-  for(mk in 1:7){
-    saveRDS(datas_rds[[mk]], file = paste0(out_name,"/",names_files[mk]))
-  }
+  data.names <- as.data.frame(datas_up[[8]])
+  print(data.names)
+  vroom_write(data.names, "names.tsv.gz")
   
-  system(paste0("tar -czvf ", out_name,".tar.gz ", out_name))
+  # system("mkdir SimulatedReads_results_depth~{depth}")
+  # system("mv gusmap_RDatas.RData sequences.llo data1_depths_geno_prob.tsv.gz \
+  #           data2_maps.tsv.gz data3_filters.tsv.gz data4_times.tsv.gz data5_SNPCall_efficiency.tsv.gz data10_counts.tsv.gz \
+  #           simu_haplo.tsv.gz  names.tsv.gz plots positions SimulatedReads_results_depth~{depth}")
+  # system("tar -czvf SimulatedReads_results_depth~{depth}.tar.gz SimulatedReads_results_depth~{depth}")
+  
 }
 
