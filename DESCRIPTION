@@ -35,4 +35,5 @@ Imports:
     attempt,
     glue,
     golem,
-    htmltools
+    htmltools,
+    ggVennDiagram

@@ -16,18 +16,49 @@ prepare_datas_simu <- function(x, example_simu){
       data.gz <- "Wait"
     } else { ######## Only the toy_sample in the package - the rest in server
       if(example_simu == "bi"){
-        data.gz <- c(system.file("ext", "simu_results/depth10/biallelics/SimulatedReads_results_depth10_seed8085.tar.gz", package = "Reads2MapApp"))
+        data.gz <- c(system.file("ext", "simu_results/depth10/biallelics/SimulatedReads_results_depth10_seed8085.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "bi_dev"){
-        data.gz <- c(system.file("ext", "simu_results/depth20/biallelics_dev/SimulatedReads_results_depth20_.tar.gz", package = "Reads2MapApp"),
-                     system.file("ext", "simu_results/depth10/biallelics_dev/SimulatedReads_results_depth10_.tar.gz", package = "Reads2MapApp"))
-      } else if(example_simu == "bi_pl"){
-        data.gz <- c(system.file("ext", "simu_results/depth10/biallelics_pl/SimulatedReads_results_depth10_seed8086.tar.gz", package = "Reads2MapApp"))
+        data.gz <- c(system.file("ext", "simu_results/depth20/biallelics_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth10/biallelics_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "bi_filt_gq"){ 
+        data.gz <- c(system.file("ext", "simu_results/depth10/biallelics_filt_GQ/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/biallelics_filt_GQ/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "bi_filt_gq_dev"){
+        data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics_dev/SimulatedReads_results_depth20_seed8080.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth10/multiallelics_dev/SimulatedReads_results_depth10_seed8081.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "bi_filt_gq_noninfo"){ 
+        data.gz <- c(system.file("ext", "simu_results/depth20/biallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8296.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/biallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8297.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth10/biallelics_filt_GQ_noninfo/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "bi_filt_gq_noninfo_dev"){ 
+        data.gz <- c(system.file("ext", "simu_results/depth20/biallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20_seed8295.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/biallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth10/biallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth10/biallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth10_seed8294.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "bi_pl_filt"){
+        data.gz <- c(system.file("ext", "simu_results/depth10/biallelics_pl_filt/SimulatedReads_results_depth10_seed8090.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/biallelics_pl_filt/SimulatedReads_results_depth20_seed8089.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "multi"){
         data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics/SimulatedReads_results_depth20_seed8082.tar.gz", package = "Reads2MapApp"),
                      system.file("ext", "simu_results/depth10/multiallelics/SimulatedReads_results_depth10_seed8084.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "multi_dev"){
         data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics_dev/SimulatedReads_results_depth20_seed8080.tar.gz", package = "Reads2MapApp"),
                      system.file("ext", "simu_results/depth10/multiallelics_dev/SimulatedReads_results_depth10_seed8081.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "multi_filt_gq"){ 
+        data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics_filt_GQ/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth10/multiallelics_filt_GQ/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "multi_filt_gq_dev"){
+        data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "multi_filt_gq_noninfo"){ 
+        data.gz <- c(system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8299.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8300.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "multi_filt_gq_noninfo_dev"){ 
+        data.gz <- c(system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20_seed8291.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "toy_sample_bi"){
         data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "toy_sample_multi"){
@@ -39,27 +70,39 @@ prepare_datas_simu <- function(x, example_simu){
     if(data.gz == "Wait"){
       cat("Waiting...\n")
     } else {
-      path_dir <- tempdir()
+      
       list_files <- list()
       for(i in 1:length(data.gz)){
+        path_dir <- file.path(tempdir(),paste0("/temp", i))
+        dir.create(path_dir, showWarnings = FALSE)
         untar(data.gz[i], exdir = path_dir)
         list_files[[i]] <- untar(data.gz[i], list = T)
+        list_files[[i]] <- file.path(path_dir, list_files[[i]])
       }
       
-      list_files <- lapply(list_files, function(x) file.path(path_dir, x))
       for_rm <- sapply(list_files, "[", 1)
       list_files <- lapply(list_files, "[", -1)
       list_files <- lapply(list_files, sort)
       
       # Remove GATK Qual plots
       if(length(grep("QualPlots", list_files)) > 0)
-        list_files <- lapply(list_files, function(x) x[-grep("QualPlots", x)])
+        list_files <- lapply(list_files, function(x)  if(any(grepl("QualPlots", x))) x[-grep("QualPlots", x)] else x)
+      
+      # positions
+      positions <- list()
+      for(i in 1:length(list_files)){
+        idx <- which(grepl("positions.tar.gz", list_files[[i]]))
+        positions[[i]] <- list_files[[i]][idx]
+        list_files[[i]] <- list_files[[i]][-idx]
+      }
       
       # Data
       datas <- list()
       for(i in 1:length(list_files[[1]])){
         datas[[i]] <- sapply(list_files, "[", i)
       }
+      
+      datas[[length(datas)+1]] <- unlist(positions)
       
       ## Tables
       data1_depths_geno_prob <- data2_maps <- data3_filters <- data10_counts <- vector()
@@ -331,7 +374,7 @@ avalSNPs_graph_filt <- function(seeds){
     p[[i]] <- ggVennDiagram(seeds[[i]][1:3], label = "both", color = 1) + 
       scale_color_grey() + scale_fill_viridis_c() + theme_bw() + coord_sf(clip = "off")
   }
-    ggarrange(plotlist = p)
+  ggarrange(plotlist = p)
 }
 
 filters_graph <- function(data){

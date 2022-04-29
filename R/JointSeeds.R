@@ -5,6 +5,8 @@
 #
 ########################################################
 
+# Deprecated
+
 #'Joint simulations with same depth and different seed
 #'
 #'@param ... tar.gz files outputted from onemap_workflows

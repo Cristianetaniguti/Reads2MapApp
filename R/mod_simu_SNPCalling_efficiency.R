@@ -27,7 +27,7 @@ mod_simu_SNPCalling_efficiency_ui <- function(id){
              ),
              box(title = "SNP calling efficiency - with VCFtools filters",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                 plotOutput(ns("snpcall_filt_out")), hr(),
+                 uiOutput(ns("plot.ui")), hr(),
                  actionButton(ns("go"), "Update",icon("refresh")),
              )
       ),
@@ -107,6 +107,16 @@ mod_simu_SNPCalling_efficiency_server <- function(input, output, session, datas_
   
   output$snpcall_filt_out <- renderPlot({
     avalSNPs_graph_filt(button()[[2]])
+  })
+  
+  plotHeight <- reactive({
+    size <- round(length(button()[[2]])/3, 0)*500
+    if(size == 0) size <- 500
+    size
+  })
+  
+  output$plot.ui <- renderUI({
+    plotOutput(ns("snpcall_filt_out"), height = plotHeight())
   })
   
 }

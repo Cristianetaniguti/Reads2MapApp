@@ -174,7 +174,7 @@ mod_simu_roc_curves_server <- function(input, output, session, datas_simu){
           df$depth <- methods$depth[i]
           df$best_tr <- best$threshold
           
-          n <- 150 # Only a subset of dots
+          n <- 250 # Only a subset of dots
           vec <- 1:dim(df)[1]
           subs <- round(seq(min(vec),max(vec),(max(vec)-min(vec))/(n-1)), 0)
           subs_df <- df[order(df$sensitivity),]

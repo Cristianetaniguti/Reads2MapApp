@@ -30,8 +30,32 @@ prepare_datas_emp <- function(x, example_emp){
       #   data.gz <- system.file("ext", "eucalyptus/biallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
       # } else if(example_emp == "toy_sample"){
       #   data.gz <- system.file("ext", "toy_sample_emp/temp/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      if(example_emp == "rose"){
-        data.gz <- system.file("ext", "rose/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      if(example_emp == "rose1"){
+        data.gz <- system.file("ext", "rose/biallelics_filt_PL_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "rose2"){
+        data.gz <- system.file("ext", "rose/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "rose3"){
+        data.gz <- system.file("ext", "rose/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "rose4"){
+        data.gz <- system.file("ext", "rose/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "rose5"){
+        data.gz <- system.file("ext", "rose/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "rose6"){
+        data.gz <- system.file("ext", "rose/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "rose7"){
+        data.gz <- system.file("ext", "rose/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "populus1"){
+        data.gz <- system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "populus2"){
+        data.gz <- system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "populus3"){
+        data.gz <- system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "populus4"){
+        data.gz <- system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "populus5"){
+        data.gz <- system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      } else if(example_emp == "populus6"){
+        data.gz <- system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
       } else if(example_emp == "toy_sample_multi"){
          data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
       }

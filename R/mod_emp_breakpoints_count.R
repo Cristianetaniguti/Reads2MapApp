@@ -67,7 +67,7 @@ mod_emp_breakpoints_count_server <- function(input, output, session, datas_emp){
         stop(safeError("We do not include in this app support to do it with GUSMap.
                          Please, select other option."))
       } else {
-        idx <- which(result_list[[6]] == temp_n)
+        idx <- which(datas_emp()[[6]] == temp_n)
         data <- readList(datas_emp()[[8]], index = idx)
         data <- data[[1]]
         class(data) <- "sequence"
