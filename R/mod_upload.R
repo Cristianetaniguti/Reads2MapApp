@@ -65,35 +65,42 @@ mod_upload_ui <- function(id){
                    "See description of each dataset in the tables bellow.",
                    selectInput(ns("example_emp"), label = h4(tags$b("EmpiricalReads2Map.wdl results")), 
                                choices = list(
-                               "Roses 37% Chr01	- biallelics filt PL and noninfo" = "rose1",
-                               "Roses 37% Chr01	- biallelics filt GQ and noninfo" = "rose2",
-                               "Roses 37% Chr01	- multiallelics filt GQ and noninfo" = "rose3",
-                               "Roses 37% Chr01	- biallelics  GQ" = "rose4",
-                               "Roses 37% Chr01	- multiallelics GQ" = "rose5",
-                               "Roses 37% Chr01	- biallelics filt GQ" = "rose6",
-                               "Roses 37% Chr01	- multiallelics filt GQ" = "rose7",
-                               "P. tremula 37% Chr10 - biallelics GQ" = "populus1",
-                               "P. tremula 37% Chr10 - biallelics filt GQ" = "populus2",
-                               "P. tremula 37% Chr10 - biallelics filt GQ and noninfo" = "populus3",
-                               "P. tremula 37% Chr10 - multiallelics GQ" = "populus4",
-                               "P. tremula 37% Chr10 - multiallelics filt GQ" = "populus5",
-                               "P. tremula 37% Chr10 - multiallelics filt GQ and noninfo" = "populus6",
-                                "Toy sample with multiallelics" = "toy_sample_multi"), 
+                                 "Roses 37% Chr01	- biallelics filt GQ and noninfo" = "rose_biallelics_filt_GQ_noninfo",
+                                 "Roses 37% Chr01	- multiallelics filt GQ and noninfo" = "rose_multiallelics_filt_GQ_noninfo",
+                                 "Roses 37% Chr01	- biallelics  GQ" = "rose_biallelics_GQ",
+                                 "Roses 37% Chr01	- multiallelics GQ" = "rose_multiallelics_GQ",
+                                 "Roses 37% Chr01	- biallelics filt GQ" = "rose_biallelics_filt_GQ",
+                                 "Roses 37% Chr01	- multiallelics filt GQ" = "rose_multiallelics_filt_GQ",
+                                 "P. tremula 37% Chr10 - biallelics GQ" = "populus_biallelics_GQ",
+                                 "P. tremula 37% Chr10 - biallelics filt GQ" = "populus_biallelics_filt_GQ",
+                                 "P. tremula 37% Chr10 - biallelics filt GQ and noninfo" = "populus_biallelics_filt_GQ_noninfo",
+                                 "P. tremula 37% Chr10 - multiallelics GQ" = "populus_multiallelics_GQ",
+                                 "P. tremula 37% Chr10 - multiallelics filt GQ" = "populus_multiallelics_filt_GQ",
+                                 "P. tremula 37% Chr10 - multiallelics filt GQ and noninfo" = "populus_multiallelics_filt_GQ_noninfo",
+                                 "P. tremula 37% Chr10 with 6 contaminants - biallelics GQ" = "populus_biallelics_GQ_cont",
+                                 "P. tremula 37% Chr10 with 6 contaminants - biallelics filt GQ" = "populus_biallelics_filt_GQ_cont",
+                                 "P. tremula 37% Chr10 with 6 contaminants - biallelics filt GQ and noninfo" = "populus_biallelics_filt_GQ_noninfo_cont",
+                                 "P. tremula 37% Chr10 with 6 contaminants - multiallelics GQ" = "populus_multiallelics_GQ_cont",
+                                 "P. tremula 37% Chr10 with 6 contaminants - multiallelics filt GQ" = "populus_multiallelics_filt_GQ_cont",
+                                 "P. tremula 37% Chr10 with 6 contaminants - multiallelics filt GQ and noninfo" = "populus_multiallelics_filt_GQ_noninfo_cont",
+                                 "Toy sample with multiallelics" = "toy_sample_multi"), 
                                selected = "toy_sample_multi"),
                  )
              )
       ),
       column(width = 12,
-             "Here we describe some of the main characteristics of each dataset available in this server. 
+             fluidPage(
+               "Here we describe some of the main characteristics of each dataset available in this server. 
                      It is possible to access all other arguments used in the analysis in the metadata produced by the workflows.", hr(),
-             box(width = NULL,  solidHeader = TRUE, 
-                 collapsible = FALSE, status="primary", title= "SimulatedReads2Map results available",
-                 DT::dataTableOutput(ns("simulated_datasets")),
-             ), 
-             hr(),
-             box(width = NULL,  solidHeader = TRUE, 
-                 collapsible = FALSE, status="primary", title= "EmpiricalReads2Map results available",
-                 DT::dataTableOutput(ns("empirical_datasets")),
+               box(width = NULL,  solidHeader = TRUE, 
+                   collapsible = FALSE, status="primary", title= "SimulatedReads2Map results available",
+                   DT::dataTableOutput(ns("simulated_datasets")),
+               ), 
+               hr(),
+               box(width = NULL,  solidHeader = TRUE, 
+                   collapsible = FALSE, status="primary", title= "EmpiricalReads2Map results available",
+                   DT::dataTableOutput(ns("empirical_datasets")),
+               )
              )
       )
     )
@@ -104,26 +111,26 @@ mod_upload_ui <- function(id){
 #'
 #' @noRd 
 mod_upload_server <- function(input, output, session){
-    ns <- session$ns
-    ##################################################
-    # Simulations
-    ##################################################
-    
-    # Input tables
-    output$simulated_datasets <- DT::renderDataTable({
-      DT::datatable(simulated_datasets, options = list(scrollX = TRUE))
-    })
-    
-    output$empirical_datasets <- DT::renderDataTable({
-      DT::datatable(empirical_datasets, options = list(scrollX = TRUE))
-    })
-    
-    return(
-      list(
-        datas_simu = reactive({prepare_datas_simu(x=input$simulatedreads, example_simu =input$example_simu)}),
-        datas_emp = reactive({prepare_datas_emp(input$empiricalreads, input$example_emp)})
-      )
+  ns <- session$ns
+  ##################################################
+  # Simulations
+  ##################################################
+  
+  # Input tables
+  output$simulated_datasets <- DT::renderDataTable({
+    DT::datatable(simulated_datasets, options = list(scrollX = TRUE))
+  })
+  
+  output$empirical_datasets <- DT::renderDataTable({
+    DT::datatable(empirical_datasets, options = list(scrollX = TRUE))
+  })
+  
+  return(
+    list(
+      datas_simu = reactive({prepare_datas_simu(x=input$simulatedreads, example_simu =input$example_simu)}),
+      datas_emp = reactive({prepare_datas_emp(input$empiricalreads, input$example_emp)})
     )
+  )
 }
 
 ## To be copied in the UI

@@ -174,7 +174,6 @@ mod_simu_depths_and_genotyping_server <- function(input, output, session, datas_
                         selected=unlist(seeds_choice)[1])
     })
     
-    
     button1 <- eventReactive(input$go1, {
       withProgress(message = 'Building left graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))

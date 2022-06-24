@@ -57,7 +57,7 @@ prepare_datas_simu <- function(x, example_simu){
                      system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8300.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "multi_filt_gq_noninfo_dev"){ 
         data.gz <- c(system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-                     system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20_seed8291.tar.gz", package = "Reads2MapApp"),
+                     system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20_seed8303.tar.gz", package = "Reads2MapApp"),
                      system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "toy_sample_bi"){
         data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
@@ -188,10 +188,16 @@ errorProb_graph <- function(data, genotypes, alpha){
   data <- data.frame(data)
   if(dim(data)[1] == 0) stop(safeError("This marker does not exists in this dataset."))
   
-  colors <- c("gray", "#5289C7", "#4EB265", "#882E72", "#F6C141")
-  names(colors) <-  c("missing", "homozygous-alt","homozygous-ref", "heterozygous", "homozygous-alt == ref")
+  #colors <- c("gray", "#5289C7", "#4EB265", "#882E72", "#F6C141")
+  colors <- c("gray", "#5289C7", "#4EB265", "#882E72")
+  #names(colors) <-  c("missing", "homozygous-alt","homozygous-ref", "heterozygous", "homozygous-alt == ref")
+  names(colors) <-  c("missing", "homozygous-alt","homozygous-ref", "heterozygous")
+  
   data$pop <- "progeny"
   data$pop[data$ind %in% c("P1", "P2")] <- "parents"
+  
+  data$alt <- as.numeric(data$alt)
+  data$gt.onemap.alt.ref <- as.factor(data$gt.onemap.alt.ref)
   
   if(genotypes == "simulated_genotypes"){
     data %>% ggplot(aes(x=ref, y=alt, color=gabGT)) + 
