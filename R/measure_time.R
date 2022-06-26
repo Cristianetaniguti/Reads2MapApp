@@ -5,7 +5,7 @@
 #' @param interactive plots an plotly-type graphic with possibility to see other values in an interactive way
 #' 
 #' @import ggplot2
-#' @import plotly
+#' @importFrom plotly ggplotly
 #' 
 #' @return ggplot boxplot with time spent by each task
 #' 
@@ -128,7 +128,7 @@ efficiency_table <- function(infos_seff, jobs){
 #' @import ggplot2
 #' @import tidyr
 #' @import dplyr
-#' @import plotly
+#' @importFrom plotly ggplotly
 #' 
 #' @export
 efficiency_graphics_perc <- function(eff_table, interactive=TRUE){
@@ -150,7 +150,7 @@ efficiency_graphics_perc <- function(eff_table, interactive=TRUE){
 #' @import ggplot2
 #' @import tidyr
 #' @import dplyr
-#' @import plotly
+#' @importFrom plotly ggplotly
 #' 
 #' @export
 efficiency_graphics_cpu <- function(eff_table, interactive=TRUE){
@@ -172,7 +172,7 @@ efficiency_graphics_cpu <- function(eff_table, interactive=TRUE){
 #' @import ggplot2
 #' @import tidyr
 #' @import dplyr
-#' @import plotly
+#' @importFrom plotly ggplotly
 #' 
 #' @export
 efficiency_graphics_mem <- function(eff_table, interactive=TRUE){

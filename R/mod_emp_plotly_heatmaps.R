@@ -59,7 +59,7 @@ mod_emp_plotly_heatmaps_ui <- function(id){
     
 #' emp_plotly_heatmaps Server Functions
 #'
-#' @import plotly
+#' @importFrom plotly renderPlotly
 #' 
 #' @noRd 
 mod_emp_plotly_heatmaps_server <- function(input, output, session, datas_emp){
