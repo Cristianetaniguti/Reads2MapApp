@@ -80,6 +80,8 @@ mod_simu_overview_map_size_ui <- function(id){
     
 #' simu_overview_map_size Server Functions
 #'
+#' @importFrom stats aggregate cor.test median sd var
+#'
 #' @noRd 
 mod_simu_overview_map_size_server <- function(input, output, session, datas_simu){
     ns <- session$ns

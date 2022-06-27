@@ -1,5 +1,8 @@
 #' Read input data
 #' 
+#' @param x inputted dataset
+#' @param example_simu selected example id
+#' 
 #' @import vroom
 #' @import largeList
 #' 
@@ -11,7 +14,7 @@ prepare_datas_simu <- function(x, example_simu){
     if(!is.null(x)){
       data.gz <- x[,4]
       path = "data/"
-    } else if(is.null(example_simu)) {
+    } else if(example_simu=="none") {
       cat("Wait credentials\n")
       data.gz <- "Wait"
     } else { ######## Only the toy_sample in the package - the rest in server
@@ -62,7 +65,7 @@ prepare_datas_simu <- function(x, example_simu){
       } else if(example_simu == "toy_sample_bi"){
         data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "toy_sample_multi"){
-        data.gz <- c(system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+        data.gz <- system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp")
       }
     }
     incProgress(0.4, detail = paste("Uploading simulation data..."))
@@ -183,6 +186,10 @@ prepare_datas_simu <- function(x, example_simu){
 
 
 #' Functions to build graphics for the data from simulations
+#' 
+#' @param data data.frame
+#' @param genotypes to be documented
+#' @param alpha transparency of dots
 #' 
 errorProb_graph <- function(data, genotypes, alpha){
   data <- data.frame(data)

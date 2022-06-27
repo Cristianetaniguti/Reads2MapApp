@@ -20,7 +20,12 @@ app_sys <- function(...){
 #' @noRd
 get_golem_config <- function(
   value, 
-  config = Sys.getenv("R_CONFIG_ACTIVE", "default"), 
+  config = Sys.getenv(
+    "GOLEM_CONFIG_ACTIVE", 
+    Sys.getenv("R_CONFIG_ACTIVE", 
+               "default"
+    )
+  ), 
   use_parent = TRUE
 ){
   config::get(

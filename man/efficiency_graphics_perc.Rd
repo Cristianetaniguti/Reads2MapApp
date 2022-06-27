@@ -6,6 +6,11 @@
 \usage{
 efficiency_graphics_perc(eff_table, interactive = TRUE)
 }
+\arguments{
+\item{eff_table}{data.frame from efficiency_table function}
+
+\item{interactive}{logical indicating if a plotly graphic should be displayed}
+}
 \description{
 HPC efficiency graphics
 }

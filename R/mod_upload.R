@@ -46,8 +46,9 @@ mod_upload_ui <- function(id){
                                               "Biallelics + multiallelics filtered GQ and non-informative" = "multi_filt_gq_noninfo",
                                               "Biallelics + multiallelics filtered GQ and non-informative with segregation distortion" = "multi_filt_gq_noninfo_dev",
                                               "Toy sample without multiallelics" = "toy_sample_bi",
-                                              "Toy sample with multiallelics" = "toy_sample_multi"),
-                               selected = "toy_sample_multi"),
+                                              "Toy sample with multiallelics" = "toy_sample_multi",
+                                              "None" = "none"),
+                               selected = "none"),
                  )
              )
       ),
@@ -83,8 +84,9 @@ mod_upload_ui <- function(id){
                                  "P. tremula 37% Chr10 with 6 contaminants - multiallelics GQ" = "populus_multiallelics_GQ_cont",
                                  "P. tremula 37% Chr10 with 6 contaminants - multiallelics filt GQ" = "populus_multiallelics_filt_GQ_cont",
                                  "P. tremula 37% Chr10 with 6 contaminants - multiallelics filt GQ and noninfo" = "populus_multiallelics_filt_GQ_noninfo_cont",
-                                 "Toy sample with multiallelics" = "toy_sample_multi"), 
-                               selected = "toy_sample_multi"),
+                                 "Toy sample with multiallelics" = "toy_sample_multi",
+                                 "None"= "none"), 
+                               selected = "none"),
                  )
              )
       ),

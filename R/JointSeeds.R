@@ -16,13 +16,8 @@
 #'@import dplyr
 #'@import vroom
 #'
-#'@examples
 #' 
-# joint_same_depth("depth10_file1",
-#                  "depth10_file2",
-#                  out_name = "SimulatedReads_results_depth10_joint")
 #'
-#'@export
 joint_same_depth <- function(..., out_name = "SimulatedReads_results_joint"){
   data.gz <- c(...)
 

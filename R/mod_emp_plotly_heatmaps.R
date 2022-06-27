@@ -7,6 +7,8 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
+#' @importFrom plotly plotlyOutput
+#' 
 mod_emp_plotly_heatmaps_ui <- function(id){
   ns <- NS(id)
   tagList(

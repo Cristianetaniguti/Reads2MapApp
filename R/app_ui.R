@@ -53,10 +53,10 @@ app_ui <- function(request) {
           menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times"),
           tags$li(class = "dropdown",
                   tags$a(href="https://statgen-esalq.github.io/", target="_blank", 
-                         tags$img(height = "55px", alt="Logo", src="logo_fundo_azul.png")
+                         tags$img(height = "55px", alt="Logo", src="www/logo_fundo_azul.png")
                   ),
                   tags$a(href="https://www.polyploids.org/", target="_blank", 
-                         tags$img(height = "55px", alt="Logo", src="logo_white.png"))
+                         tags$img(height = "55px", alt="Logo", src="www/logo_white.png"))
                   )
         )
       ),

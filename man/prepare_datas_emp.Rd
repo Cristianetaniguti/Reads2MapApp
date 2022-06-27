@@ -6,6 +6,11 @@
 \usage{
 prepare_datas_emp(x, example_emp)
 }
+\arguments{
+\item{x}{inputted dataset}
+
+\item{example_emp}{selected example id}
+}
 \description{
 Read empirical input data
 }

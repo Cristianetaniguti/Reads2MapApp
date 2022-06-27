@@ -59,6 +59,7 @@ mod_emp_maps_ui <- function(id){
 #' @importFrom ggpubr ggarrange
 #' @import onemap
 #' @import GUSMap
+#' @importFrom grDevices dev.off pdf rainbow
 #'
 #' @noRd 
 mod_emp_maps_server <- function(input, output, session, datas_emp){

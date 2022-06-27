@@ -62,9 +62,11 @@ transform_day <- function(x){
 #' Convert data obtained by efficiency script to 
 #' tables
 #' 
+#' @param infos_seff information obtained throught command seff
+#' @param jobs vector defining job numbers
+#' 
 #' @import lubridate
 #'
-#' @export
 efficiency_table <- function(infos_seff, jobs){
   
   df <- read.table(infos_seff, sep = "\n")
@@ -125,12 +127,14 @@ efficiency_table <- function(infos_seff, jobs){
 
 #' HPC efficiency graphics
 #' 
+#' @param eff_table data.frame from efficiency_table function
+#' @param interactive logical indicating if a plotly graphic should be displayed
+#' 
 #' @import ggplot2
 #' @import tidyr
 #' @import dplyr
 #' @importFrom plotly ggplotly
 #' 
-#' @export
 efficiency_graphics_perc <- function(eff_table, interactive=TRUE){
   p <- eff_table %>%
     mutate(mem = (mem_used_GB/mem_GB)*100 , cpu = (cpu_used/cpu)*100) %>%
@@ -147,12 +151,14 @@ efficiency_graphics_perc <- function(eff_table, interactive=TRUE){
 
 #' HPC efficiency graphics
 #' 
+#' @param eff_table data.frame from efficiency_table function
+#' @param interactive logical indicating if a plotly graphic should be displayed
+#' 
 #' @import ggplot2
 #' @import tidyr
 #' @import dplyr
 #' @importFrom plotly ggplotly
 #' 
-#' @export
 efficiency_graphics_cpu <- function(eff_table, interactive=TRUE){
   p <- eff_table %>%
     select(tasks, cpu_used) %>% pivot_longer(cols = c(2), values_to = "usage (min)") %>%
@@ -169,12 +175,14 @@ efficiency_graphics_cpu <- function(eff_table, interactive=TRUE){
 
 #' HPC efficiency graphics
 #' 
+#' @param eff_table data.frame from efficiency_table function
+#' @param interactive logical indicating if a plotly graphic should be displayed
+#' 
 #' @import ggplot2
 #' @import tidyr
 #' @import dplyr
 #' @importFrom plotly ggplotly
 #' 
-#' @export
 efficiency_graphics_mem <- function(eff_table, interactive=TRUE){
   p <- eff_table %>%
     select(tasks, mem_used_GB) %>% pivot_longer(cols = c(2), values_to="usage (GB)") %>%

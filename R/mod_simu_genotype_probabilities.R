@@ -53,15 +53,7 @@ mod_simu_genotype_probabilities_ui <- function(id){
       ), br(),
       column(width=12,
              box(width=NULL, solidHeader = TRUE,
-                 tags$strong("Progeny genotypes"), br(),
-                 "We can evaluate the estimated progenies genotypes concordance by comparing the agreement between
-                 real and estimated heterozygous, reference allele homozygous (homozygous-ref), and alternative
-                 allele homozygous (homozygous-alt). For that, we can use conditional probabilities: P (Estimate =
-                 E|M ethod = M ∩ Real = R). It returns the probability of an estimated genotype given a method and
-                 a real genotype. The methods are the combination of each SNP caller, genotype caller, and reads count
-                 source. We expect that a good method results in high probabilities for the same estimated and real genotypes
-                 (e.g. P (E = heterozygous|M ∩ R = hetetozygous)) and low probabilities when they are different
-                 (e.g. P (E = heterozygous|M ∩ S = homozygous − alt))."),
+                 tags$strong("Progeny genotypes"), br()),
              hr(),
              
              box(title = "Progeny  error and conditional genotypes probabilities",
@@ -71,11 +63,7 @@ mod_simu_genotype_probabilities_ui <- function(id){
       ),
       column(width = 12,
              box(width=NULL, solidHeader = TRUE,
-                 tags$strong("Parents genotypes"), br(),
-                 "To test the capabilities of software correctly estimating the parents’ genotypes, we can use the
-                 same conditional probability, but, instead of measure the similarities between individuals genotypes, we
-                 test the combination of both parents genotypes. To do that we perform the conditional probabilities
-                 analysis between the marker types (e.g. P (E = B3.7|M ∩ R = B3.7))"),
+                 tags$strong("Parents genotypes"), br()),
              hr(),
              box(title = "Parents conditional genotypes probabilities - only biallelic markers.",
                  width = NULL, solidHeader = TRUE, collapsible = TRUE, status="primary",
