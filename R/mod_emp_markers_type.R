@@ -17,7 +17,7 @@ mod_emp_markers_type_ui <- function(id){
              box(title = "Marker type",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("marker_type_emp_out")), hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       column(width = 6,

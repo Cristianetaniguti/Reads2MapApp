@@ -19,7 +19,7 @@ mod_simu_markers_type_ui <- function(id){
                  width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("marker_type_out"), width = "100%", height = "550px"),
                  hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       

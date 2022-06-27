@@ -20,7 +20,7 @@ mod_emp_maps_ui <- function(id){
              box(title = "Recombination fraction heatmap",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("map1_emp_out")),hr(),
-                 actionButton(ns("go1"), "Update",icon("refresh")),
+                 actionButton(ns("go1"), "Update",icon("refresh", verify_fa = FALSE)),
              ),
              box(solidHeader = T,
                  radioButtons(ns("ErrorProb"), label = p("Genotyping method"),
@@ -46,7 +46,7 @@ mod_emp_maps_ui <- function(id){
       column(width = 4,
              box(title = "Genetic map",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                 actionButton(ns("go2"), "Update",icon("refresh")),
+                 actionButton(ns("go2"), "Update",icon("refresh", verify_fa = FALSE)),
                  imageOutput(ns("map_emp_out"), width = "100%", height = "100%"),
              )
       )

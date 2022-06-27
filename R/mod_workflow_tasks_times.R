@@ -38,7 +38,7 @@ mod_workflow_tasks_times_ui <- function(id){
     box(solidHeader = T, collapsible = FALSE, status="primary",
         title = "Time spent by each WDL task",
         width = NULL,
-        actionButton(ns("go"), "Update",icon("refresh")),
+        actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
         # div(downloadButton("wf_out_down"),style="float:right"),
         hr(),
         plotlyOutput(ns("wf_times_out"), width = "100%", height = "100%"),

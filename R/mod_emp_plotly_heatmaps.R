@@ -17,7 +17,7 @@ mod_emp_plotly_heatmaps_ui <- function(id){
              box(title = "Interactive recombination fraction heatmap",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotlyOutput(ns("heatmaps_emp_out"), height = 650),hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       )
     ),

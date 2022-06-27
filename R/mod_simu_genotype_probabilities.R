@@ -46,7 +46,7 @@ mod_simu_genotype_probabilities_ui <- function(id){
                                       choices = CountsFrom_choice,
                                       selected = unlist(CountsFrom_choice)),
                    hr(),
-                   actionButton(ns("go"), "Update",icon("refresh")),
+                   actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
                    # ),
                  )
              )

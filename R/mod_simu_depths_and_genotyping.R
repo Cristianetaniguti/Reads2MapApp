@@ -21,7 +21,7 @@ mod_simu_depths_and_genotyping_ui <- function(id){
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("disper_depth_out")),
                  hr(),
-                 actionButton(ns("go1"), "Update",icon("refresh")),
+                 actionButton(ns("go1"), "Update",icon("refresh", verify_fa = FALSE)),
              ),
              box(
                width = NULL, solidHeader = TRUE,
@@ -86,7 +86,7 @@ mod_simu_depths_and_genotyping_ui <- function(id){
                  plotOutput(ns("disper_depth2_out")),
                  hr(),
                  tableOutput(ns('disper_depth2_cor_out')),
-                 actionButton(ns("go2"), "Update",icon("refresh")),
+                 actionButton(ns("go2"), "Update",icon("refresh", verify_fa = FALSE)),
              ),
              
              box(
