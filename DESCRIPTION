@@ -37,4 +37,5 @@ Imports:
     golem,
     htmltools,
     ggVennDiagram,
-    lubridate
+    lubridate,
+    markdown

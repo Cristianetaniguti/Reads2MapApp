@@ -6,7 +6,7 @@
 #' @importFrom utils read.table untar
 #' @import vroom
 #' @import largeList
-prepare_datas_emp <- function(x, example_emp){
+prepare_datas_emp <- function(x = NULL, example_emp = NULL){
   # This function makes adjustments in the input tar.gz file to be processed inside the app
   # It returns six data objects and the app options in a list format
   cat(example_emp)
@@ -14,7 +14,10 @@ prepare_datas_emp <- function(x, example_emp){
     if(!is.null(x)){
       data.gz <- x[,4]
       path = "data/"
-    } else if(example_emp== "none"){
+    } else if(is.null(example_emp)){
+      cat("Wait credentials\n")
+      data.gz <- "Wait"
+    } else if(example_emp== "none" ){
       cat("Wait credentials\n")
       data.gz <- "Wait"
     } else { ######## Available examples

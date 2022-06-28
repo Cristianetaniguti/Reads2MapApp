@@ -16,6 +16,7 @@ RUN Rscript -e 'remotes::install_version("config",upgrade="never", version = "0.
 RUN Rscript -e 'remotes::install_version("attempt",upgrade="never", version = "0.3.1")'
 RUN Rscript -e 'remotes::install_version("DT",upgrade="never", version = "0.22")'
 RUN Rscript -e 'remotes::install_version("ggpubr",upgrade="never", version = "0.4.0")'
+RUN Rscript -e 'remotes::install_version("markdown",upgrade="never", version = "1.1")'
 RUN Rscript -e 'remotes::install_version("lubridate",upgrade="never", version = "1.8.0")'
 RUN Rscript -e 'remotes::install_version("ggVennDiagram",upgrade="never", version = "1.2.0")'
 RUN Rscript -e 'remotes::install_version("golem",upgrade="never", version = "0.3.2")'
@@ -24,6 +25,7 @@ RUN Rscript -e 'remotes::install_version("pROC",upgrade="never", version = "1.18
 RUN Rscript -e 'remotes::install_version("vroom",upgrade="never", version = "1.5.3")'
 RUN Rscript -e 'remotes::install_version("largeList",upgrade="never", version = "0.3.1")'
 RUN Rscript -e 'remotes::install_version("shinydashboard",upgrade="never", version = "0.7.2")'
+RUN Rscript -e 'remotes::install_github("tpbilton/GUSbase", ref = "92119b9c57faa7abeede8236d24a4a8e85fb3df7")'
 RUN Rscript -e 'remotes::install_github("tpbilton/GUSMap@4d7d4057049819d045750d760a45976c8f30dac6")'
 RUN Rscript -e 'remotes::install_github("Cristianetaniguti/onemap@7f5ac29d65d0bd82d9e46fcc2a26e3fc904a0782")'
 RUN mkdir /build_zone

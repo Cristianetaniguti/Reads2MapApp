@@ -6,14 +6,18 @@
 #' @import vroom
 #' @import largeList
 #' 
-prepare_datas_simu <- function(x, example_simu){
+prepare_datas_simu <- function(x=NULL, example_simu=NULL){
   withProgress(message = 'Working:', value = 0, {
     incProgress(0.2, detail = paste("Uploading simulation data..."))
     # This function makes adjustments in the input tar.gz file to be processed inside the app
     # It returns six data objects and the app options in a list format
+    cat(example_simu)
     if(!is.null(x)){
       data.gz <- x[,4]
       path = "data/"
+    } else if(is.null(example_simu)){
+      cat("Wait credentials\n")
+      data.gz <- "Wait"
     } else if(example_simu=="none") {
       cat("Wait credentials\n")
       data.gz <- "Wait"

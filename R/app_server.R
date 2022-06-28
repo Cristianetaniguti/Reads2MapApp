@@ -12,26 +12,26 @@ app_server <- function( input, output, session ) {
   #####################
   # Credentials
   ####################
-  # passwords <- c()
-  # 
-  # credentials <- data.frame(
-  #   user =     names(passwords), # mandatory
-  #   password = as.vector(passwords), # mandatory
-  #   start = c(rep("2021-02-28", length(passwords))), # optinal (all others)
-  #   expire = c(rep(NA,length(passwords))),
-  #   admin = c(TRUE, rep(FALSE, length(passwords)-1)),
-  #   comment = "Simple and secure authentification mechanism
-  # for single ‘Shiny’ applications.",
-  #   stringsAsFactors = FALSE
-  # )
-  # 
-  # res_auth <- shinymanager::secure_server(
-  #   check_credentials = shinymanager::check_credentials(credentials)
-  # )
-  # 
-  # output$auth_output <- renderPrint({
-  #   reactiveValuesToList(res_auth)
-  # })
+  passwords <- c("Visitor" = "MuitoMapa123")
+
+  credentials <- data.frame(
+    user =     names(passwords), # mandatory
+    password = as.vector(passwords), # mandatory
+    start = c(rep("2021-02-28", length(passwords))), # optinal (all others)
+    expire = c(rep(NA,length(passwords))),
+    admin = c(TRUE, rep(FALSE, length(passwords)-1)),
+    comment = "Simple and secure authentification mechanism
+  for single ‘Shiny’ applications.",
+    stringsAsFactors = FALSE
+  )
+
+  res_auth <- shinymanager::secure_server(
+    check_credentials = shinymanager::check_credentials(credentials)
+  )
+
+  output$auth_output <- renderPrint({
+    reactiveValuesToList(res_auth)
+  })
   
   
   ## Start modules
