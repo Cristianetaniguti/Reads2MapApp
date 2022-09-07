@@ -33,7 +33,11 @@ data.gz <- c(system.file("ext", "simu_results/depth10/biallelics/SimulatedReads_
              system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8300.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20_seed8303.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+             system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"),
+             system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo_dev_replaced/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
+             system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev_replaced/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+
+data.gz[31] <- "C:/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/simu_results/depth20/multiallelics_filt_GQ_noninfo_dev_replaced/SimulatedReads_results_depth20.tar.gz"
 
 # Big dataset
 counts.total <- data.frame()
@@ -78,10 +82,10 @@ for(i in 1:length(data.gz)){
     class(data) <- "sequence"
     
     #df <- progeny_haplotypes(data, ind = 1:5, most_likely = T)
-    df <- progeny_haplotypes2(data, ind = "all", most_likely = T)
+    df <- progeny_haplotypes(data, ind = "all", most_likely = T)
     #plot(df)
     
-    counts.est <- progeny_haplotypes_counts2(df)
+    counts.est <- progeny_haplotypes_counts(df)
     #counts.est2 <- progeny_haplotypes_counts(df2)
     
     # Difference est - simu
@@ -111,7 +115,10 @@ for(i in 1:length(data.gz)){
     
     if(grepl("multiallelics", data.gz[i])) dataset <- "multi" else dataset <- "bi"
     if(grepl("_dev", data.gz[i])) dataset2 <- "dev" else dataset2 <- "nondev"
-    if(grepl("_filt_GQ_noninfo", data.gz[i])) dataset3 <- "filt_GQ_noninfo" else if(grepl("_filt_GQ", data.gz[i])) dataset3 <- "filt_GQ" else dataset3 <- "GQ"
+    if(grepl("replaced", data.gz[i])) dataset3 <- "filt_GQ_noninfo_replaced" else 
+      if(grepl("_filt_GQ_noninfo", data.gz[i])) dataset3 <- "filt_GQ_noninfo" else 
+        if(grepl("_filt_GQ", data.gz[i])) dataset3 <- "filt_GQ" else 
+          dataset3 <- "GQ"    
     total_size = cumsum(c(0,kosambi(data$seq.rf)))
     total_size = total_size[length(total_size)]
     counts <- cbind(multi = dataset, segr = dataset2, filt = dataset3, name = files.names[j], neg.error, pos.error, perc.error, total_size = total_size)
@@ -120,18 +127,18 @@ for(i in 1:length(data.gz)){
   }
 }
 
-# save(counts.total, file = "counts.total_HMM_parents.RData")
-# load("counts.total_HMM_parents.RData")
-load("counts.total_bugfix.RData")
+#save(counts.total, file = "counts.total_HMM_parents_replaced.RData")
+load("counts.total_HMM_parents_replaced.RData")
+#load("../counts.total_bugfix.RData")
 
 without_false <- counts.total[grep("FALSE", counts.total$name),]
 without_false$seed <- sapply(strsplit(without_false$name, "_"), "[[",2)
 without_false$depth <- sapply(strsplit(without_false$name, "_"), "[[",3)
-without_false$SNPCaller <- sapply(strsplit(without_false$name, "_"), "[[",4)
+without_false$SNPCall <- sapply(strsplit(without_false$name, "_"), "[[",4)
 without_false$CountsFrom <- sapply(strsplit(without_false$name, "_"), "[[",5)
-without_false$GenotypeCaller <- sapply(strsplit(without_false$name, "_"), "[[",6)
+without_false$GenoCall <- sapply(strsplit(without_false$name, "_"), "[[",6)
 
-df <- without_false %>% group_by(depth, SNPCaller, CountsFrom, GenotypeCaller, multi, segr, filt) %>% 
+df <- without_false %>% group_by(depth, SNPCall, CountsFrom, GenoCall, multi, segr, filt) %>% 
   summarise(mean.neg = mean(as.numeric(neg.error), na.rm = T), mean.pos = mean(as.numeric(pos.error), na.rm = T),
             sd.neg = sd(neg.error), sd.pos = sd(pos.error), mean_perc = mean(as.numeric(perc.error)))
 
@@ -150,38 +157,20 @@ df_long <- perfumaria(df_long)
 df_long$mean_perc <- paste0(round(df_long$mean_perc, 1), "%")
 df_long$mean_perc[which(df_long$mean_perc == "NA%")] <- ""
 
-library(ggplot2)
-df_long %>% filter(multi == "bi" & segr == "nondev" & filt == "filt_GQ_noninfo") %>% 
-  ggplot(aes(x=GenotypeCaller,y=value,fill=name)) + geom_bar(stat="identity",position="identity") +
-  geom_errorbar(aes(ymin=value-sd, ymax=value+sd), width=.2) +
-  geom_text(aes(x=GenotypeCaller,y=value+sd + 1000,label=mean_perc) , angle = 45) +
-  scale_y_continuous(labels=abs) + facet_grid(depth + CountsFrom ~ SNPCaller) + theme_bw() + 
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
 df_long2 <- pivot_longer(without_false, cols = c(5,6), names_to = "signal", values_to = "wrong_breakpoints")
-
-df_long3 <- df_long2 %>% filter(multi == "bi" & segr == "nondev")
-df_long3$shape <- as.factor(unlist(sapply(split(df_long3$seed, paste0(df_long3$depth, df_long3$filt)), function(x) as.numeric(as.factor(x)))))
-
-df_long3 <- perfumaria(df_long3)
-df_long3  %>% ggplot(aes(x=GenotypeCaller,y=as.numeric(wrong_breakpoints),shape=shape, color = filt)) + 
-  geom_point(size = 1, position=position_dodge(width=0.9)) + 
-  facet_grid(depth + CountsFrom ~ SNPCaller) + theme_bw() + geom_hline(yintercept=0, color = "black") + 
-  theme(axis.text.x = element_text(angle = 45,hjust=1))
 
 change.name <- c(GQ = "no extra filters",
                  filt_GQ = "genotype prob > 0.8",
-                 filt_GQ_noninfo = "genotype prob > 0.8 \n only informative markers")
+                 filt_GQ_noninfo = "genotype prob > 0.8 \n only informative markers",
+                 filt_GQ_noninfo_replaced = "genotype prob > 0.8 \n only informative markers \n missing replaced")
 
 df_long2$filt <- change.name[match(df_long2$filt, names(change.name))]
 
 df_long2$filt <- factor(df_long2$filt, levels =  c("no extra filters", 
                                                    "genotype prob > 0.8", 
-                                                   "genotype prob > 0.8 \n only informative markers"))
+                                                   "genotype prob > 0.8 \n only informative markers",
+                                                   "genotype prob > 0.8 \n only informative markers \n missing replaced"))
 
-head(df_long2)
-df_long2$GenoCall <- df_long2$GenotypeCaller
-df_long2$SNPCall <- df_long2$SNPCaller
 df_long2 <- perfumaria(df_long2)
 
 df_long2$GenoCall <- factor(df_long2$GenoCall, levels =  c("polyRAD",
@@ -192,7 +181,7 @@ df_long2$GenoCall <- factor(df_long2$GenoCall, levels =  c("polyRAD",
                                                            "SuperMASSA (5%)",
                                                            "freebayes/GATK",
                                                            "freebayes/GATK (5%)",
-                                                           "OneMap_version2", "GUSMap"))
+                                                           "freebayes/GATK (0.001%)", "GUSMap"))
 
 legend_text <- c(VCF_bi_nondev = "Without segregation distortion\n Only biallelics/ Counts from VCF",
                  BAM_bi_nondev = "Without segregation distortion\n Only biallelics/ Counts from BAM",
@@ -207,7 +196,79 @@ df_long2$dataset <- paste0(df_long2$CountsFrom, "_", df_long2$multi, "_", df_lon
 df_long2$dataset <- legend_text[match(df_long2$dataset, names(legend_text))]
 
 colors.p <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+#colors.p <- c("#a9a9a9","#800000", "#f58231", "#ffe119", "#000075", "#4363d8", "#000000", "#dcbeff")
 names(colors.p) <- legend_text
+
+find_zeros <- df_long2 %>% group_by(multi, seed, depth, segr, filt, name) %>% summarise(zeros = sum(sqrt(as.numeric(wrong_breakpoints)^2)))
+
+df_mean <- df_long2  %>% group_by(multi, segr, depth, filt, SNPCall, GenoCall, CountsFrom, dataset, signal) %>% summarise(mean_wrong = mean(as.numeric(wrong_breakpoints)))
+
+find_zeros <- df_mean %>% group_by(multi, depth, segr, filt,  SNPCall, GenoCall, CountsFrom, dataset) %>% summarise(zeros = sum(sqrt(as.numeric(mean_wrong)^2)))
+
+idx <- paste0(find_zeros$name[which(round(find_zeros$zeros,4) == 0)],
+              find_zeros$multi[which(round(find_zeros$zeros,4) == 0)],
+              find_zeros$filt[which(round(find_zeros$zeros,4) == 0)])
+
+df_long2[which(paste0(df_long2$name,df_long2$multi,df_long2$filt) %in% idx),]
+df_long2$signal[which(paste0(df_long2$name,df_long2$multi,df_long2$filt) %in% idx)] <- "zero"
+
+
+zeros <- paste0(
+  df_mean$multi[which(round(find_zeros$zeros,0) < 0)],
+  df_mean$segr[which(round(find_zeros$zeros,0) < 0)],
+  df_mean$depth[which(round(find_zeros$zeros,0) < 0)],
+  df_mean$filt[which(round(find_zeros$zeros,0) < 0)],
+  df_mean$SNPCall[which(round(find_zeros$zeros,0) < 0)],
+  df_mean$GenoCall[which(round(find_zeros$zeros,0) < 0)],
+  df_mean$CountsFrom[which(round(find_zeros$zeros,0) < 0)])
+
+temp <- paste0(df_mean$multi,
+               df_mean$segr,
+               df_mean$depth,
+               df_mean$filt,
+               df_mean$SNPCall,
+               df_mean$GenoCall,
+               df_mean$CountsFrom)
+
+if(length(which(temp %in% zeros)) > 0){
+  df_mean[which(temp %in% zeros),]
+  df_mean$mean_wrong[which(temp %in% zeros)] <- 0
+  df_mean$signal[which(temp %in% zeros)] <- "zero"
+}
+
+save(df_long2, file = "df_long2.RData")
+
+df_long2$dataset
+
+p1 <- df_long2  %>% filter(depth == "Depth 20") %>% 
+  ggplot(aes(x=GenoCall,y= as.numeric(wrong_breakpoints), color = dataset, shape = signal)) + 
+  geom_point(size = 1.5, position=position_dodge(width=0.9)) + 
+  scale_shape_manual(values = c(6, 17, 19), labels = c("Underestimated breaks", "Overestimated breaks", "all correct")) +
+  facet_grid(filt ~ SNPCall) + theme_bw() + geom_hline(yintercept=Inf, color = "black") + 
+  theme(axis.text.x = element_text(angle = 30, hjust=1),
+        legend.position = "bottom", legend.title = element_blank(), 
+        legend.text = element_text(size=8),
+        axis.text = element_text(size=6),
+        axis.title.x = element_blank())  + 
+  guides(color = guide_legend(nrow=4), shape = guide_legend(nrow=2)) + ylab("Number of wrong breakpoints")
+
+p1 <- df_mean  %>% filter(depth == "Depth 20") %>% 
+  ggplot(aes(x=GenoCall,y= log(sqrt(round(as.numeric(mean_wrong),0)^2), base = 10), color = dataset, shape = signal)) + 
+  geom_point(size = 2, position=position_dodge(width=0.9)) + 
+  scale_color_manual(values = colors.p) +
+  scale_shape_manual(values = c(6, 17, 15), labels = c("Underestimated breaks", "Overestimated breaks", "all correct")) +
+  facet_grid(filt ~ SNPCall) + theme_minimal() +  geom_hline(yintercept=-Inf, color = "blue") + 
+  theme(axis.text.x = element_text(angle = 30, hjust=1),
+        legend.position = "bottom", legend.title = element_blank(), 
+        legend.text = element_text(size=8),
+        axis.text = element_text(size=6),
+        axis.title.x = element_blank())  +
+  guides(color = guide_legend(nrow=4), shape = guide_legend(nrow=2)) + ylab(expression("Log"[10]*" of mean number of wrong breakpoints"))
+
+p1
+
+ggsave(p1, filename = "log10_haplo20.png", width = 170, height = 225, units = "mm")
+
 
 p <- df_long2  %>% filter(depth == "Depth 10") %>% ggplot(aes(x=GenoCall,y=as.numeric(perc.error), color = dataset)) + 
   geom_point(size = 1.5, position=position_dodge(width=0.9)) + 
@@ -217,72 +278,10 @@ p <- df_long2  %>% filter(depth == "Depth 10") %>% ggplot(aes(x=GenoCall,y=as.nu
         legend.text = element_text(size=8),
         axis.text = element_text(size=6),
         axis.title.x = element_blank())  +
-  guides(color = guide_legend(nrow=4)) + ylab("Percentage of wrong haplotypes (%)")
+  guides(color = guide_legend(nrow=4)) + ylab(expression("Log"[10]*" of mean number of wrong breakpoints"))
 
+ggsave(p, filename = "perc_wrong_haplo10_n.png", width = 170, height = 225, units = "mm")
 
-find_zeros <- df_long2 %>% group_by(multi, seed, segr, filt, name) %>% summarise(zeros = sum(sqrt(as.numeric(wrong_breakpoints)^2)))
-find_zeros$name[which(round(find_zeros$zeros,4) == 0)]
-find_zeros$multi[which(round(find_zeros$zeros,4) == 0)]
-find_zeros$filt[which(round(find_zeros$zeros,4) == 0)]
-
-df_long2$signal[which(df_long2$multi == "multi" & df_long2$name == "map_81_20_gatk_bam_updog_FALSE" & df_long2$filt == "genotype prob > 0.8 \n only informative markers")] <- "zero"
-df_long2$signal[which(df_long2$multi == "multi" & df_long2$name == "map_81_20_gatk_bam_updog_FALSE" & df_long2$filt == "genotype prob > 0.8 \n only informative markers")] <- "zero"
-
-df_mean <- df_long2  %>% group_by(multi, segr, depth, filt, SNPCall, GenoCall, CountsFrom, dataset, signal) %>% summarise(mean_wrong = mean(as.numeric(wrong_breakpoints)))
-
-df_long2$wrong_breakpoints[which(df_long2$wrong_breakpoints == 0)] <- NA
-df_long2$wrong_breakpoints[which(df_long2$multi == "multi" & df_long2$name == "map_81_20_gatk_bam_updog_FALSE" & df_long2$filt == "genotype prob > 0.8 \n only informative markers")] <- 0
-
-idx <- which(round(df_mean$mean_wrong,2) == 0)
-zeros <- paste0(
-df_mean$multi[idx[which(diff(idx) == 1)]],
-df_mean$segr[idx[which(diff(idx) == 1)]],
-df_mean$depth[idx[which(diff(idx) == 1)]],
-df_mean$filt[idx[which(diff(idx) == 1)]],
-df_mean$SNPCall[idx[which(diff(idx) == 1)]],
-df_mean$GenoCall[idx[which(diff(idx) == 1)]],
-df_mean$CountsFrom[idx[which(diff(idx) == 1)]])
-
-df_mean$mean_wrong[which(round(df_mean$mean_wrong,2) == 0)] <- NA
-
-temp <- paste0(df_mean$multi,
-       df_mean$segr,
-       df_mean$depth,
-       df_mean$filt,
-       df_mean$SNPCall,
-       df_mean$GenoCall,
-       df_mean$CountsFrom)
-
-df_mean$mean_wrong[which(temp %in% zeros)] <- 0
-df_mean$signal[which(temp %in% zeros)] <- "zero"
-
-
-p1 <- df_mean  %>% filter(depth == "Depth 20") %>% 
-  ggplot(aes(x=GenoCall,y= as.numeric(mean_wrong), color = dataset, shape = signal)) + 
-  geom_point(size = 1.5, position=position_dodge(width=0.9)) + 
-  scale_shape_manual(values = c(6, 17, 19), labels = c("Underestimated breaks", "Overestimated breaks", "all correct")) +
-  facet_grid(filt ~ SNPCall) + theme_bw() + geom_hline(yintercept=Inf, color = "black") + 
-  theme(axis.text.x = element_text(angle = 30, hjust=1),
-        legend.position = "bottom", legend.title = element_blank(), 
-        legend.text = element_text(size=8),
-        axis.text = element_text(size=6),
-        axis.title.x = element_blank())  + 
-  guides(color = guide_legend(nrow=4), shape = guide_legend(nrow=2)) + ylab("Number of wrong breakpoints")
-
-p1 <- df_mean  %>% filter(depth == "Depth 20") %>% 
-  ggplot(aes(x=GenoCall,y= log(sqrt(as.numeric(mean_wrong)^2)), color = dataset, shape = signal)) + 
-  geom_point(size = 1.5, position=position_dodge(width=0.9)) + 
-  scale_shape_manual(values = c(6, 17, 19), labels = c("Underestimated breaks", "Overestimated breaks", "all correct")) +
-  facet_grid(filt ~ SNPCall) + theme_bw() + geom_hline(yintercept=Inf, color = "black") + 
-  theme(axis.text.x = element_text(angle = 30, hjust=1),
-        legend.position = "bottom", legend.title = element_blank(), 
-        legend.text = element_text(size=8),
-        axis.text = element_text(size=6),
-        axis.title.x = element_blank())  + 
-  guides(color = guide_legend(nrow=4), shape = guide_legend(nrow=2)) + ylab("Number of wrong breakpoints")
-
-ggsave(p1, filename = "perc_wrong_haplo10_n.png", width = 170, height = 225, units = "mm")
-ggsave(p1, filename = "perc_wrong_haplo20_n.png", width = 170, height = 225, units = "mm")
 
 # Empirical
 data.gz <- c(system.file("ext", "rose/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
@@ -291,6 +290,8 @@ data.gz <- c(system.file("ext", "rose/biallelics_filt_GQ_noninfo/EmpiricalReads_
              system.file("ext", "rose/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "rose/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "rose/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
+             system.file("ext", "rose/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
+             system.file("ext", "rose/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
@@ -302,9 +303,9 @@ data.gz <- c(system.file("ext", "rose/biallelics_filt_GQ_noninfo/EmpiricalReads_
              system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"))
-
-data.gz <- system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+             system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
+             system.file("ext", "populus/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
+             system.file("ext", "populus/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"))
 
 prog_counts_total <- data.frame()
 for(i in 1:length(data.gz)){
@@ -323,15 +324,17 @@ for(i in 1:length(data.gz)){
   if(grepl("rose/", data.gz[i])) dataset2 <- "rose" else if(grepl("_cont", data.gz[i])) dataset2 <- "aspen_cont" else dataset2 <- "aspen"
   cat(dataset2)
   if(grepl("multiallelics", data.gz[i])) dataset <- "multi" else dataset <- "bi"
-  if(grepl("_filt_GQ_noninfo", data.gz[i])) dataset3 <- "filt_GQ_noninfo" else if(grepl("_filt_GQ", data.gz[i])) dataset3 <- "filt_GQ" else dataset3 <- "GQ"
-  
+  if(grepl("replaced", data.gz[i])) dataset3 <- "filt_GQ_noninfo_replaced" else 
+    if(grepl("_filt_GQ_noninfo", data.gz[i])) dataset3 <- "filt_GQ_noninfo" else 
+      if(grepl("_filt_GQ", data.gz[i])) dataset3 <- "filt_GQ" else 
+        dataset3 <- "GQ"  
   for(j in 1:length(temp1)){
     cat(j, "j \n")
     data <- temp1[[j]]
     files.names[j]
     class(data) <- "sequence"
     prog <- progeny_haplotypes(data, ind = "all", most_likely = TRUE)
-    prog_counts <- progeny_haplotypes_counts2(x = prog)
+    prog_counts <- progeny_haplotypes_counts(x = prog)
     prog_counts <- cbind(dataset = dataset2, multi = dataset, filt = dataset3, file = files.names[[j]], prog_counts)
     prog_counts_total <- rbind(prog_counts_total, prog_counts)
   }
@@ -344,13 +347,15 @@ x <- prog_counts_total
 
 change.name <- c(GQ = "no extra filters",
                  filt_GQ = "genotype prob > 0.8",
-                 filt_GQ_noninfo = "genotype prob > 0.8 \n only informative markers")
+                 filt_GQ_noninfo = "+ only informative markers",
+                 filt_GQ_noninfo_replaced = "+ missing replaced")
 
 x$filt <- change.name[match(x$filt, names(change.name))]
 
 x$filt <- factor(x$filt, levels =  c("no extra filters", 
                                      "genotype prob > 0.8", 
-                                     "genotype prob > 0.8 \n only informative markers"))
+                                     "+ only informative markers",
+                                     "+ missing replaced"))
 
 x$GenoCall <- gsub(".RData","",sapply(strsplit(x$file, "_"), "[[", 4))
 x$SNPCall <- sapply(strsplit(x$file, "_"), "[[", 2)
@@ -366,7 +371,7 @@ x$GenoCall <- factor(x$GenoCall, levels =  c("polyRAD",
                                              "SuperMASSA (5%)",
                                              "freebayes/GATK",
                                              "freebayes/GATK (5%)",
-                                             "OneMap_version2", "GUSMap"))
+                                             "freebayes/GATK (0.001%)", "GUSMap"))
 
 legend_text <- c(VCF_bi = "Only biallelics/ Counts from VCF",
                  BAM_bi = "Only biallelics/ Counts from BAM",
@@ -391,6 +396,8 @@ mycolors <- sample(mycolors)
 x2 <- x %>% ungroup %>% group_by(ind, grp, dataset, dataset2 , multi, filt, file, GenoCall, SNPCall, CountsFrom) %>%
   summarise(counts = sum(counts))
 
+save(x2, file = "counts_emp.RData")
+
 p <- x2 %>% filter(SNPCall == "GATK" & 
                      GenoCall == "polyRAD (5%)" & 
                      dataset %in%  c("aspen_cont", "aspen") & 
@@ -414,12 +421,34 @@ ggsave(p, filename = "breakcounts_emp_polyrad0.05_bi_vcf_gatk.png", width = 170,
 
 software <- as.character(unique(x2$GenoCall))
 
+# Aspen issue
+
+p_aspen <- x2 %>% filter( GenoCall == "freebayes/GATK" & 
+                            dataset %in%  c("aspen") &
+                            filt == "+ only informative markers" &
+                            SNPCall == "freebayes" &
+                            dataset2 == "With multiallelics/ Counts from VCF")  %>% 
+  ggplot(aes(x=ind, y=counts, fill = dataset2)) +
+  scale_fill_manual(values = c("#009E73")) +
+  geom_bar(stat="identity") + coord_flip() +
+  facet_grid(. ~ SNPCall + GenoCall+ dataset, 
+             labeller = labeller(dataset = c("aspen" = "Without contaminants", "aspen_cont" = "With contaminants")))+
+  theme_bw() +
+  theme(legend.position = "bottom", legend.title = element_blank(), 
+        axis.text.y =  element_text(size=2.5),
+        axis.title = element_text(size=8),
+        legend.text = element_text(size=8),
+        strip.text = element_text(size = 7),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 7),
+        title = element_text(size = 8))  +
+  guides(fill = guide_legend(nrow=2, keywidth = 0.5, keyheight = 0.5)) + 
+  ylab("breakpoint counts")
+
 # Aspen
-
-
 p_aspen <- x2 %>% filter( GenoCall == "updog" & 
-                           dataset %in%  c("aspen_cont", "aspen") &
-                            filt == "genotype prob > 0.8 \n only informative markers" &
+                            dataset %in%  c("aspen_cont", "aspen") &
+                            filt == "+ only informative markers" &
                             SNPCall == "freebayes" &
                             dataset2 == "With multiallelics/ Counts from BAM")  %>% 
   ggplot(aes(x=ind, y=counts, fill = dataset2)) +
@@ -443,12 +472,12 @@ ggsave(p_aspen, filename = "breakcounts_aspen1.png", width = 100, height = 225, 
 
 
 p_rose <- x2 %>% filter( GenoCall == "freebayes/GATK (5%)" & 
-                            dataset %in%  c("rose") &
-                            filt == "genotype prob > 0.8 \n only informative markers" &
-                            SNPCall == "freebayes" &
-                            dataset2 == "With multiallelics/ Counts from VCF")  %>% 
+                           dataset %in%  c("rose") &
+                           filt == "genotype prob > 0.8" &
+                           SNPCall == "GATK" &
+                           dataset2 == "Only biallelics/ Counts from VCF")  %>% 
   ggplot(aes(x=ind, y=counts, fill = dataset2)) +
-  scale_fill_manual(values = c("#009E73")) +
+  scale_fill_manual(values = c("#E69F00")) +
   geom_bar(stat="identity") + coord_flip() +
   facet_grid(. ~ SNPCall + GenoCall)+
   theme_bw() +
@@ -463,13 +492,13 @@ p_rose <- x2 %>% filter( GenoCall == "freebayes/GATK (5%)" &
   guides(fill = guide_legend(nrow=2, keywidth = 0.5, keyheight = 0.5)) + 
   ylab("breakpoint counts")
 
-ggsave(p_rose, filename = "breakcounts_rose1.png", width = 60, height = 225, units = "mm")
+ggsave(p_rose, filename = "breakcounts_rose3.png", width = 60, height = 225, units = "mm")
 
 
 p <- list()
 for(i in 1:length(software)){
   p[[i]] <- x2 %>% filter( GenoCall == software[i] & 
-                        dataset %in%  c("aspen_cont", "aspen"))  %>% 
+                             dataset %in%  c("aspen_cont", "aspen"))  %>% 
     ggplot(aes(x=ind, y=counts, fill = dataset2)) +
     geom_bar(stat="identity") + coord_flip() +
     facet_grid(. ~ SNPCall + dataset, 

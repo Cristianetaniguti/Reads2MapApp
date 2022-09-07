@@ -100,6 +100,10 @@ df <- data.frame(
   text = c("parents  progeny")
 )
 
+save(labels_df, file = "labels_df.RData")
+save(data, file = "data.RData")
+save(df, file = "df.RData")
+
 alpha <- 0.1
 software <- c("polyRAD", "updog", "SuperMASSA", "freebayes/GATK")
 p <- p_wrong <- list()
@@ -243,6 +247,10 @@ df <- data.frame(
   y = c(max.y),
   text = c("parents  progeny")
 )
+
+save(labels_df, file = "labels_df_dev.RData")
+save(data, file = "data_dev.RData")
+save(df, file = "df_dev.RData")
 
 alpha <- 0.1
 software <- c("polyRAD", "updog", "SuperMASSA", "freebayes/GATK")
@@ -388,6 +396,10 @@ df <- data.frame(
   text = c("parents  progeny")
 )
 
+save(labels_df, file = "labels_df_emp.RData")
+save(data_emp, file = "data_emp.RData")
+save(df, file = "df_emp.RData")
+
 colors_emp <- c("#FFC107", "#D81B60", "#1E88E5", "#004D40")
 names(colors_emp) <-  c("missing", 
                         "heterozygous", "homozygous-ref", "homozygous-alt")
@@ -424,6 +436,44 @@ for(i in 1:length(software)){
           strip.text = element_text(size = 7))  +
     ggtitle(software[i])
 }
+
+
+# Get example
+p <- data_temp %>% filter(SNPCall == "freebayes" & 
+                         CountsFrom == "VCF" & 
+                         dataset == "Aspen" & 
+                         #mks == "Chr10_1175842" &
+                         mks == "Chr10_1175838" &
+                         pop == "progeny") %>%
+  ggplot(aes(x=ref, y=alt, color=gt.vcf.alt.ref)) + 
+  geom_point(size = 2) +
+  scale_color_manual(values = colors_emp) +
+  scale_shape_manual(values=c(3, 19)) +
+  labs(x="reference allele counts", y = "alternative allele counts", color="Genotypes", shape = "Individuals") +
+  theme_bw() 
+
+p
+
+ggsave(p, filename = "example_6x_d2.15.png")
+ggsave(p, filename = "example_6x_b3.7.png")
+
+
+p <- data_temp %>% filter(SNPCall == "freebayes" & 
+                            CountsFrom == "VCF" & 
+                            dataset == "Rose" & 
+                            mks == "Chr01_10578097" &
+                            #mks == "Chr01_10578127" &
+                            pop == "progeny") %>%
+  ggplot(aes(x=ref, y=alt, color=gt.vcf.alt.ref)) + 
+  geom_point(size = 2) +
+  scale_color_manual(values = colors_emp) +
+  labs(x="reference allele counts", y = "alternative allele counts", color="Genotypes", shape = "Individuals") +
+  theme_bw() 
+
+p
+
+ggsave(p, filename = "example_96x_b3.7.png")
+ggsave(p, filename = "example_96x_d2.15.png")
 
 emp_depth1 <- ggarrange(plotlist = p[1:2], ncol = 1, common.legend = T)
 emp_depth2 <- ggarrange(plotlist = p[3:4], ncol = 1, common.legend = T)

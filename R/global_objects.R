@@ -10,6 +10,7 @@ id <- c("Biallelics GQ",
         "Biallelics GQ filtered with segregation distortion",
         "Biallelics GQ and non-informative filtered",
         "Biallelics GQ and non-informative filtered with segregation distortion",
+        "Biallelics, GQ and non-informative filtered, with segregation distortion, and GT missing replaced",
         "Biallelics PL filtered",
         "Biallelics + multiallelics GQ",
         "Biallelics + multiallelics GQ with segregation distortion",
@@ -20,15 +21,15 @@ id <- c("Biallelics GQ",
         "Toy sample without multiallelics",
         "Toy sample with multiallelics")
 
-depth_parents <- c(rep("80,160", 13), rep("20,30", 2))
-depth_progeny <- c(rep("10,20",13), rep("10,20",2))
-population_size <- c(rep(200,13), 20,20)
-number_fam <- c(rep(5,13), 2,2)
-ref_gen <- c(rep("Populus trichocarpa v4.0 chromosome 10:0-8424600",13),
+depth_parents <- c(rep("80,160", 14), rep("20,30", 2))
+depth_progeny <- c(rep("10,20",14), rep("10,20",2))
+population_size <- c(rep(200,14), 20,20)
+number_fam <- c(rep(5,14), 2,2)
+ref_gen <- c(rep("Populus trichocarpa v4.0 chromosome 10:0-8424600",14),
              rep("Populus trichocarpa v4.0 chromosome 10:0-2000000",2))
-ref_vcf <- c(rep("From EmpiricalReads2Map with Bioproject PRJNA395 raw data", 15))
-ref_map <- (rep("From thesis chapter 2",15))
-library <- c(rep("RADinitio",15))
+ref_vcf <- c(rep("From EmpiricalReads2Map with Bioproject PRJNA395 raw data", 16))
+ref_map <- (rep("From thesis chapter 2",16))
+library <- c(rep("RADinitio",16))
 
 simulated_datasets <- data.frame(id, depth_parents, depth_progeny,
                                  population_size, number_fam,

@@ -86,7 +86,9 @@ mod_simu_depths_and_genotyping_ui <- function(id){
                  plotOutput(ns("disper_depth2_out")),
                  hr(),
                  tableOutput(ns('disper_depth2_cor_out')),
-                 actionButton(ns("go2"), "Update",icon("refresh")),
+                 actionButton(ns("go2"), "Update",icon("refresh")), br(),
+                 radioButtons(ns("fformat_depth2"), "File type", choices=c("png","tiff","jpeg","pdf", "RData"), selected = "png", inline = T),
+                 downloadButton(ns('bn_download_depth2'), "Download", class = "butt")
              ),
              
              box(
@@ -215,8 +217,9 @@ mod_simu_depths_and_genotyping_server <- function(input, output, session, datas_
       if(input$real == "simulated_genotypes"){
         stop(safeError("Simulated genotypes option is set. All genotypes are correct."))
       } else {
+        print(head(button1()[[1]]))
         DT::datatable(button1()[[1]][which(button1()[[1]]$gabGT != button1()[[1]]$gt.onemap.alt.ref),
-                                     c(1,2,3,18,9,10,17,20)],
+                                     c(1,2,3,18,9,10,12, 17,20)],
                       options = list(scrollX = TRUE))
       }
     })
@@ -262,10 +265,45 @@ mod_simu_depths_and_genotyping_server <- function(input, output, session, datas_
         stop(safeError("Simulated genotypes option is set. All genotypes are correct."))
       } else {
         DT::datatable(button2()[[1]][which(button2()[[1]]$gabGT != button2()[[1]]$gt.onemap.alt.ref),
-                                     c(1,2,3,18,9,10,17,20)],
+                                     c(1,2,3,18,9,10, 12, 17,20)],
                       options = list(scrollX = TRUE))
       }
     )
+    
+    # Download depth 2
+    # create filename
+    fn_downloadname_depth2 <- reactive({
+      
+      seed <- sample(1:1000,1)
+      if(input$fformat_depth2=="png") filename <- paste0("depth","_",seed,".png")
+      if(input$fformat_depth2=="tiff") filename <- paste0("depth","_",seed,".tiff")
+      if(input$fformat_depth2=="jpeg") filename <- paste0("depth","_",seed,".jpg")
+      if(input$fformat_depth2=="pdf") filename <- paste0("depth","_",seed,".pdf")
+      if(input$fformat_depth2=="RData") filename <- paste0("depth","_",seed,".RData")
+      return(filename)
+    })
+    
+    # download 
+    fn_download_depth2 <- function()
+    {
+      p <- errorProb_graph(button2()[[1]], input$real2, button2()[[2]])
+      
+      if(input$fformat_depth2!="RData"){
+        ggsave(p, filename = fn_downloadname_depth2())    
+      } else save(p, file = fn_downloadname_depth2())
+    }
+    
+    
+    # download handler
+    output$bn_download_depth2 <- downloadHandler(
+      filename = fn_downloadname_depth2,
+      content = function(file) {
+        fn_download_depth2()
+        file.copy(fn_downloadname_depth2(), file, overwrite=T)
+        file.remove(fn_downloadname_depth2())
+      }
+    )
+    
 }
     
 ## To be copied in the UI

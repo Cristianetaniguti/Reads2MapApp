@@ -45,6 +45,7 @@ mod_upload_ui <- function(id){
                                               "Biallelics + multiallelics filtered GQ with segregation distortion" = "multi_filt_gq_dev", 
                                               "Biallelics + multiallelics filtered GQ and non-informative" = "multi_filt_gq_noninfo",
                                               "Biallelics + multiallelics filtered GQ and non-informative with segregation distortion" = "multi_filt_gq_noninfo_dev",
+                                              "Biallelics + multiallelics, GQ and non-informative filtered, with segregation distortion, and GT missing replaced" = "multi_filt_gq_noninfo_dev_replaced",
                                               "Toy sample without multiallelics" = "toy_sample_bi",
                                               "Toy sample with multiallelics" = "toy_sample_multi"),
                                selected = "toy_sample_multi"),
