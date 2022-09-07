@@ -20,7 +20,7 @@ mod_simu_maps_ui <- function(id){
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("map_out")),
                  hr(),
-                 actionButton(ns("go1"), "Update",icon("refresh")),
+                 actionButton(ns("go1"), "Update",icon("refresh", verify_fa = FALSE)),
              ), br(),
              box(solidHeader = T,
                  radioButtons(ns("ErrorProb"), label = p("Genotyping method"),
@@ -59,7 +59,7 @@ mod_simu_maps_ui <- function(id){
       column(width = 4,
              box(title = "Genetic map",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
                  hr(),
                  imageOutput(ns("map1_out"), width = "100%", height = "100%")
              )

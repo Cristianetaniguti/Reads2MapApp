@@ -10,11 +10,9 @@
 SNPCalling_efficiency_graph_emp(data, data_names)
 }
 \arguments{
+\item{data}{list with marker names (chr_pos) of each dataset}
+
 \item{data_names}{character defining the name of each vcf data}
-
-\item{data_list}{list with marker names (chr_pos) of each dataset}
-
-\item{out_prefix}{character defining the prefix of image files names}
 }
 \description{
 Performs comparisons between maximum datasets:

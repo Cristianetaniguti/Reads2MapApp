@@ -26,7 +26,7 @@ mod_simu_breakpoints_counts_ui <- function(id){
                  hr(),
                  plotOutput(ns("counts_simu_out")),
                  hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       

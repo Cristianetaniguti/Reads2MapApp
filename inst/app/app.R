@@ -1,1 +1,1 @@
-Reads2MapApp::Reads2MapApp() 
+Reads2MapApp::run_app() 

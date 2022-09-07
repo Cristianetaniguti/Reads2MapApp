@@ -155,3 +155,4 @@ joint_same_depth <- function(..., out_name = "SimulatedReads_results_joint"){
 #             data2_maps.tsv.gz data3_filters.tsv.gz data4_times.tsv.gz data5_SNPCall_efficiency.tsv.gz data10_counts.tsv.gz \
 #             simu_haplo.tsv.gz  names.tsv.gz  sha04/20_51_positions.tar.gz sha02/20_101_positions.tar.gz sh00/20_42_positions.tar.gz sh01/20_30_positions.tar.gz SimulatedReads_results_depth20")
 # system("tar -czvf SimulatedReads_results_depth20.tar.gz SimulatedReads_results_depth20")
+

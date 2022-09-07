@@ -18,7 +18,7 @@ mod_simu_filters_ui <- function(id){
              box(title = "Filters",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("filters_out")),  hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       

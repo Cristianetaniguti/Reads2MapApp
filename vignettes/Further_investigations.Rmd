@@ -1,6 +1,0 @@
----
-title: "Further investigations"
-output: pdf_document
----
-
-Here we will better explore the source of parents genotyping errors reported in thesis chapter 3.3.2. When It was observed that when a proportion of 0.2 of markers changing from D1.10 to D2.15 

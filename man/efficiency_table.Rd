@@ -7,6 +7,11 @@ tables}
 \usage{
 efficiency_table(infos_seff, jobs)
 }
+\arguments{
+\item{infos_seff}{information obtained throught command seff}
+
+\item{jobs}{vector defining job numbers}
+}
 \description{
 Convert data obtained by efficiency script to
 tables

@@ -18,7 +18,7 @@ mod_emp_SNPCalling_efficiency_ui <- function(id){
                  width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("SNPCalling_efficiency_emp_out")),
                  hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       column(width = 6,

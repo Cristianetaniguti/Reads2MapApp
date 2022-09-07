@@ -6,6 +6,13 @@
 \usage{
 errorProb_graph(data, genotypes, alpha)
 }
+\arguments{
+\item{data}{data.frame}
+
+\item{genotypes}{to be documented}
+
+\item{alpha}{transparency of dots}
+}
 \description{
 Functions to build graphics for the data from simulations
 }

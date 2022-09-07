@@ -17,7 +17,7 @@ mod_emp_cM_Mb_ui <- function(id){
              box(title = "cM x Mb",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("cmxmb_emp_out")), hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       

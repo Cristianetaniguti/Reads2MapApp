@@ -22,7 +22,7 @@ mod_emp_depth_and_genotyping_ui <- function(id){
                  plotOutput(ns("disper_depth_emp_out")),
                  hr(),
                  tableOutput(ns("disper_depth_emp_table")),
-                 actionButton(ns("go1"), "Update",icon("refresh")),
+                 actionButton(ns("go1"), "Update",icon("refresh", verify_fa = FALSE)),
              ),
              
              box(
@@ -77,7 +77,7 @@ mod_emp_depth_and_genotyping_ui <- function(id){
                  plotOutput(ns("disper_depth2_emp_out")),
                  hr(),
                  tableOutput(ns("disper_depth2_emp_table")),
-                 actionButton(ns("go2"), "Update",icon("refresh"))
+                 actionButton(ns("go2"), "Update",icon("refresh", verify_fa = FALSE))
              ),
              box(
                width = NULL, solidHeader = TRUE,

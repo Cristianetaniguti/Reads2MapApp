@@ -19,7 +19,7 @@ mod_simu_overview_map_size_ui <- function(id){
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("all_size_out"), width = "100%", height = "550px"),
                  hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       
@@ -79,6 +79,8 @@ mod_simu_overview_map_size_ui <- function(id){
 }
     
 #' simu_overview_map_size Server Functions
+#'
+#' @importFrom stats aggregate cor.test median sd var
 #'
 #' @noRd 
 mod_simu_overview_map_size_server <- function(input, output, session, datas_simu){

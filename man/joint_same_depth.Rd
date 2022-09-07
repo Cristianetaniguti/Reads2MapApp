@@ -14,7 +14,3 @@ joint_same_depth(..., out_name = "SimulatedReads_results_joint")
 \description{
 Joint simulations with same depth and different seed
 }
-\examples{
-
-
-}

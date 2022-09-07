@@ -1,14 +1,23 @@
 #' Read empirical input data
 #' 
+#' @param x inputted dataset
+#' @param example_emp selected example id
+#' 
+#' @importFrom utils read.table untar
 #' @import vroom
 #' @import largeList
-prepare_datas_emp <- function(x, example_emp){
+prepare_datas_emp <- function(x = NULL, example_emp = NULL){
   # This function makes adjustments in the input tar.gz file to be processed inside the app
   # It returns six data objects and the app options in a list format
+  cat(example_emp)
+  cat(x)
     if(!is.null(x)){
       data.gz <- x[,4]
       path = "data/"
     } else if(is.null(example_emp)){
+      cat("Wait credentials\n")
+      data.gz <- "Wait"
+    } else if(example_emp== "none" ){
       cat("Wait credentials\n")
       data.gz <- "Wait"
     } else { ######## Available examples
@@ -101,6 +110,9 @@ prepare_datas_emp <- function(x, example_emp){
 }
 
 #' Functions to build graphics for the empirical datas
+#' @param data data.frame
+#' @param genotypes to be documented
+#' @param from to be documented
 #' 
 errorProb_graph_emp <- function(data, genotypes, from){
   
@@ -270,9 +282,8 @@ overview_graph_emp <- function(df_overview, reescale = NULL){
 #' Performs comparisons between maximum datasets:
 #' 1) Venn diagram with exactly matching markers positions;
 #' 
-#' @param data_list list with marker names (chr_pos) of each dataset
+#' @param data list with marker names (chr_pos) of each dataset
 #' @param data_names character defining the name of each vcf data
-#' @param out_prefix character defining the prefix of image files names
 #' 
 #' @import ggVennDiagram
 #' @import ggplot2

@@ -7,6 +7,8 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
+#' @importFrom plotly plotlyOutput
+#' 
 mod_emp_plotly_heatmaps_ui <- function(id){
   ns <- NS(id)
   tagList(
@@ -15,7 +17,7 @@ mod_emp_plotly_heatmaps_ui <- function(id){
              box(title = "Interactive recombination fraction heatmap",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotlyOutput(ns("heatmaps_emp_out"), height = 650),hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       )
     ),
@@ -59,7 +61,7 @@ mod_emp_plotly_heatmaps_ui <- function(id){
     
 #' emp_plotly_heatmaps Server Functions
 #'
-#' @import plotly
+#' @importFrom plotly renderPlotly
 #' 
 #' @noRd 
 mod_emp_plotly_heatmaps_server <- function(input, output, session, datas_emp){

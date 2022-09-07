@@ -18,7 +18,7 @@ mod_simu_times_ui <- function(id){
                  width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("times_out")),
                  hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       

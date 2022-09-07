@@ -21,7 +21,7 @@ mod_simu_depths_and_genotyping_ui <- function(id){
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("disper_depth_out")),
                  hr(),
-                 actionButton(ns("go1"), "Update",icon("refresh")),
+                 actionButton(ns("go1"), "Update",icon("refresh", verify_fa = FALSE)),
              ),
              box(
                width = NULL, solidHeader = TRUE,
@@ -89,6 +89,7 @@ mod_simu_depths_and_genotyping_ui <- function(id){
                  actionButton(ns("go2"), "Update",icon("refresh")), br(),
                  radioButtons(ns("fformat_depth2"), "File type", choices=c("png","tiff","jpeg","pdf", "RData"), selected = "png", inline = T),
                  downloadButton(ns('bn_download_depth2'), "Download", class = "butt")
+
              ),
              
              box(

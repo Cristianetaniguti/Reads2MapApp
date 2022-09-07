@@ -21,7 +21,7 @@ mod_emp_breakpoints_count_ui <- function(id){
                  hr(),
                  plotOutput(ns("counts_emp_out")),
                  hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")))
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)))
       ),
       box(solidHeader = T,
           radioButtons(ns("ErrorProb"), label = p("Genotyping method"),

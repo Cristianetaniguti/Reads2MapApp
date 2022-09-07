@@ -6,6 +6,13 @@
 \usage{
 errorProb_graph_emp(data, genotypes, from)
 }
+\arguments{
+\item{data}{data.frame}
+
+\item{genotypes}{to be documented}
+
+\item{from}{to be documented}
+}
 \description{
 Functions to build graphics for the empirical datas
 }

@@ -23,12 +23,12 @@ mod_simu_SNPCalling_efficiency_ui <- function(id){
              box(title = "SNP calling efficiency - without filters",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("snpcall_out")), hr(),
-                 actionButton(ns("go"), "Update",icon("refresh"))
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE))
              ),
              box(title = "SNP calling efficiency - with VCFtools filters",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  uiOutput(ns("plot.ui")), hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       column(width = 6,

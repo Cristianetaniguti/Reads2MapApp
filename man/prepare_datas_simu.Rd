@@ -6,6 +6,11 @@
 \usage{
 prepare_datas_simu(x, example_simu)
 }
+\arguments{
+\item{x}{inputted dataset}
+
+\item{example_simu}{selected example id}
+}
 \description{
 Read input data
 }

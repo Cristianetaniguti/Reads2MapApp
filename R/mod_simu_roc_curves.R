@@ -53,7 +53,7 @@ mod_simu_roc_curves_ui <- function(id){
                  hr(),
                  "Best thresholds:",
                  tableOutput(ns("thr_out")), hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       

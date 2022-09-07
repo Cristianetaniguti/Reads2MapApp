@@ -18,7 +18,7 @@ mod_simu_progeny_haplotypes_ui <- function(id){
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("haplot_out")),
                  hr(),
-                 actionButton(ns("go"), "Update",icon("refresh")),
+                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       column(width = 12,
@@ -26,7 +26,7 @@ mod_simu_progeny_haplotypes_ui <- function(id){
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  plotOutput(ns("haplot_simu_out")),
                  hr(),
-                 actionButton(ns("go1"), "Update",icon("refresh"))
+                 actionButton(ns("go1"), "Update",icon("refresh", verify_fa = FALSE))
              )
       ), br(),
       box(solidHeader = T,
