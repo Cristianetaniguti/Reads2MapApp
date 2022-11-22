@@ -7,11 +7,8 @@
 #' @import largeList
 #' 
 prepare_datas_simu <- function(x=NULL, example_simu=NULL){
-  withProgress(message = 'Working:', value = 0, {
-    incProgress(0.2, detail = paste("Uploading simulation data..."))
     # This function makes adjustments in the input tar.gz file to be processed inside the app
     # It returns six data objects and the app options in a list format
-    cat(example_simu)
     if(!is.null(x)){
       data.gz <- x[,4]
       path = "data/"
@@ -72,8 +69,7 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
         data.gz <- system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp")
       }
     }
-    incProgress(0.4, detail = paste("Uploading simulation data..."))
-    
+
     if(data.gz == "Wait"){
       cat("Waiting...\n")
     } else {
@@ -153,8 +149,7 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
           }
         }
       }
-      incProgress(0.8, detail = paste("Uploading simulation data..."))
-      
+
       temp <- unique(paste0(data2_maps$depth, "_", data2_maps$seed))
       seeds <- sapply(strsplit(temp, "_"), "[", 2)
       depths <- sapply(strsplit(temp, "_"), "[", 1)
@@ -185,7 +180,6 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
       
       result_list
     }
-  })
 }
 
 

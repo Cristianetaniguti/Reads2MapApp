@@ -129,8 +129,18 @@ mod_upload_server <- function(input, output, session){
   
   return(
     list(
-      datas_simu = reactive({prepare_datas_simu(x=input$simulatedreads, example_simu =input$example_simu)}),
-      datas_emp = reactive({prepare_datas_emp(input$empiricalreads, input$example_emp)})
+      datas_simu = reactive({
+        withProgress(message = 'Working:', value = 0, {
+          incProgress(0.5, detail = paste("Uploading simulation data..."))
+          prepare_datas_simu(x=input$simulatedreads, example_simu =input$example_simu)
+        })
+      }),
+      datas_emp = reactive({
+        withProgress(message = 'Working:', value = 0, {
+          incProgress(0.5, detail = paste("Uploading empirical data..."))
+          prepare_datas_emp(input$empiricalreads, input$example_emp)
+        })
+      })
     )
   )
 }

@@ -9,8 +9,6 @@
 prepare_datas_emp <- function(x = NULL, example_emp = NULL){
   # This function makes adjustments in the input tar.gz file to be processed inside the app
   # It returns six data objects and the app options in a list format
-  cat(example_emp)
-  cat(x)
     if(!is.null(x)){
       data.gz <- x[,4]
       path = "data/"
@@ -72,7 +70,11 @@ prepare_datas_emp <- function(x = NULL, example_emp = NULL){
         list_files[[i]] <- untar(data.gz[i], list = T)
       }
 
-      list_files <- lapply(list_files, function(x) file.path(path_dir, x,sep="")) 
+      list_files <- lapply(list_files, function(x) {
+        y <- file.path(path_dir, x,sep="")
+        y <- substring(y,1, nchar(y)-1)
+        return(y)
+      })
       list_files <- lapply(list_files, "[", -1)
       
       # Data
