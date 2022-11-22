@@ -63,6 +63,8 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
         data.gz <- c(system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
                      system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20_seed8303.tar.gz", package = "Reads2MapApp"),
                      system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
+      } else if(example_simu == "multi_filt_gq_noninfo_dev_replaced"){ 
+        data.gz <- c(system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo_dev_replaced/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "toy_sample_bi"){
         data.gz <- c(system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
       } else if(example_simu == "toy_sample_multi"){

@@ -1,3 +1,6 @@
+# Color blind friendly pallete
+my_colors <- c("#CC79A7","#D55E00","#0072B2","#F0E442","#009E73","#56B4E9","#E69F00","#000000")
+
 test_geno <- function(global, error){
   if(global){
     geno <- paste0(error, 0.05)
@@ -59,7 +62,7 @@ perfumaria <- function(data){
                   SuperMASSA = "supermassa", 
                   GUSMap = "gusmap", 
                   updog = "updog", 
-                  OneMap_version2 = "SNPCallerdefault", 
+                  `freebayes/GATK (0.001%)` = "SNPCallerdefault", 
                   `freebayes/GATK` = "SNPCaller",
                   `polyRAD (5%)` = "polyrad0.05", 
                   `updog (5%)` = "updog0.05", 

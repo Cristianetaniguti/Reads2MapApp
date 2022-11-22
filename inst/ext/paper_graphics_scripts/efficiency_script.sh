@@ -1,7 +1,7 @@
 # Adapt this line according to your HPC
 module load R
 
-grep -rw "Submitted batch job" * > jobs
+grep -rw "job id" * > jobs
 
 echo -e '
 df <- read.table("jobs", sep = "\t") \n
@@ -18,4 +18,4 @@ Rscript script_efficiency.R
 
 for i in $(cat jobs_id);do
   seff $i >> efficiency.infos.txt
-done
+done  

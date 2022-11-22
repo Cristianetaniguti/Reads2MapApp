@@ -44,11 +44,11 @@ mod_upload_ui <- function(id){
                                               "Biallelics + multiallelics filtered GQ" = "multi_filt_gq", 
                                               "Biallelics + multiallelics filtered GQ with segregation distortion" = "multi_filt_gq_dev", 
                                               "Biallelics + multiallelics filtered GQ and non-informative" = "multi_filt_gq_noninfo",
-                                              "Biallelics + multiallelics filtered GQ and non-informative with segregation distortion" = "multi_filt_gq_noninfo_dev",
+                                              "Biallelics + multiallelics filtered GQ and non-informative with segregation distortion" = "multi_filt_gq_noninfo_dev",=======
+                                              "Biallelics + multiallelics, GQ and non-informative filtered, with segregation distortion, and GT missing replaced" = "multi_filt_gq_noninfo_dev_replaced",
                                               "Toy sample without multiallelics" = "toy_sample_bi",
-                                              "Toy sample with multiallelics" = "toy_sample_multi",
-                                              "None" = "none"),
-                               selected = "none"),
+                                              "Toy sample with multiallelics" = "toy_sample_multi"),
+                               selected = "toy_sample_multi"),
                  )
              )
       ),
@@ -83,10 +83,9 @@ mod_upload_ui <- function(id){
                                  "P. tremula 37% Chr10 with 6 contaminants - biallelics filt GQ and noninfo" = "populus_biallelics_filt_GQ_noninfo_cont",
                                  "P. tremula 37% Chr10 with 6 contaminants - multiallelics GQ" = "populus_multiallelics_GQ_cont",
                                  "P. tremula 37% Chr10 with 6 contaminants - multiallelics filt GQ" = "populus_multiallelics_filt_GQ_cont",
-                                 "P. tremula 37% Chr10 with 6 contaminants - multiallelics filt GQ and noninfo" = "populus_multiallelics_filt_GQ_noninfo_cont",
-                                 "Toy sample with multiallelics" = "toy_sample_multi",
-                                 "None"= "none"), 
-                               selected = "none"),
+                                 "P. tremula 37% Chr10 with 6 contaminants - multiallelics filt GQ and noninfo" = "populus_multiallelics_filt_GQ_noninfo_cont",=======
+                                 "Toy sample with multiallelics" = "toy_sample_multi"), 
+                               selected = "toy_sample_multi"),
                  )
              )
       ),
@@ -129,18 +128,8 @@ mod_upload_server <- function(input, output, session){
   
   return(
     list(
-      datas_simu = reactive({
-        withProgress(message = 'Working:', value = 0, {
-          incProgress(0.5, detail = paste("Uploading simulation data..."))
-          prepare_datas_simu(x=input$simulatedreads, example_simu =input$example_simu)
-        })
-      }),
-      datas_emp = reactive({
-        withProgress(message = 'Working:', value = 0, {
-          incProgress(0.5, detail = paste("Uploading empirical data..."))
-          prepare_datas_emp(input$empiricalreads, input$example_emp)
-        })
-      })
+      datas_simu = reactive({prepare_datas_simu(x=input$simulatedreads, example_simu =input$example_simu)}),
+      datas_emp = reactive({prepare_datas_emp(input$empiricalreads, input$example_emp)})
     )
   )
 }

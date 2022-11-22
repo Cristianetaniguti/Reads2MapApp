@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #' Measuring cromwell tasks time
 #' 
 #' @param log.file character with log file name in cromwell-workflow-logs directory after 
@@ -5,12 +6,12 @@
 #' @param interactive plots an plotly-type graphic with possibility to see other values in an interactive way
 #' 
 #' @import ggplot2
-#' @importFrom plotly ggplotly
+#' @import plotly
 #' 
 #' @return ggplot boxplot with time spent by each task
 #' 
 workflow_times <- function(log.file, interactive=FALSE){
-
+  
   input.file <- read.table(log.file, header = F, sep = "~")
   input.file <- t(input.file)
   
@@ -27,9 +28,9 @@ workflow_times <- function(log.file, interactive=FALSE){
   done <- do.call(rbind, done)
   dates.done <- as.POSIXct(paste(done[,2], done[,3]), format="[%m/%d/%Y %H:%M:%OS]")
   done.df <- data.frame(dates.done, id= factor(done[,7], levels = unique(as.character(done[,7]))))
-
+  
   tot.df <- merge(done.df, start.df, by = "id")
-
+  
   tot.df <- cbind(tot.df, diff=difftime(tot.df[,2], tot.df[,3], units='mins'))
   
   tot.df <- cbind(task=sapply(strsplit(as.character(tot.df$id), ":"), "[", 1), tot.df)
@@ -59,14 +60,16 @@ transform_day <- function(x){
   paste0(new.h, ":",sapply(split.t, "[",2),":",sapply(split.t, "[",3))
 }
 
+
 #' Convert data obtained by efficiency script to 
 #' tables
 #' 
-#' @param infos_seff information obtained throught command seff
-#' @param jobs vector defining job numbers
+#' @param infos_seff output of seff bash command in HPRC
+#' @param jobs data.frame with first column being the task name and the second the job id
 #' 
 #' @import lubridate
 #'
+#' @export
 efficiency_table <- function(infos_seff, jobs){
   
   df <- read.table(infos_seff, sep = "\n")
@@ -124,17 +127,14 @@ efficiency_table <- function(infos_seff, jobs){
   return(df.infos)
 }
 
-
 #' HPC efficiency graphics
-#' 
-#' @param eff_table data.frame from efficiency_table function
-#' @param interactive logical indicating if a plotly graphic should be displayed
 #' 
 #' @import ggplot2
 #' @import tidyr
 #' @import dplyr
-#' @importFrom plotly ggplotly
+#' @import plotly
 #' 
+#' @export
 efficiency_graphics_perc <- function(eff_table, interactive=TRUE){
   p <- eff_table %>%
     mutate(mem = (mem_used_GB/mem_GB)*100 , cpu = (cpu_used/cpu)*100) %>%
@@ -151,14 +151,12 @@ efficiency_graphics_perc <- function(eff_table, interactive=TRUE){
 
 #' HPC efficiency graphics
 #' 
-#' @param eff_table data.frame from efficiency_table function
-#' @param interactive logical indicating if a plotly graphic should be displayed
-#' 
 #' @import ggplot2
 #' @import tidyr
 #' @import dplyr
-#' @importFrom plotly ggplotly
+#' @import plotly
 #' 
+#' @export
 efficiency_graphics_cpu <- function(eff_table, interactive=TRUE){
   p <- eff_table %>%
     select(tasks, cpu_used) %>% pivot_longer(cols = c(2), values_to = "usage (min)") %>%
@@ -175,14 +173,12 @@ efficiency_graphics_cpu <- function(eff_table, interactive=TRUE){
 
 #' HPC efficiency graphics
 #' 
-#' @param eff_table data.frame from efficiency_table function
-#' @param interactive logical indicating if a plotly graphic should be displayed
-#' 
 #' @import ggplot2
 #' @import tidyr
 #' @import dplyr
-#' @importFrom plotly ggplotly
+#' @import plotly
 #' 
+#' @export
 efficiency_graphics_mem <- function(eff_table, interactive=TRUE){
   p <- eff_table %>%
     select(tasks, mem_used_GB) %>% pivot_longer(cols = c(2), values_to="usage (GB)") %>%
@@ -194,5 +190,33 @@ efficiency_graphics_mem <- function(eff_table, interactive=TRUE){
   }
   
   return(p)
+}
+
+#' HPC efficiency graphics
+#' 
+#' @import ggplot2
+#' @import tidyr
+#' @import dplyr
+#' 
+#' @export
+efficiency_graphics_mem_cpu <- function(eff_table, reescale = 15){
+  p <- eff_table %>%
+    select(tasks, cpu_used, mem_used_GB) %>%
+    ggplot(aes(x=tasks)) +   coord_flip() +
+    geom_boxplot(aes(y = (cpu_used/60)/reescale), color = "blue", position = position_jitter(w = 0.05, h = 0)) +  
+    geom_boxplot(aes(y=mem_used_GB), color = "red") +
+    scale_y_continuous(
+      
+      # Features of the first axis
+      name = "Memory Utilized (GB)",
+      
+      # Add a second axis and specify its features
+      sec.axis = sec_axis(~.*reescale, name="CPU Utilized (min)")
+    ) +
+    theme_bw() +
+    theme(axis.text.x.top = element_text(colour="#005AB5"),
+          axis.text.x.bottom = element_text(colour="#DC3220"),
+          axis.title.x.top = element_text(colour="#005AB5"),
+          axis.title.x.bottom = element_text(colour="#DC3220"))
 }
 
