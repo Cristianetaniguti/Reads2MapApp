@@ -8,7 +8,7 @@ Each icon at the left corner of this page points to a different data set and pro
 
 In the session "Maps" it is possible to download the OneMap or GUSMap R object containing the combination of software and parameters you selected. With the object you can make modifications in the sequence using the R environment and OneMap or GUSMap packages functions. 
 
-By now, only one chromosome is evaluated in both workflows. However, the EmpiricalReads2Map workflow also provide the complete VCF file to users reproduce only the chosen pipeline in the other chromosomes. Therefore, users can select the best pipeline using one chromosome and apply it to the others without spent all the time and computer resources needed to compare all the methods for all chromosomes. We showed an example of this usage in the [Quick Guide to build High-Density Linkage Maps](https://cristianetaniguti.github.io/Tutorials/onemap/High_density_maps.html)
+By now, only one chromosome is evaluated in both workflows. However, the EmpiricalReads2Map workflow also provide the complete VCF file to users reproduce only the chosen pipeline in the other chromosomes. Therefore, users can select the best pipeline using one chromosome and apply it to the others without spent all the time and computer resources needed to compare all the methods for all chromosomes. We showed an example of this usage in the [Quick Guide to build High-Density Linkage Maps](https://cristianetaniguti.github.io/Tutorials/onemap/Quick_HighDens/High_density_maps.html)
 
 ### Running the Reads2Map App locally
 
