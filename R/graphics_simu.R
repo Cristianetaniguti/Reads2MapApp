@@ -141,10 +141,10 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
             saveList(temp1, file = temp_name, append = T, compress = T)
           }
         } else if(all(grepl("names.tsv.gz", datas[[i]]))){
-          temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
+          temp1 <-  vroom(datas[[i]][[j]], delim = "\t", show_col_types = FALSE)
           names_rdatas <- c(names_rdatas, temp1)
         } else {
-          temp1 <-  vroom(datas[[i]][[j]], delim = "\t")
+          temp1 <-  vroom(datas[[i]][[j]], delim = "\t", show_col_types = FALSE)
           name_temp <- unlist(strsplit(datas[[i]][[j]], "/"))
           name_temp <- unlist(strsplit(name_temp[length(name_temp)], "[.]"))[1]
           assign(name_temp, rbind(base::get(name_temp), temp1))

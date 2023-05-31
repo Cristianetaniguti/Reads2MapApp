@@ -59,7 +59,7 @@ prepare_datas_emp <- function(x = NULL, example_emp = NULL){
       #   data.gz <- system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
     }
   }
-  
+
   if(data.gz == "Wait"){
     cat("Waiting...\n")
   } else {
@@ -90,16 +90,20 @@ prepare_datas_emp <- function(x = NULL, example_emp = NULL){
     inds_list <- as.list(1:length(inds))
     names(inds_list) <- paste0(inds, " (", inds, ")")
     
-    data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
-    data5 <- base::get(data5)
+    if(length(grep("gusmap_RDatas.RData", datas)) > 0){
+      data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
+      data5 <- base::get(data5)
+    } else data5 <- NULL
     
-    names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t")
+    names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t", show_col_types = FALSE)
     names_rdatas <- as.data.frame(names_rdatas)[,1]
-    names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
-    result_list <- list("data1" = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]]), 
-                        "data2" = vroom(datas[[grep("data2_maps.tsv.gz", datas)]]), 
-                        "data3" = vroom(datas[[grep("data3_filters.tsv.gz", datas)]]), 
-                        "data4" = vroom(datas[[grep("data4_times.tsv.gz", datas)]]), 
+    if(length(grep("gusmap", names_rdatas)) > 0){
+      names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+    }
+    result_list <- list("data1" = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]], show_col_types = FALSE), 
+                        "data2" = vroom(datas[[grep("data2_maps.tsv.gz", datas)]], show_col_types = FALSE), 
+                        "data3" = vroom(datas[[grep("data3_filters.tsv.gz", datas)]], show_col_types = FALSE), 
+                        "data4" = vroom(datas[[grep("data4_times.tsv.gz", datas)]], show_col_types = FALSE), 
                         "data5" = data5, 
                         "names" = names_rdatas, 
                         "ind_names" = inds_list,

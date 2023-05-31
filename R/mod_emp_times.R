@@ -26,13 +26,13 @@ mod_emp_times_ui <- function(id){
                width = NULL, solidHeader = TRUE,
                fluidPage(
                  checkboxGroupInput(ns("ErrorProb"), label = p("Genotyping method"),
-                                    choices = maps_choice,
-                                    selected = unlist(maps_choice)),
+                                    choices = "This will be updated",
+                                    selected = "This will be updated"),
                ),
                fluidPage(
                  checkboxGroupInput(ns("SNPCall"), label = p("SNP calling method"),
-                                    choices = SNPCall_choice,
-                                    selected = unlist(SNPCall_choice)),
+                                    choices = "This will be updated",
+                                    selected = "This will be updated"),
                )
              )
       ),
@@ -47,8 +47,8 @@ mod_emp_times_ui <- function(id){
                ),
                fluidPage(
                  checkboxGroupInput(ns("CountsFrom"), label = p("Counts from"),
-                                    choices = CountsFrom_choice,
-                                    selected = unlist(CountsFrom_choice))
+                                    choices = "This will be updated",
+                                    selected = "This will be updated")
                )
              )
       )
@@ -61,6 +61,35 @@ mod_emp_times_ui <- function(id){
 #' @noRd 
 mod_emp_times_server <-  function(input, output, session, datas_emp){
   ns <- session$ns
+  
+  observe({
+
+    SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
+    names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
+    methods <- unique(datas_emp()[[2]]$GenoCall)
+    methods <- unique(gsub("0.05", "", methods))
+
+    ErrorProb_choice <- as.list(methods)
+    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+    CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
+    names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
+     
+    updateCheckboxGroupInput(session, "SNPCall",
+                             label="SNP call method",
+                             choices = SNPCall_choice,
+                             selected=unlist(SNPCall_choice)[1])
+    
+    updateCheckboxGroupInput(session, "ErrorProb",
+                             label="Genotyping method",
+                             choices = ErrorProb_choice,
+                             selected=unlist(ErrorProb_choice)[1])
+    
+    updateCheckboxGroupInput(session, "CountsFrom",
+                             label="Counts From",
+                             choices = CountsFrom_choice,
+                             selected=unlist(CountsFrom_choice)[1])
+  })
+  
   button <- eventReactive(input$go, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))

@@ -24,12 +24,12 @@ mod_emp_maps_ui <- function(id){
              ),
              box(solidHeader = T,
                  radioButtons(ns("ErrorProb"), label = p("Genotyping method"),
-                              choices = maps_choice,
-                              selected = "updog"),
+                              choices = "This will be updated",
+                              selected = "This will be updated"),
                  
                  radioButtons(ns("SNPCall"), label = p("SNP calling method"),
-                              choices = SNPCall_choice,
-                              selected = "gatk"),
+                              choices = "This will be updated",
+                              selected = "This will be updated"),
              ),
              box(solidHeader = T,
                  radioButtons(ns("Global0.05"), label = p("Error rate"),
@@ -37,8 +37,8 @@ mod_emp_maps_ui <- function(id){
                               selected = "FALSE"),
                  
                  radioButtons(ns("CountsFrom"), label = p("Counts from"),
-                              choices = CountsFrom_choice,
-                              selected = "vcf"), hr(),
+                              choices = "This will be updated",
+                              selected = "This will be updated"), hr(),
                  div(downloadButton(ns("map_emp_out_down"), label = "Download sequence"),style="float:right"), br(), br(),
                  div(downloadButton(ns("map_emp_onemap_down"), label = "Download PDF with all onemap heatmaps"),style="float:right")
              )
@@ -64,6 +64,35 @@ mod_emp_maps_ui <- function(id){
 #' @noRd 
 mod_emp_maps_server <- function(input, output, session, datas_emp){
   ns <- session$ns
+  
+  observe({
+    
+    SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
+    names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
+    methods <- unique(datas_emp()[[2]]$GenoCall)
+    methods <- unique(gsub("0.05", "", methods))
+    
+    ErrorProb_choice <- as.list(methods)
+    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+    CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
+    names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
+    
+    updateRadioButtons(session, "SNPCall",
+                             label="SNP call method",
+                             choices = SNPCall_choice,
+                             selected=unlist(SNPCall_choice)[1])
+    
+    updateRadioButtons(session, "ErrorProb",
+                             label="Genotyping method",
+                             choices = ErrorProb_choice,
+                             selected=unlist(ErrorProb_choice)[1])
+    
+    updateRadioButtons(session, "CountsFrom",
+                             label="Counts From",
+                             choices = CountsFrom_choice,
+                             selected=unlist(CountsFrom_choice)[1])
+  })
+  
   button2 <- eventReactive(input$go2, {
     withProgress(message = 'Building draw', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
