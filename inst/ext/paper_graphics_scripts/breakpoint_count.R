@@ -307,6 +307,97 @@ data.gz <- c(system.file("ext", "rose/biallelics_filt_GQ_noninfo/EmpiricalReads_
              system.file("ext", "populus/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "populus/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"))
 
+data.gz <- c("/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_GQ/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_GQ/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz")
+
+max_cores <- 10
+# fix -Inf issue
+tofix <- list()
+idx <- c(9,12,13,14,15,18, 22)
+for(i in idx){
+  cat(i, "i \n")
+  path_dir <- dirname(data.gz[i])
+  untar(data.gz[i], exdir = path_dir)
+  list_files <- untar(data.gz[i], list = T)
+  list_files <- paste0(path_dir, "/", list_files)
+  path.file <- list_files[grep("sequences", list_files)]
+  temp1 <- readList(path.file)
+  files.names <-  vroom(list_files[grep("names", list_files)], delim = "\t", num_threads = max_cores)
+  files.names <- as.vector(as.matrix(files.names))
+  files.names <- files.names[-grep("gusmap", files.names)]
+  map_report <- vroom(list_files[grep("data2_maps", list_files)], delim = "\t", num_threads = max_cores)
+
+  tofix[[i]] <- which(sapply(temp1, "[[",4) == -Inf)
+  if(length(tofix[[i]]) > 0){
+    temp2 <- temp1
+    for(z in 1:length(tofix[[i]])){
+      map1 <- temp1[tofix[[i]]][[z]]
+      twopts <- map1$twopt
+      input.seq <- make_seq(twopts, map1$seq.num)
+
+      split.names <- unlist(strsplit(files.names[[tofix[[i]][[z]]]], "_"))
+      result <- create_map_report_emp(input.seq,
+                                      CountsFrom = split.names[3],
+                                      SNPCall = split.names[2],
+                                      GenoCall = gsub("0", "", sapply(strsplit(split.names[4], "[.]"), "[[", 1)),
+                                      max_cores = 4)
+      temp2[tofix[[i]]][[z]] <- result[[1]]
+      map_report_temp <- map_report[-which(map_report$CountsFrom == split.names[3] &
+                                       map_report$SNPCall == split.names[2] &
+                                       map_report$GenoCall == gsub("0", "", sapply(strsplit(split.names[4], "[.]"), "[[", 1))),]
+      map_report <- rbind(map_report_temp, result[[2]])
+    }
+    vroom_write(map_report, paste0(path_dir,"/EmpiricalReads_results/data2_maps.tsv.gz"), num_threads = max_cores)
+    saveList(temp2, file = paste0(path_dir, "/EmpiricalReads_results/sequences_emp.llo"), append=FALSE, compress=TRUE)
+    if(grepl("_cont.tar.gz", data.gz[i])) name.file <- "/EmpiricalReads_results_cont_bugfix.tar.gz " else name.file <- "/EmpiricalReads_results_bugfix.tar.gz "
+    system(paste0("tar -czvf ", path_dir,name.file, path_dir,"/EmpiricalReads_results"))
+  }
+  system(paste0("rm -r ", path_dir,"/EmpiricalReads_results"))
+}
+
+data.gz <- c("/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_GQ/EmpiricalReads_results_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_GQ/EmpiricalReads_results_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ/EmpiricalReads_results_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_GQ/EmpiricalReads_results_cont_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_GQ/EmpiricalReads_results_cont_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results_bugfix.tar.gz")
+
 prog_counts_total <- data.frame()
 for(i in 1:length(data.gz)){
   cat(i, "i \n")

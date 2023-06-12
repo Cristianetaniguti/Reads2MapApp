@@ -126,13 +126,9 @@ for(i in 1:length(software)){
     guides(colour = guide_legend(override.aes = list(alpha = 1, size = 2), nrow=3), 
            shape = guide_legend(override.aes = list(alpha = 1)))  + 
     theme_bw() + 
-    theme(axis.text.x = element_text(angle = 30, hjust=1),
-          legend.position = "bottom", legend.title = element_blank(), 
-          axis.text =  element_text(size=6),
-          axis.title = element_text(size=8),
-          legend.text = element_text(size=6),
-          axis.title.x = element_blank(),
-          strip.text = element_text(size = 7))  +
+    theme(legend.position = "bottom", 
+          legend.title = element_blank(),
+          legend.text = element_text(margin = margin(r = 20))) +
     ggtitle(software[i])
 }
 
@@ -274,13 +270,9 @@ for(i in 1:length(software)){
     guides(colour = guide_legend(override.aes = list(alpha = 1, size = 2), nrow=3), 
            shape = guide_legend(override.aes = list(alpha = 1)))  + 
     theme_bw() + 
-    theme(axis.text.x = element_text(angle = 30, hjust=1),
-          legend.position = "bottom", legend.title = element_blank(), 
-          axis.text =  element_text(size=6),
-          axis.title = element_text(size=8),
-          legend.text = element_text(size=6),
-          axis.title.x = element_blank(),
-          strip.text = element_text(size = 7))  +
+    theme(legend.position = "bottom", 
+          legend.title = element_blank(),
+          legend.text = element_text(margin = margin(r = 20))) +
     ggtitle(software[i])
 }
 
@@ -312,7 +304,10 @@ for(i in 1:length(list_files[[1]])){
   datas[[i]] <- sapply(list_files, "[", i)
 }
 
-data1 = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]])
+nchar(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]])
+file.d <- substr(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]],1,nchar(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]])-1)
+
+data1 = vroom(file.d)
 
 # Mean depth
 
@@ -341,14 +336,13 @@ for(i in 1:length(list_files[[1]])){
   datas[[i]] <- sapply(list_files, "[", i)
 }
 
-data2 = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]])
+nchar(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]])
+file.d <- substr(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]],1,nchar(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]])-1)
+
+data2 = vroom(file.d)
 
 parents <- data2[which(data2$ind %in% c("PT_M", "PT_F")),]
 progeny <- data2[which(!(data2$ind %in% c("PT_M", "PT_F"))),]
-
-summary(parents$alt + parents$ref)
-summary(progeny$alt + progeny$ref)
-
 
 data1 <-cbind(dataset= "Rose", perfumaria(data1))
 data2 <- cbind(dataset="Aspen", perfumaria(data2))
@@ -427,13 +421,9 @@ for(i in 1:length(software)){
     guides(colour = guide_legend(override.aes = list(alpha = 1), nrow=2), 
            shape = guide_legend(override.aes = list(alpha = 1)))  + 
     theme_bw() + 
-    theme(axis.text.x = element_text(angle = 30, hjust=1),
-          legend.position = "bottom", legend.title = element_blank(), 
-          axis.text =  element_text(size=6),
-          axis.title = element_text(size=8),
-          legend.text = element_text(size=6),
-          axis.title.x = element_blank(),
-          strip.text = element_text(size = 7))  +
+    theme(legend.position = "bottom", 
+          legend.title = element_blank(),
+          legend.text = element_text(margin = margin(r = 20))) +
     ggtitle(software[i])
 }
 

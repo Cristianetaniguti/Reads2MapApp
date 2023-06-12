@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #' Measuring cromwell tasks time
 #' 
 #' @param log.file character with log file name in cromwell-workflow-logs directory after 

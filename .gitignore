@@ -8,6 +8,7 @@ inst/ext/simulations
 inst/ext/simu_results
 inst/ext/toy_sample_simu
 inst/ext/populus
+inst/ext/populus_review
 inst/ext/eucalyptus
 inst/ext/populus8.5
 tests/

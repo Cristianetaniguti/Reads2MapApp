@@ -126,7 +126,7 @@ data.gz <- c(system.file("ext", "simu_results/depth10/biallelics/SimulatedReads_
              system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo_dev_replaced/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
              system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev_replaced/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
 
-data.gz[31] <- "C:/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/simu_results/depth20/multiallelics_filt_GQ_noninfo_dev_replaced/SimulatedReads_results_depth20.tar.gz"
+data.gz[31] <- "/home/cris/R/x86_64-pc-linux-gnu-library/4.1/Reads2MapApp/ext/simu_results/depth20/multiallelics_filt_GQ_noninfo_dev_replaced/SimulatedReads_results_depth20.tar.gz"
 
 # Big dataset
 df_total.polyrad <- df_total.updog <- df_total.supermassa <- df_total.SNPCaller <- data.frame()
@@ -351,8 +351,6 @@ for(i in 1:length(software)){
   multi_total <- rbind(multi_total, multi)
 }
 
-
-
 save(bi_total, file = "bi_total.RData")
 save(multi_total, file = "multi_total.RData")
 
@@ -419,6 +417,23 @@ bi_correct_suppl <- temp %>% filter(wrong == "correct" & grepl("With segr", data
 
 ggsave(bi_correct_suppl, filename = paste0("marker_type_bi_correct_suppl.png"), width = 120, height = 150, units = "mm")
 
+count_wrong_correct <- temp %>% filter(grepl("With segr", dataset) &
+                                         GenoCall != "freebayes/GATK" &
+                                         SNPCall == "GATK" &
+                                         CountsFrom == "VCF") %>% group_by(depth, SNPCall, GenoCall, filt, CountsFrom, wrong) %>%
+  summarize(correct = sum(mean_count))
+
+count_wrong_correct$lab <- paste0(count_wrong_correct$wrong, ": ", round(count_wrong_correct$correct,2))
+count_wrong_correct$x <- NA
+count_wrong_correct$x[which(count_wrong_correct$filt == "no extra filters")] <- 1
+count_wrong_correct$x[which(count_wrong_correct$filt == "genotype prob > 0.8")] <- 2
+count_wrong_correct$x[which(count_wrong_correct$filt == "+ only informative markers")] <- 3
+count_wrong_correct$x[which(count_wrong_correct$filt == "+ missing replaced")] <- 4
+
+count_wrong_correct$y <- NA
+count_wrong_correct$y[which(count_wrong_correct$wrong == "correct")] <- 7
+count_wrong_correct$y[which(count_wrong_correct$wrong == "wrong")] <- 6
+
 temp2 <- temp %>% filter(wrong == "wrong" & grepl("With segr", dataset) &
                            GenoCall != "freebayes/GATK" &
                            CountsFrom == "VCF") %>% droplevels() %>%
@@ -437,13 +452,34 @@ bi_wrong1 <- temp2 %>%
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.5)) +
+  geom_text(data= count_wrong_correct, aes(x,y, label = lab), 
+            inherit.aes = FALSE, show.legend = FALSE, size = 2.5) + 
   facet_grid(depth + GenoCall ~ SNPCall) + 
   theme_bw() +
-  ylab("mean # of markers") +  xlab("Filters") +
+  ylab("mean # of wrong markers") +  xlab("Filters") +
   theme(legend.position = "bottom", legend.title = element_blank(),
-        axis.text.x = element_text(angle = 20, hjust=1)) + ggtitle("Biallelics - wrong")
+        axis.text.x = element_text(angle = 20, hjust=1)) + ggtitle("Biallelics") +
+  scale_y_continuous(expand = expansion(mult = c(NULL, 0.1)))
 
 ggsave(bi_wrong1, filename = paste0("marker_type_bi_wrong_paper.png"),  width = 120, height = 200, units = "mm")
+
+count_wrong_correct <- temp %>% filter(grepl("With segr", dataset) &
+                                         GenoCall == "freebayes/GATK" &
+                                         SNPCall == "GATK" &
+                                         CountsFrom == "VCF") %>% group_by(depth, SNPCall, GenoCall, filt, CountsFrom, wrong) %>%
+  summarize(correct = sum(mean_count))
+
+count_wrong_correct$lab <- paste0(count_wrong_correct$wrong, ": ", round(count_wrong_correct$correct,2))
+count_wrong_correct$x <- NA
+count_wrong_correct$x[which(count_wrong_correct$filt == "no extra filters")] <- 1
+count_wrong_correct$x[which(count_wrong_correct$filt == "genotype prob > 0.8")] <- 2
+count_wrong_correct$x[which(count_wrong_correct$filt == "+ only informative markers")] <- 3
+count_wrong_correct$x[which(count_wrong_correct$filt == "+ missing replaced")] <- 4
+
+count_wrong_correct$y <- NA
+count_wrong_correct$y[which(count_wrong_correct$wrong == "correct")] <- 5
+count_wrong_correct$y[which(count_wrong_correct$wrong == "wrong")] <- 4.5
+
 
 temp2 <- temp %>% filter(wrong == "wrong" & grepl("With segr", dataset) &
                            GenoCall == "freebayes/GATK" &
@@ -463,11 +499,14 @@ bi_wrong2 <- temp2 %>%
     width = 0.1,
     linetype = "solid",
     position=position_dodge(width=0.5)) +
+  geom_text(data= count_wrong_correct, aes(x,y, label = lab), 
+            inherit.aes = FALSE, show.legend = FALSE, size = 2.5) + 
   facet_grid(depth  ~ SNPCall) + 
   theme_bw() +
-  ylab("mean # of markers") +  xlab("Filters") +
+  ylab("mean # of wrong markers") +  xlab("Filters") +
   theme(legend.position = "bottom", legend.title = element_blank(),
-        axis.text.x = element_text(angle = 20, hjust=1)) + ggtitle("Biallelics - wrong")
+        axis.text.x = element_text(angle = 20, hjust=1)) + ggtitle("Biallelics")  +
+  scale_y_continuous(expand = expansion(mult = c(NULL, 0.1)))
 
 ggsave(bi_wrong2, filename = paste0("marker_type_bi_wrong_suppl.png"),  width = 120, height = 170, units = "mm")
 
@@ -1210,7 +1249,7 @@ filters_paper1 <- means %>% filter((GenoCall %in% c("polyRAD", "polyRAD (5%)","S
   ylab(expression("Log"[10]*" of the mean Euclidean distance")) +
   labs(color = "Genotype call\nsoftware", shape = "Genotype call\nsoftware") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + ggtitle("A") 
-  #guides(shape = guide_legend(override.aes = list(size = 5)))
+#guides(shape = guide_legend(override.aes = list(size = 5)))
 
 filters_paper2 <- means %>% filter((GenoCall %in% c("polyRAD", "polyRAD (5%)","SuperMASSA", "SuperMASSA (5%)", "updog", "updog (5%)")) & 
                                      grepl("multiallelics", dataset) &
@@ -1285,28 +1324,28 @@ p_supple <- means %>% filter((GenoCall %in% c("polyRAD", "polyRAD (5%)","SMASSA"
 ggsave(p_supple, filename = "size_suppl_multi.png", width = 170, height = 120, units = "mm")
 
 ### Empirical
-data.gz <- c(system.file("ext", "rose/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "rose/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "rose/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "rose/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "rose/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "rose/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "rose/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "rose/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"),
-             system.file("ext", "populus/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp"))
+data.gz <- c("/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/rose/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_GQ/EmpiricalReads_results_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_GQ/EmpiricalReads_results_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ/EmpiricalReads_results_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_GQ/EmpiricalReads_results_cont_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_GQ/EmpiricalReads_results_cont_bugfix.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/biallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz",
+             "/mnt/c/Users/Rose_Lab/Documents/Cris_temp/Reads2MapApp/inst/ext/populus/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results_bugfix.tar.gz")
 
 df_total <- data.frame()
 for(i in 1:length(data.gz)){
@@ -1527,7 +1566,7 @@ filters_supple <- ggarrange(filters_supple1, filters_supple2, common.legend = TR
 ggsave(filters_supple, filename = "filters_supple_emp.png", width = 170, height = 120, units = "mm")
 
 filters_paper1 <- merge_emp %>% filter((GenoCall %in% c("polyRAD", "polyRAD (5%)","SuperMASSA", "SuperMASSA (5%)", "updog", "updog (5%)")) & 
-                                         grepl("biallelics", dataset) &
+                                         grepl("multiallelics", dataset) &
                                          emp %in% c("rose (~94x)", "aspen (~6x)")) %>% 
   ggplot(aes(x = filt, y = log(total_size, base = 10),  group = GenoCall, shape = GenoCall)) +
   geom_line(aes(color = GenoCall)) + 
@@ -1542,7 +1581,7 @@ filters_paper1 <- merge_emp %>% filter((GenoCall %in% c("polyRAD", "polyRAD (5%)
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + ggtitle("A")
 
 filters_paper2 <- merge_emp %>% filter((GenoCall %in% c("polyRAD", "polyRAD (5%)","SuperMASSA", "SuperMASSA (5%)", "updog", "updog (5%)")) & 
-                                         grepl("biallelics", dataset) &
+                                         grepl("multiallelics", dataset) &
                                          emp %in% c("rose (~94x)", "aspen (~6x)")) %>% 
   ggplot(aes(x = filt, y = n_mks, fill = GenoCall)) +
   geom_bar(stat="identity", position=position_dodge()) +
@@ -1649,7 +1688,7 @@ means_wider <- merge(cont, noncont)
 save(means_wider, file = "means_wider.RData")
 
 p_paper1 <- means_wider %>% filter(!(GenoCall %in% c("polyRAD", "polyRAD (5%)","SuperMASSA", "SuperMASSA (5%)")) & 
-                                     !(GenoCall == "freebayes/GATK" & SNPCall == "freebayes") &
+                                     #!(GenoCall == "freebayes/GATK" & SNPCall == "freebayes") &
                                      (filt %in% c("+ only informative markers")) & 
                                      multi == "multi" &
                                      CountsFrom == "VCF") %>% 
@@ -1666,7 +1705,7 @@ p_paper1 <- means_wider %>% filter(!(GenoCall %in% c("polyRAD", "polyRAD (5%)","
   guides(color = guide_legend(nrow = 2, byrow = TRUE)) + ggtitle("A")
 
 p_paper2 <- means_wider %>% filter(!(GenoCall %in% c("polyRAD", "polyRAD (5%)","SuperMASSA", "SuperMASSA (5%)")) & 
-                                     !(GenoCall == "freebayes/GATK" & SNPCall == "freebayes") &
+                                     #!(GenoCall == "freebayes/GATK" & SNPCall == "freebayes") &
                                      (filt %in% c("+ only informative markers")) & 
                                      multi == "multi" &
                                      CountsFrom == "VCF") %>% 
@@ -1731,7 +1770,7 @@ merge_emp$SNPCall <- gsub("freebayes", "freebayes (fb)", merge_emp$SNPCall)
 save(merge_emp, file = "merge_emp.RData")
 
 p_paper <- merge_emp %>% filter(!(GenoCall %in% c("polyRAD", "polyRAD (5%)","SuperMASSA", "SuperMASSA (5%)")) & 
-                                  !(GenoCall == "fb/GATK" & SNPCall == "freebayes (fb)") &
+                                  #!(GenoCall == "fb/GATK" & SNPCall == "freebayes (fb)") & # here
                                   emp %in% c("rose (~94x)", "aspen (~6x)") &
                                   !(filt %in% c("genotype prob > 0.8", "no extra filters", "+ only informative markers")) & 
                                   grepl("VCF", dataset) &

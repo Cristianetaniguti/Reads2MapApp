@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #' upload UI Function
 #'
 #' @description A shiny Module.
@@ -69,6 +68,7 @@ mod_upload_ui <- function(id){
                                choices = list(
                                  "Roses 37% Chr01	- biallelics filt GQ and noninfo" = "rose_biallelics_filt_GQ_noninfo",
                                  "Roses 37% Chr01	- multiallelics filt GQ and noninfo" = "rose_multiallelics_filt_GQ_noninfo",
+                                 "Roses 37% Chr01	- multiallelics filt GQ and noninfo AD replaced" = "rose_multiallelics_filt_GQ_noninfo_replaced",
                                  "Roses 37% Chr01	- biallelics  GQ" = "rose_biallelics_GQ",
                                  "Roses 37% Chr01	- multiallelics GQ" = "rose_multiallelics_GQ",
                                  "Roses 37% Chr01	- biallelics filt GQ" = "rose_biallelics_filt_GQ",
@@ -79,6 +79,7 @@ mod_upload_ui <- function(id){
                                  "P. tremula 37% Chr10 - multiallelics GQ" = "populus_multiallelics_GQ",
                                  "P. tremula 37% Chr10 - multiallelics filt GQ" = "populus_multiallelics_filt_GQ",
                                  "P. tremula 37% Chr10 - multiallelics filt GQ and noninfo" = "populus_multiallelics_filt_GQ_noninfo",
+                                 "P. tremula 37% Chr10 - multiallelics filt GQ and noninfo and AD replaced" = "populus_multiallelics_filt_GQ_noninfo_replaced",
                                  "P. tremula 37% Chr10 with 6 contaminants - biallelics GQ" = "populus_biallelics_GQ_cont",
                                  "P. tremula 37% Chr10 with 6 contaminants - biallelics filt GQ" = "populus_biallelics_filt_GQ_cont",
                                  "P. tremula 37% Chr10 with 6 contaminants - biallelics filt GQ and noninfo" = "populus_biallelics_filt_GQ_noninfo_cont",
