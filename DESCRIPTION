@@ -5,8 +5,7 @@ Authors@R:
     person(given = "Cristiane Hayumi",
            family = "Taniguti",
            role = c("aut", "cre"),
-           email = "chtaniguti@usp.br",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           email = "chtaniguti@tamu.edu")
 Description: Build graphics for Reads2Map results.
 License: GPL-3
 Encoding: UTF-8

@@ -25,8 +25,8 @@ mod_emp_markers_type_ui <- function(id){
                width = NULL, solidHeader = TRUE,
                fluidPage(
                  checkboxGroupInput(ns("ErrorProb"), label = p("Genotyping method"),
-                                    choices = maps_choice,
-                                    selected = unlist(maps_choice)),
+                                    choices = "This will be updated",
+                                    selected = "This will be updated")
                )
              )
       ),
@@ -35,14 +35,14 @@ mod_emp_markers_type_ui <- function(id){
                width = NULL, solidHeader = TRUE,
                fluidPage(
                  checkboxGroupInput(ns("SNPCall"), label = p("SNP calling method"),
-                                    choices = SNPCall_choice,
-                                    selected = unlist(SNPCall_choice)),
+                                    choices = "This will be updated",
+                                    selected = "This will be updated")
                ),
                
                fluidPage(
                  checkboxGroupInput(ns("CountsFrom"), label = p("Counts from"),
-                                    choices = CountsFrom_choice,
-                                    selected = unlist(CountsFrom_choice))
+                                    choices = "This will be updated",
+                                    selected = "This will be updated")
                )
              )
       )
@@ -54,24 +54,52 @@ mod_emp_markers_type_ui <- function(id){
 #'
 #' @noRd 
 mod_emp_markers_type_server <- function(input, output, session, datas_emp){
-    ns <- session$ns
+  ns <- session$ns
+  
+  observe({
     
-    button <- eventReactive(input$go, {
-      withProgress(message = 'Building graphic', value = 0, {
-        incProgress(0, detail = paste("Doing part", 1))
-        data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb) %>%
-          filter(SNPCall %in% input$SNPCall) %>%
-          filter(CountsFrom %in% input$CountsFrom) %>%
-          group_by(type, GenoCall, SNPCall, CountsFrom) %>%
-          summarise(n = n()) %>%
-          gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
-        perfumaria(data)
-      })
-    })
+    SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
+    names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
+    methods <- unique(datas_emp()[[2]]$GenoCall)
+    methods <- unique(gsub("0.05", "", methods))
     
-    output$marker_type_emp_out <- renderPlot({
-      marker_type_graph_emp(button())
+    ErrorProb_choice <- as.list(methods)
+    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+    CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
+    names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
+    
+    updateCheckboxGroupInput(session, "SNPCall",
+                             label="SNP call method",
+                             choices = SNPCall_choice,
+                             selected=unlist(SNPCall_choice)[1])
+    
+    updateCheckboxGroupInput(session, "ErrorProb",
+                             label="Genotyping method",
+                             choices = ErrorProb_choice,
+                             selected=unlist(ErrorProb_choice)[1])
+    
+    updateCheckboxGroupInput(session, "CountsFrom",
+                             label="Counts From",
+                             choices = CountsFrom_choice,
+                             selected=unlist(CountsFrom_choice)[1])
+  })
+  
+  button <- eventReactive(input$go, {
+    withProgress(message = 'Building graphic', value = 0, {
+      incProgress(0, detail = paste("Doing part", 1))
+      data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb) %>%
+        filter(SNPCall %in% input$SNPCall) %>%
+        filter(CountsFrom %in% input$CountsFrom) %>%
+        group_by(type, GenoCall, SNPCall, CountsFrom) %>%
+        summarise(n = n()) %>%
+        gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
+      perfumaria(data)
     })
+  })
+  
+  output$marker_type_emp_out <- renderPlot({
+    marker_type_graph_emp(button())
+  })
 }
 
 ## To be copied in the UI

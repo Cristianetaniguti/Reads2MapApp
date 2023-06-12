@@ -9,108 +9,110 @@
 prepare_datas_emp <- function(x = NULL, example_emp = NULL){
   # This function makes adjustments in the input tar.gz file to be processed inside the app
   # It returns six data objects and the app options in a list format
-  cat(example_emp)
-  cat(x)
-    if(!is.null(x)){
-      data.gz <- x[,4]
-      path = "data/"
-    } else if(is.null(example_emp)){
-      cat("Wait credentials\n")
-      data.gz <- "Wait"
-    } else if(example_emp== "none" ){
-      cat("Wait credentials\n")
-      data.gz <- "Wait"
-    } else { ######## Available examples
-      if(example_emp == "rose_biallelics_filt_GQ_noninfo"){
-        data.gz <- system.file("ext", "rose/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "rose_multiallelics_filt_GQ_noninfo"){
-        data.gz <- system.file("ext", "rose/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "rose_multiallelics_filt_GQ_noninfo_replaced"){
-        data.gz <- system.file("ext", "rose/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "rose_biallelics_GQ"){
-        data.gz <- system.file("ext", "rose/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "rose_multiallelics_GQ"){
-        data.gz <- system.file("ext", "rose/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-       } else if(example_emp == "rose/biallelics_filt_GQ"){
-        data.gz <- system.file("ext", "rose/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "rose_multiallelics_filt_GQ"){
-        data.gz <-system.file("ext", "rose/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_biallelics_GQ"){
-        data.gz <- system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_biallelics_filt_GQ"){
-        data.gz <- system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_biallelics_filt_GQ_noninfo"){
-        data.gz <- system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_multiallelics_GQ"){
-        data.gz <-  system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_multiallelics_filt_GQ"){
-        data.gz <- system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_multiallelics_filt_GQ_noninfo"){
-        data.gz <- system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_multiallelics_filt_GQ_noninfo_replaced"){
-        data.gz <- system.file("ext", "populus/multiallelics_filt_GQ_noninfo_replaced/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_biallelics_GQ_cont"){
-        data.gz <- system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_biallelics_filt_GQ_cont"){
-        data.gz <- system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_biallelics_filt_GQ_noninfo_cont"){
-        data.gz <- system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_multiallelics_GQ_cont"){
-        data.gz <- system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_multiallelics_filt_GQ_cont"){
-        data.gz <- system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "populus_multiallelics_filt_GQ_noninfo_cont"){
-        data.gz <- system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      } else if(example_emp == "toy_sample_multi"){
-         data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      }
+  if(!is.null(x)){
+    data.gz <- x[,4]
+    path = "data/"
+  } else if(is.null(example_emp)){
+    cat("Wait credentials\n")
+    data.gz <- "Wait"
+  } else if(example_emp== "none" ){
+    cat("Wait credentials\n")
+    data.gz <- "Wait"
+  } else { ######## Available examples
+    if(example_emp == "toy_sample_multi"){
+      data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # if(example_emp == "rose_biallelics_filt_GQ_noninfo"){
+      #   data.gz <- system.file("ext", "rose/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "rose_multiallelics_filt_GQ_noninfo"){
+      #   data.gz <- system.file("ext", "rose/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "rose_biallelics_GQ"){
+      #   data.gz <- system.file("ext", "rose/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "rose_multiallelics_GQ"){
+      #   data.gz <- system.file("ext", "rose/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      #  } else if(example_emp == "rose/biallelics_filt_GQ"){
+      #   data.gz <- system.file("ext", "rose/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "rose_multiallelics_filt_GQ"){
+      #   data.gz <-system.file("ext", "rose/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_biallelics_GQ"){
+      #   data.gz <- system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_biallelics_filt_GQ"){
+      #   data.gz <- system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_biallelics_filt_GQ_noninfo"){
+      #   data.gz <- system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_multiallelics_GQ"){
+      #   data.gz <-  system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_multiallelics_filt_GQ"){
+      #   data.gz <- system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_multiallelics_filt_GQ_noninfo"){
+      #   data.gz <- system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_biallelics_GQ_cont"){
+      #   data.gz <- system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_biallelics_filt_GQ_cont"){
+      #   data.gz <- system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_biallelics_filt_GQ_noninfo_cont"){
+      #   data.gz <- system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_multiallelics_GQ_cont"){
+      #   data.gz <- system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_multiallelics_filt_GQ_cont"){
+      #   data.gz <- system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
+      # } else if(example_emp == "populus_multiallelics_filt_GQ_noninfo_cont"){
+      #   data.gz <- system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
+    }
+  }
+
+  if(data.gz == "Wait"){
+    cat("Waiting...\n")
+  } else {
+    path_dir <- tempdir()
+    list_files <- list()
+    for(i in 1:length(data.gz)){
+      untar(data.gz[i], exdir = path_dir)
+      list_files[[i]] <- untar(data.gz[i], list = T)
     }
     
-    if(data.gz == "Wait"){
-      cat("Waiting...\n")
-    } else {
-      path_dir <- tempdir()
-      list_files <- list()
-      for(i in 1:length(data.gz)){
-        untar(data.gz[i], exdir = path_dir)
-        list_files[[i]] <- untar(data.gz[i], list = T)
-      }
-
-      list_files <- lapply(list_files, function(x) file.path(path_dir, x,sep="")) 
-      list_files <- lapply(list_files, "[", -1)
-      
-      # Data
-      datas <- list()
-      for(i in 1:length(list_files[[1]])){
-        datas[[i]] <- sapply(list_files, "[", i)
-      }
-      
-      for_rm <- sapply(list_files, "[", -grep("sequences",datas))
-      
-      temp_dat <- readList(datas[[grep("sequences",datas)]], index = 1)
-      inds <- rownames(temp_dat[[1]]$data.name$geno)
-      inds_list <- as.list(1:length(inds))
-      names(inds_list) <- paste0(inds, " (", inds, ")")
-      
+    list_files <- lapply(list_files, function(x) {
+      y <- file.path(path_dir, x,sep="")
+      y <- substring(y,1, nchar(y))
+      return(y)
+    })
+    list_files <- lapply(list_files, "[", -1)
+    
+    # Data
+    datas <- list()
+    for(i in 1:length(list_files[[1]])){
+      datas[[i]] <- sapply(list_files, "[", i)
+    }
+    
+    for_rm <- sapply(list_files, "[", -grep("sequences",datas))
+    
+    temp_dat <- readList(datas[[grep("sequences",datas)]], index = 1)
+    inds <- rownames(temp_dat[[1]]$data.name$geno)
+    inds_list <- as.list(1:length(inds))
+    names(inds_list) <- paste0(inds, " (", inds, ")")
+    
+    if(length(grep("gusmap_RDatas.RData", datas)) > 0){
       data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
       data5 <- base::get(data5)
-      
-      names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t")
-      names_rdatas <- as.data.frame(names_rdatas)[,1]
+    } else data5 <- NULL
+    
+    names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t", show_col_types = FALSE)
+    names_rdatas <- as.data.frame(names_rdatas)[,1]
+    if(length(grep("gusmap", names_rdatas)) > 0){
       names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
-      result_list <- list("data1" = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]]), 
-                          "data2" = vroom(datas[[grep("data2_maps.tsv.gz", datas)]]), 
-                          "data3" = vroom(datas[[grep("data3_filters.tsv.gz", datas)]]), 
-                          "data4" = vroom(datas[[grep("data4_times.tsv.gz", datas)]]), 
-                          "data5" = data5, 
-                          "names" = names_rdatas, 
-                          "ind_names" = inds_list,
-                          "sequence.llo" = datas[[grep("sequences",datas)]])
-      
-      system(paste("rm -r", paste(for_rm, collapse = " ")))
-      
-      result_list
     }
+    result_list <- list("data1" = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]], show_col_types = FALSE), 
+                        "data2" = vroom(datas[[grep("data2_maps.tsv.gz", datas)]], show_col_types = FALSE), 
+                        "data3" = vroom(datas[[grep("data3_filters.tsv.gz", datas)]], show_col_types = FALSE), 
+                        "data4" = vroom(datas[[grep("data4_times.tsv.gz", datas)]], show_col_types = FALSE), 
+                        "data5" = data5, 
+                        "names" = names_rdatas, 
+                        "ind_names" = inds_list,
+                        "sequence.llo" = datas[[grep("sequences",datas)]])
+    
+    system(paste("rm -r", paste(for_rm, collapse = " ")))
+    
+    result_list
+  }
 }
 
 #' Functions to build graphics for the empirical datas
@@ -185,7 +187,7 @@ ind_size_graph_emp <- function(data){
     geom_point(position=position_dodge(width = 0.5)) + 
     labs(x="Genotype call", y = "Distance between markers (cM)", fill = "SNP call", title = "Genetic distances") +
     scale_color_viridis_d(begin=0, end = 0.6) + facet_grid(CountsFrom~.) + theme_bw()
-                          
+  
   ggarrange(p1,p2, common.legend=T)  
 }
 
@@ -210,7 +212,7 @@ marker_type_graph_emp <- function(data){
 }
 
 times_graph_emp <- function(data){
-
+  
   p1 <- data %>% filter(key == "number of markers") %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
     geom_bar(stat="identity", position=position_dodge())  +
     geom_text(aes(label= round(value,3)), position=position_dodge(width=0.9), vjust=-0.25) +
@@ -247,7 +249,7 @@ overview_graph_emp <- function(df_overview, reescale = NULL){
                                      CountsFrom= "Read counts from", 
                                      map.size = "Map size (cM)") %>%
     select(., SNPCall, GenoCall, CountsFrom, map.size) %>%
-  gather(key3, value3, - SNPCall, -GenoCall, -CountsFrom)  
+    gather(key3, value3, - SNPCall, -GenoCall, -CountsFrom)  
   
   y_lim_nmks <- max(df_overview$`Mapped markers`)
   y_lim_cm <- max(df_overview$`Map size (cM)`)
@@ -279,7 +281,7 @@ overview_graph_emp <- function(df_overview, reescale = NULL){
     )
   
   p1 <- ggarrange(plotlist = ps2, ncol = 2, nrow = 2, common.legend = T, legend = "right")
-
+  
   return(p1)
 }
 
