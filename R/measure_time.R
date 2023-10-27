@@ -218,4 +218,3 @@ efficiency_graphics_mem_cpu <- function(eff_table, reescale = 15){
           axis.title.x.top = element_text(colour="#005AB5"),
           axis.title.x.bottom = element_text(colour="#DC3220"))
 }
-

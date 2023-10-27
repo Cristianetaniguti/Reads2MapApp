@@ -113,13 +113,9 @@ p_temp1 <- data %>% droplevels() %>% ggplot(aes(x=ref, y=alt, color=gabGT, label
   guides(colour = guide_legend(override.aes = list(alpha = 1)), 
          shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw() + ggtitle("True") + 
   geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE) +
-  theme(legend.key.size = unit(1, 'cm'), #change legend key size
-        legend.key.height = unit(1, 'cm'), #change legend key height
-        legend.key.width = unit(1, 'cm'), #change legend key width
-        legend.title = element_text(size=12), #change legend title font size
-        legend.text = element_text(size=10)) +
-  guides(shape = guide_legend(override.aes = list(size = 3), nrow=2), 
-         color = guide_legend(override.aes = list(size = 3), nrow=2)) 
+  guides(shape = guide_legend(override.aes = list(size = 2.5), nrow=2), 
+         color = guide_legend(override.aes = list(size = 2.5), nrow=2)) +
+  xlim(c(0,150)) + ylim(c(0, 150)) + theme(legend.spacing.x = unit(10, "pt"))
   
 colors_temp <- colors[match(names(table(data$gt.onemap.alt.ref)), names(colors))]
 p_temp2 <- data %>% droplevels() %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.alt.ref, label = ind)) + 
@@ -129,19 +125,17 @@ p_temp2 <- data %>% droplevels() %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.al
   scale_color_manual(values = colors_temp) +
   guides(colour = guide_legend(override.aes = list(alpha = 1)), 
          shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw() + ggtitle("Estimated") + 
-  theme(legend.key.size = unit(1, 'cm'), #change legend key size
-        legend.key.height = unit(1, 'cm'), #change legend key height
-        legend.key.width = unit(1, 'cm'), #change legend key width
-        legend.title = element_text(size=12), #change legend title font size
-        legend.text = element_text(size=10)) +
-  guides(shape = guide_legend(override.aes = list(size = 3), nrow=2), 
-         color = guide_legend(override.aes = list(size = 3), nrow=2)) +
-  geom_label_repel (aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE)
+  guides(shape = guide_legend(override.aes = list(size = 2.5), nrow=2), 
+         color = guide_legend(override.aes = list(size = 2.5), nrow=2)) +
+  geom_label_repel (aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE) +
+  xlim(c(0,150)) + ylim(c(0, 150)) + theme(legend.spacing.x = unit(10, "pt"))
 
 p <- list(p_temp2, p_temp1) 
 plot <- ggarrange(plotlist = p, common.legend = T, legend = "bottom") 
 plot1 <- annotate_figure(plot, top = text_grob("B) Depth 20 - GATK - updog - Counts from BAM", 
-                                               color = "black", face = "bold", size = 14, hjust = 0.7))
+                                               color = "black", face = "bold", size = 14, hjust = 0.6))
+
+ggsave(plot1, filename = "geno_error1_B.png", width = 7.5, height = 5)
 
 # Case 2.4
 data <- case2.4.real$data
@@ -153,10 +147,10 @@ p_temp1 <- data %>% droplevels() %>% ggplot(aes(x=ref, y=alt, color=gabGT, label
   scale_color_manual(values = colors_temp) +
   guides(colour = guide_legend(override.aes = list(alpha = 1)), 
          shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw() + ggtitle("True") + 
-  theme(legend.position="none") +
-  guides(shape = guide_legend(override.aes = list(size = 3), nrow=2), 
-         color = guide_legend(override.aes = list(size = 3), nrow=2)) +
-  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE)
+  guides(shape = guide_legend(override.aes = list(size = 2.5), nrow=2), 
+         color = guide_legend(override.aes = list(size = 2.5), nrow=2)) +
+  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE) +
+  xlim(c(0,150)) + ylim(c(0, 150)) + theme(legend.spacing.x = unit(10, "pt"))
 
 colors_temp <- colors[match(names(table(data$gt.onemap.alt.ref)), names(colors))]
 p_temp2 <- data %>% droplevels() %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.alt.ref, label = ind)) + 
@@ -166,19 +160,21 @@ p_temp2 <- data %>% droplevels() %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.al
   scale_color_manual(values = colors_temp, drop=FALSE) +
   guides(colour = guide_legend(override.aes = list(alpha = 1)), 
          shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw() + ggtitle("Estimated") + 
-  theme(legend.position="none") +
-  guides(shape = guide_legend(override.aes = list(size = 3), nrow=2), 
-         color = guide_legend(override.aes = list(size = 3), nrow=2)) +
-  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE )
+  guides(shape = guide_legend(override.aes = list(size = 2.5), nrow=2), 
+         color = guide_legend(override.aes = list(size = 2.5), nrow=2)) +
+  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE , box.padding = 0.3) +
+  xlim(c(0,150)) + ylim(c(0, 150)) + theme(legend.spacing.x = unit(10, "pt"))
 
 p <- list(p_temp2, p_temp1) 
-plot <- ggarrange(plotlist = p) 
+plot <- ggarrange(plotlist = p, common.legend = T, legend = "bottom") 
 plot2 <- annotate_figure(plot, top = text_grob("A) Depth 20 - GATK - updog - Counts from VCF", 
-                                               color = "black", face = "bold", size = 14, hjust = 0.7))
+                                               color = "black", face = "bold", size = 14, hjust = 0.6)) 
 
-case2 <- ggarrange(plot2,plot1, ncol = 1)
+ggsave(plot2, filename = "geno_error1_A.png", width = 7.5, height = 5)
 
-ggsave(case2, filename = "case2.png", width = 170, height = 225, units = "mm")
+#case2 <- ggarrange(plot2,plot1, ncol = 1)
+
+#ggsave(case2, filename = "case2.png", width = 170, height = 225, units = "mm")
 
 
 temp <- load("bi_GQ_polyrad_VCF_depth20_estimated_seed90_case3.RData")
@@ -200,14 +196,10 @@ p_temp1 <- data %>% ggplot(aes(x=ref, y=alt, color=gabGT, label = ind)) +
   scale_color_manual(values = colors_temp) +
   guides(colour = guide_legend(override.aes = list(alpha = 1)), 
          shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw() + ggtitle("True") +
-  theme(legend.key.size = unit(1, 'cm'), #change legend key size
-        legend.key.height = unit(1, 'cm'), #change legend key height
-        legend.key.width = unit(1, 'cm'), #change legend key width
-        legend.title = element_text(size=12), #change legend title font size
-        legend.text = element_text(size=10)) +
-  guides(shape = guide_legend(override.aes = list(size = 3), nrow=2), 
-         color = guide_legend(override.aes = list(size = 3), nrow=2))+
-  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE)
+  guides(shape = guide_legend(override.aes = list(size = 2.5), nrow=2), 
+         color = guide_legend(override.aes = list(size = 2.5), nrow=2))+
+  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE) +
+  xlim(c(0,150)) + ylim(c(0, 150)) + theme(legend.spacing.x = unit(10, "pt"))
 
 p_temp2 <- data %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.alt.ref, label = ind)) + 
   geom_point(aes(shape=pop), size = 1.5) +
@@ -216,19 +208,18 @@ p_temp2 <- data %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.alt.ref, label = in
   scale_color_manual(values = colors_temp) +
   guides(colour = guide_legend(override.aes = list(alpha = 1)), 
          shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw() + 
-  ggtitle("Estimated") + theme(legend.key.size = unit(1, 'cm'), #change legend key size
-                               legend.key.height = unit(1, 'cm'), #change legend key height
-                               legend.key.width = unit(1, 'cm'), #change legend key width
-                               legend.title = element_text(size=12), #change legend title font size
-                               legend.text = element_text(size=10)) +
-  guides(shape = guide_legend(override.aes = list(size = 3), nrow=2), 
-         color = guide_legend(override.aes = list(size = 3), nrow=2))+
-  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE)
+  ggtitle("Estimated") + 
+  guides(shape = guide_legend(override.aes = list(size = 2.5), nrow=2), 
+         color = guide_legend(override.aes = list(size = 2.5), nrow=2))+
+  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE) +
+  xlim(c(0,150)) + ylim(c(0, 150)) + theme(legend.spacing.x = unit(10, "pt"))
 
 p <- list(p_temp2, p_temp1) 
 plot <- ggarrange(plotlist = p, common.legend = T, legend = "bottom") 
 plot1 <- annotate_figure(plot, top = text_grob("B) Depth 20 - GATK - polyRAD - Counts from VCF", 
-                                               color = "black", face = "bold", size = 14, hjust = 0.7))
+                                               color = "black", face = "bold", size = 14, hjust = 0.57))
+
+ggsave(plot1, filename = "geno_error2_B.png", width = 7.5, height = 5)
 
 # Case 3.2
 data <- case2.3.real$data
@@ -241,9 +232,10 @@ p_temp1 <- data %>% ggplot(aes(x=ref, y=alt, color=gabGT, label = ind)) +
   guides(colour = guide_legend(override.aes = list(alpha = 1)), 
          shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw() + ggtitle("True") +
   theme(legend.position="none") +
-  guides(shape = guide_legend(override.aes = list(size = 3), nrow=2), 
-         color = guide_legend(override.aes = list(size = 3), nrow=2))+
-  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE)
+  guides(shape = guide_legend(override.aes = list(size = 2.5), nrow=2), 
+         color = guide_legend(override.aes = list(size = 2.5), nrow=2))+
+  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE) +
+  xlim(c(0,150)) + ylim(c(0, 150)) + theme(legend.spacing.x = unit(10, "pt"))
 
 p_temp2 <- data %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.alt.ref, label = ind)) + 
   geom_point(aes(shape=pop), size = 1.5) +
@@ -253,15 +245,18 @@ p_temp2 <- data %>% ggplot(aes(x=ref, y=alt, color=gt.onemap.alt.ref, label = in
   guides(colour = guide_legend(override.aes = list(alpha = 1)), 
          shape = guide_legend(override.aes = list(alpha = 1))) + theme_bw() + ggtitle("Estimated") + 
   theme(legend.position="none") +
-  guides(shape = guide_legend(override.aes = list(size = 3), nrow=2), 
-         color = guide_legend(override.aes = list(size = 3), nrow=2))+
-  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE)
+  guides(shape = guide_legend(override.aes = list(size = 2.5), nrow=2), 
+         color = guide_legend(override.aes = list(size = 2.5), nrow=2))+
+  geom_label_repel(aes(label=ifelse(pop == "parents",as.character(ind),'')), show.legend = FALSE) +
+  xlim(c(0,150)) + ylim(c(0, 150)) + theme(legend.spacing.x = unit(10, "pt"))
 
 p <- list(p_temp2, p_temp1) 
-plot <- ggarrange(plotlist = p) 
+plot <- ggarrange(plotlist = p, common.legend = T, legend = "bottom") 
 plot2 <- annotate_figure(plot, top = text_grob("A) Depth 10 - freebayes - SuperMASSA - Counts from VCF", 
-                                               color = "black", face = "bold", size = 14, hjust = 0.6))
+                                               color = "black", face = "bold", size = 14, hjust = 0.48))
 
-case3 <- ggarrange(plot2, plot1, ncol = 1)
+ggsave(plot2, filename = "geno_error2_A.png", width = 7.5, height = 5)
 
-ggsave(case3, filename = "case3.png", width = 170, height = 225, units = "mm")
+# case3 <- ggarrange(plot2, plot1, ncol = 1)
+# 
+# ggsave(case3, filename = "case3.png", width = 170, height = 225, units = "mm")
