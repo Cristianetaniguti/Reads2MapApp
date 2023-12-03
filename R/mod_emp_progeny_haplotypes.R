@@ -131,8 +131,7 @@ mod_emp_progeny_haplotypes_server <- function(input, output, session, datas_emp)
                          Please, select other option."))
         } else {
           idx <- which(datas_emp()[[6]] == temp_n)
-          data <- readList(datas_emp()[[8]], index = idx)
-          data <- data[[1]]
+          data <- datas_emp()[[8]][[idx]]
           class(data) <- "sequence"
           data
         }

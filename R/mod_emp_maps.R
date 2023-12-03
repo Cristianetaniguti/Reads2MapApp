@@ -32,10 +32,6 @@ mod_emp_maps_ui <- function(id){
                               selected = "This will be updated"),
              ),
              box(solidHeader = T,
-                 radioButtons(ns("Global0.05"), label = p("Error rate"),
-                              choices = global0.05_choices,
-                              selected = "FALSE"),
-                 
                  radioButtons(ns("CountsFrom"), label = p("Counts from"),
                               choices = "This will be updated",
                               selected = "This will be updated"), hr(),
@@ -66,59 +62,65 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
   ns <- session$ns
   
   observe({
-    
-    SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
-    names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
-    methods <- unique(datas_emp()[[2]]$GenoCall)
-    methods <- unique(gsub("0.05", "", methods))
-    
-    ErrorProb_choice <- as.list(methods)
-    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
-    CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
-    names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
+    if(datas_emp()$software == "onemap"){
+      SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
+      names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
+      methods <- unique(datas_emp()[[2]]$GenoCall)
+      
+      ErrorProb_choice <- as.list(methods)
+      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+      CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
+      names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
+    } else {
+      file_names <- strsplit(names(result_list[[1]]), "_")
+      SNPCall_choice <- as.list(unique(sapply(file_names, "[[", 1)))
+      names(SNPCall_choice) <- unique(sapply(file_names, "[[", 1))
+      
+      ErrorProb_choice <- as.list(unique(sapply(file_names, "[[",2)))
+      names(ErrorProb_choice) <- unique(sapply(file_names, "[[",2))
+      
+      CountsFrom_choice <- as.list(unique(sapply(file_names, "[[",3)))
+      names(CountsFrom_choice) <- unique(sapply(file_names, "[[",3))
+    }
     
     updateRadioButtons(session, "SNPCall",
-                             label="SNP call method",
-                             choices = SNPCall_choice,
-                             selected=unlist(SNPCall_choice)[1])
+                       label="SNP call method",
+                       choices = SNPCall_choice,
+                       selected=unlist(SNPCall_choice)[1])
     
     updateRadioButtons(session, "ErrorProb",
-                             label="Genotyping method",
-                             choices = ErrorProb_choice,
-                             selected=unlist(ErrorProb_choice)[1])
+                       label="Genotyping method",
+                       choices = ErrorProb_choice,
+                       selected=unlist(ErrorProb_choice)[1])
     
     updateRadioButtons(session, "CountsFrom",
-                             label="Counts From",
-                             choices = CountsFrom_choice,
-                             selected=unlist(CountsFrom_choice)[1])
+                       label="Counts From",
+                       choices = CountsFrom_choice,
+                       selected=unlist(CountsFrom_choice)[1])
   })
   
   button2 <- eventReactive(input$go2, {
     withProgress(message = 'Building draw', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
-      if(input$Global0.05){
-        if(input$ErrorProb == "SNPCallerdefault"){
-          geno <- paste0("SNPCaller", 0.05)
-        } else if (input$ErrorProb == "gusmap"){
-          stop(safeError("Gusmap do not build plotly heatmaps.
-                           Please, select other option."))
-        } else {
-          geno <- paste0(input$ErrorProb, 0.05)
-        }
-      } else {
-        geno <- input$ErrorProb
-      }
-      
       stop_bam(input$CountsFrom, input$ErrorProb)
       
-      incProgress(0.25, detail = paste("Doing part", 2))
-      data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
-        filter(SNPCall %in% input$SNPCall) %>%
-        filter(CountsFrom == input$CountsFrom)
-      
-      incProgress(0.5, detail = paste("Doing part", 3))
-      data <-   data.frame(data$mks, data$rf)
+      if(datas_emp()$software == "onemap"){
+        incProgress(0.25, detail = paste("Doing part", 2))
+        print(head(datas_emp()[[2]]))
+
+        data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb) %>%
+          filter(SNPCall %in% input$SNPCall) %>%
+          filter(CountsFrom == input$CountsFrom)
+        
+        incProgress(0.5, detail = paste("Doing part", 3))
+        data <-   data.frame(data$mks, data$rf)
+      } else {
+        idx <- which(grepl(input$CountsFrom, names(datas_emp()$maps)) &
+                       grepl(input$SNPCall, names(datas_emp()$maps)) & 
+                       grepl(input$ErrorProb, names(datas_emp()$maps)))
+        data <- datas_emp()$maps[[idx]][[1]]
+      }
       outfile <- tempfile(pattern="file", tmpdir = tempdir(), fileext = ".png")
       print(outfile)
       list(data, outfile)
@@ -126,7 +128,13 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
   })
   
   output$map_emp_out <- renderImage({
-    draw_map2(button2()[[1]], output = button2()[[2]], col.tag = "darkblue", pos = T, id = F)
+    if(datas_emp()$software == "onemap"){
+      draw_map2(button2()[[1]], output = button2()[[2]], col.tag = "darkblue", pos = T, id = F)
+    } else {
+      png(button2()[[2]])
+      mappoly:::plot.mappoly.map(button2()[[1]])
+      dev.off()
+    }
     print(button2()[[2]])
     list(src = button2()[[2]],
          contentType = 'image/png',
@@ -138,33 +146,46 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
     withProgress(message = 'Building heatmap', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
-      geno <- test_geno_emp(input$Global0.05, input$ErrorProb)
       stop_bam(input$CountsFrom, input$ErrorProb)
       
-      temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", geno, ".RData")
-      
-      incProgress(0.25, detail = paste("Doing part", 2))
-      if(geno == "gusmap"){
-        data <- datas_emp()[[5]][[temp_n]]
-        data$rf_2pt()
-        incProgress(0.5, detail = paste("Doing part", 3))
-        list(data, geno)
+      if(datas_emp()$software == "onemap"){
+        temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", input$ErrorProb, ".rds")
+        
+        incProgress(0.25, detail = paste("Doing part", 2))
+        if(input$ErrorProb == "gusmap"){
+          list(data = NULL, input$ErrorProb)
+        } else {
+          idx <- which(datas_emp()[[6]] == temp_n)
+          data <- datas_emp()[[8]][[idx]]
+          class(data) <- "sequence"
+          incProgress(0.5, detail = paste("Doing part", 3))
+        }
       } else {
-        idx <- which(datas_emp()[[6]] == temp_n)
-        data <- readList(datas_emp()[[8]], index = idx)
-        data <- data[[1]]
-        class(data) <- "sequence"
-        incProgress(0.5, detail = paste("Doing part", 3))
-        list(data, geno)
+        idx <- which(grepl(input$CountsFrom, names(result_list$mat2)) &
+                       grepl(input$SNPCall, names(result_list$mat2)) & 
+                       grepl(input$ErrorProb, names(result_list$mat2)))
+        
+        idx2 <- which(grepl(input$CountsFrom, names(result_list$maps)) &
+                       grepl(input$SNPCall, names(result_list$maps)) & 
+                       grepl(input$ErrorProb, names(result_list$maps)))
+        
+        seq <- result_list$map_error[[idx2]][[1]]
+        data <- result_list$mat2[[idx]]
       }
+      list(data, input$ErrorProb, seq)
     })
   })
   
   output$map1_emp_out <- renderPlot({
-    if(button1()[[2]] == "gusmap"){
-      button1()[[1]]$plotChr(mat="rf", parent = "both")
+    if(datas_emp()$software == "onemap"){
+      if(button1()[[2]] == "gusmap"){
+        stop("The app no longer support GUSMap recombination fraction data, once the package is not available in CRAN anymore. 
+           Please, install the package from GitHub and visualize the recombination fraction matrix using its functions and the file gusmap_RDatas.RData contained in the Reads2Map tar.gz results.")
+      } else {
+        rf_graph_table(button1()[[1]], inter = F, mrk.axis = "none")
+      }
     } else {
-      rf_graph_table(button1()[[1]], inter = F, mrk.axis = "none")
+      mappoly:::plot.mappoly.rf.matrix(button1()[[1]], ord = button1()[[3]])
     }
   })
   
@@ -178,20 +199,16 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
       withProgress(message = 'Building heatmap', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         
-        geno <- test_geno_emp(input$Global0.05, input$ErrorProb)
         stop_bam(input$CountsFrom, input$ErrorProb)
-        temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", geno, ".RData")
+        temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", input$ErrorProb, ".RData")
         
         incProgress(0.25, detail = paste("Doing part", 2))
-        if(geno == "gusmap"){
-          data <- datas_emp()[[5]][[temp_n]]
-          data$rf_2pt()
-          incProgress(0.5, detail = paste("Doing part", 3))
+        if(input$ErrorProb == "gusmap"){
+          data <- NULL
           save(data, file=file)
         } else {
           idx <- which(datas_emp()[[6]] == temp_n)
-          data <- readList(datas_emp()[[8]], index = idx)
-          data <- data[[1]]
+          data <- datas_emp()[[8]][[idx]]
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
           save(data, file=file)
@@ -199,35 +216,6 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
       })
     }
   )
-  
-  # with bug!!
-  # ## download all gusmap heatmaps
-  # output$map_emp_gusmap_down <- downloadHandler(
-  #   filename =  function() {
-  #     tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".pdf")
-  #   },
-  #   # content is a function with argument file. content writes the plot to the device
-  #   content = function(file) {
-  #     withProgress(message = 'Building heatmap', value = 0, {
-  #       incProgress(0, detail = paste("Doing part", 1))
-  #       
-  #       part_plus <- 1/(length(datas_emp()[[5]]))
-  #       part <- 0
-  #       part.n <- 2
-  #       pdf(file = file)
-  #       for(i in 1:length(datas_emp()[[5]])){
-  #         part <- part + part_plus
-  #         part.n <- part.n + 1
-  #         data <- datas_emp()[[5]][[i]]
-  #         data$rf_2pt()
-  #         data$plotChr(mat="rf", parent = "both")
-  #         #text(x=0.9, y=.1,names(datas_emp()[[5]])[i])
-  #         incProgress(part, detail = paste("Doing part", part.n))
-  #       } 
-  #       dev.off()
-  #     })
-  #   }
-  # )
   
   ## download all onemap heatmaps
   output$map_emp_onemap_down <- downloadHandler(
@@ -239,19 +227,18 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
       withProgress(message = 'Building heatmap', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         
-        idx.0.05 <- grep("0.05", datas_emp()[[6]])
+        idx.0.05 <- grep("0.", datas_emp()[[6]])
         idx.rest <- c(1:length(datas_emp()[[6]]))[-idx.0.05]
         
         part_plus <- 1/(length(datas_emp()[[6]][-idx.0.05]))
-    
+        
         part <- 0
         part.n <- 2
         p <- list()
         for(i in 1:length(idx.rest)){
           part <- part + part_plus
           part.n <- part.n + 1
-          data <- readList(datas_emp()[[8]], index = idx.rest[i])
-          data <- data[[1]]
+          data <- datas_emp()[[8]][[idx]]
           class(data) <- "sequence"
           name <- strsplit(datas_emp()[[6]][idx.rest[i]], "[.]")
           name <- paste0(name[[1]][1:(length(name[[1]])-1)],collapse = ".")

@@ -102,7 +102,7 @@ mod_simu_breakpoints_counts_server <- function(input, output, session, datas_sim
                          Please, choose other option."))
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList(datas_simu()[[10]], index = idx)
+          data <- datas_simu()[[10]][[idx]]
           if (!is.vector(data[[1]][[1]])) data <- data[[1]][[1]] else data <- data[[1]] # bugfix
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))

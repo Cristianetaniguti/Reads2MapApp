@@ -4,7 +4,7 @@
 \alias{prepare_datas_simu}
 \title{Read input data}
 \usage{
-prepare_datas_simu(x, example_simu)
+prepare_datas_simu(x = NULL, example_simu = NULL)
 }
 \arguments{
 \item{x}{inputted dataset}

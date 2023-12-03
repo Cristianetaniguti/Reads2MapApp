@@ -4,7 +4,7 @@
 \alias{prepare_datas_emp}
 \title{Read empirical input data}
 \usage{
-prepare_datas_emp(x, example_emp)
+prepare_datas_emp(x = NULL, example_emp = NULL)
 }
 \arguments{
 \item{x}{inputted dataset}

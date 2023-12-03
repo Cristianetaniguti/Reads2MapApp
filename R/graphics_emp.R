@@ -5,7 +5,6 @@
 #' 
 #' @importFrom utils read.table untar
 #' @import vroom
-#' @import largeList
 prepare_datas_emp <- function(x = NULL, example_emp = NULL){
   # This function makes adjustments in the input tar.gz file to be processed inside the app
   # It returns six data objects and the app options in a list format
@@ -19,47 +18,13 @@ prepare_datas_emp <- function(x = NULL, example_emp = NULL){
     cat("Wait credentials\n")
     data.gz <- "Wait"
   } else { ######## Available examples
-    if(example_emp == "toy_sample_multi"){
-      data.gz <- system.file("ext", "toy_sample_emp/multiallelics/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # if(example_emp == "rose_biallelics_filt_GQ_noninfo"){
-      #   data.gz <- system.file("ext", "rose/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "rose_multiallelics_filt_GQ_noninfo"){
-      #   data.gz <- system.file("ext", "rose/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "rose_biallelics_GQ"){
-      #   data.gz <- system.file("ext", "rose/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "rose_multiallelics_GQ"){
-      #   data.gz <- system.file("ext", "rose/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      #  } else if(example_emp == "rose/biallelics_filt_GQ"){
-      #   data.gz <- system.file("ext", "rose/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "rose_multiallelics_filt_GQ"){
-      #   data.gz <-system.file("ext", "rose/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_biallelics_GQ"){
-      #   data.gz <- system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_biallelics_filt_GQ"){
-      #   data.gz <- system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_biallelics_filt_GQ_noninfo"){
-      #   data.gz <- system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_multiallelics_GQ"){
-      #   data.gz <-  system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_multiallelics_filt_GQ"){
-      #   data.gz <- system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_multiallelics_filt_GQ_noninfo"){
-      #   data.gz <- system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_biallelics_GQ_cont"){
-      #   data.gz <- system.file("ext", "populus/biallelics_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_biallelics_filt_GQ_cont"){
-      #   data.gz <- system.file("ext", "populus/biallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_biallelics_filt_GQ_noninfo_cont"){
-      #   data.gz <- system.file("ext", "populus/biallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_multiallelics_GQ_cont"){
-      #   data.gz <- system.file("ext", "populus/multiallelics_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_multiallelics_filt_GQ_cont"){
-      #   data.gz <- system.file("ext", "populus/multiallelics_filt_GQ/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
-      # } else if(example_emp == "populus_multiallelics_filt_GQ_noninfo_cont"){
-      #   data.gz <- system.file("ext", "populus/multiallelics_filt_GQ_noninfo/EmpiricalReads_results_cont.tar.gz", package = "Reads2MapApp")
+    if(example_emp == "toy_sample_diplo"){
+      data.gz <- system.file("ext", "toy_sample_emp/diploid/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
+    } else if(example_emp == "toy_sample_poly"){
+      data.gz <- system.file("ext", "toy_sample_emp/polyploid/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
     }
   }
-
+  
   if(data.gz == "Wait"){
     cat("Waiting...\n")
   } else {
@@ -83,35 +48,79 @@ prepare_datas_emp <- function(x = NULL, example_emp = NULL){
       datas[[i]] <- sapply(list_files, "[", i)
     }
     
-    for_rm <- sapply(list_files, "[", -grep("sequences",datas))
-    
-    temp_dat <- readList(datas[[grep("sequences",datas)]], index = 1)
-    inds <- rownames(temp_dat[[1]]$data.name$geno)
-    inds_list <- as.list(1:length(inds))
-    names(inds_list) <- paste0(inds, " (", inds, ")")
-    
-    if(length(grep("gusmap_RDatas.RData", datas)) > 0){
-      data5 <- load(datas[[grep("gusmap_RDatas.RData", datas)]])
-      data5 <- base::get(data5)
-    } else data5 <- NULL
-    
-    names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t", show_col_types = FALSE)
-    names_rdatas <- as.data.frame(names_rdatas)[,1]
-    if(length(grep("gusmap", names_rdatas)) > 0){
-      names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+    check_software <- sapply(datas, function(x) strsplit(basename(x), "[.]"))
+    if(all(sapply(check_software, function(x) x[length(x)]) == "rds")) { # polyploids
+      software <- "mappoly"
+      
+      dat <- mat2 <- mds <- map_error <- map_prob <- list()
+      datas <- unlist(datas)
+      
+      datas2 <- strsplit(basename(datas), "_")
+      names_datas <- sapply(datas2, function(x) paste0(x[1:3], collapse = "_"))
+      
+      list_items <- c("dat", "mat2", "mds", "map_error", "map_prob")
+      
+      result_list <- list()
+      for(j in 1:length(list_items)){
+        files <- datas[grep(list_items[j], datas)]
+        if(length(files) > 0){
+          temp_item <- list()
+          for(i in 1:length(files)){
+            temp_item[[i]] <- readRDS(files[i])
+          }
+        } else temp_item <- NULL
+        names(temp_item) <- names_datas[grep(list_items[j], datas)]
+        result_list[[j]] <- temp_item
+      }
+      names(result_list) <- list_items
+      result_list$software <- software
+      return(result_list)
+    } else { # Diploids
+      software <- "onemap"
+      for_rm <- sapply(list_files, "[", -grep("sequences",datas))
+      
+      # Support to several versions
+      if(length(grep("sequences",datas)) > 1){
+        temp_dat <- list()
+        idx <- grep("sequences",datas)[-1]
+        for(i in 1:length(idx)){
+          temp_dat[[i]] <- readRDS(datas[[idx[i]]])
+        }
+        names_rdatas <- basename(unlist(datas[idx]))
+      } else {
+        ext <- sapply(strsplit(basename(datas[[grep("sequences",datas)]]), "[.]"),  function(x) x[length(x)])
+        if(ext == "llo")  temp_dat <- largeList::readList(datas[[grep("sequences",datas)]]) else
+          temp_dat <- readRDS(datas[[grep("sequences",datas)]])
+        names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t", show_col_types = FALSE)
+        names_rdatas <- as.data.frame(names_rdatas)[,1]
+        if(length(grep("gusmap", names_rdatas)) > 0){
+          names_rdatas <- names_rdatas[-grep("gusmap", names_rdatas)]
+        }
+      }
+      
+      inds <- rownames(temp_dat[[1]]$data.name$geno)
+      inds_list <- as.list(1:length(inds))
+      names(inds_list) <- paste0(inds, " (", inds, ")")
+      
+      if(length(grep("gusmap_RDatas.RData", datas)) > 0){
+        warning("The app no longer support GUSMap recombination fraction data, once the package is not available in CRAN anymore. 
+              Please, install the package from GitHub and visualize the recombination fraction matrix using its functions and the file gusmap_RDatas.RData contained in the Reads2Map tar.gz results.")
+      }
+      
+      result_list <- list("data1" = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]], show_col_types = FALSE), 
+                          "data2" = vroom(datas[[grep("data2_maps.tsv.gz", datas)]], show_col_types = FALSE), 
+                          "data3" = vroom(datas[[grep("data3_filters.tsv.gz", datas)]], show_col_types = FALSE), 
+                          "data4" = vroom(datas[[grep("data4_times.tsv.gz", datas)]], show_col_types = FALSE), 
+                          "data5" = NULL,
+                          "names" = names_rdatas, 
+                          "ind_names" = inds_list,
+                          "sequences" = temp_dat,
+                          "software" = software)
+      
+      system(paste("rm -r", paste(for_rm, collapse = " ")))
+      
+      return(result_list)
     }
-    result_list <- list("data1" = vroom(datas[[grep("data1_depths_geno_prob.tsv.gz", datas)]], show_col_types = FALSE), 
-                        "data2" = vroom(datas[[grep("data2_maps.tsv.gz", datas)]], show_col_types = FALSE), 
-                        "data3" = vroom(datas[[grep("data3_filters.tsv.gz", datas)]], show_col_types = FALSE), 
-                        "data4" = vroom(datas[[grep("data4_times.tsv.gz", datas)]], show_col_types = FALSE), 
-                        "data5" = data5, 
-                        "names" = names_rdatas, 
-                        "ind_names" = inds_list,
-                        "sequence.llo" = datas[[grep("sequences",datas)]])
-    
-    system(paste("rm -r", paste(for_rm, collapse = " ")))
-    
-    result_list
   }
 }
 

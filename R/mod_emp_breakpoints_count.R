@@ -97,8 +97,7 @@ mod_emp_breakpoints_count_server <- function(input, output, session, datas_emp){
                          Please, select other option."))
       } else {
         idx <- which(datas_emp()[[6]] == temp_n)
-        data <- readList(datas_emp()[[8]], index = idx)
-        data <- data[[1]]
+        data <- datas_emp()[[8]][[idx]]
         class(data) <- "sequence"
         inds <- 1:data$data.name$n.ind
         incProgress(0.3, detail = paste("Doing part", 2))

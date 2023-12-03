@@ -8,9 +8,9 @@ tables}
 efficiency_table(infos_seff, jobs)
 }
 \arguments{
-\item{infos_seff}{information obtained throught command seff}
+\item{infos_seff}{output of seff bash command in HPRC}
 
-\item{jobs}{vector defining job numbers}
+\item{jobs}{data.frame with first column being the task name and the second the job id}
 }
 \description{
 Convert data obtained by efficiency script to

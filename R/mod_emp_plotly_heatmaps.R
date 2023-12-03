@@ -114,8 +114,7 @@ mod_emp_plotly_heatmaps_server <- function(input, output, session, datas_emp){
         temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", geno, ".RData")
         incProgress(0.25, detail = paste("Doing part", 2))
         idx <- which(datas_emp()[[6]] == temp_n)
-        data <- readList(datas_emp()[[8]], index = idx)
-        data <- data[[1]]
+        data <- datas_emp()[[8]][[idx]]
         class(data) <- "sequence"
         incProgress(0.5, detail = paste("Doing part", 3))
         data

@@ -4,7 +4,6 @@
 #' @param example_simu selected example id
 #' 
 #' @import vroom
-#' @import largeList
 #' 
 prepare_datas_simu <- function(x=NULL, example_simu=NULL){
   # This function makes adjustments in the input tar.gz file to be processed inside the app
@@ -133,7 +132,7 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
           names(vcf_pos_temp[[j]]) <- paste0(gsub(".tsv","",sapply(strsplit(list_files_pos[[j]][-1], "/"), "[",2)))
           vcf_pos <- c(vcf_pos, vcf_pos_temp)
         } else if(all(grepl("sequences.llo", datas[[i]]))){
-          temp1 <- readList(datas[[i]][[j]])
+          temp1 <- largeList::readList(datas[[i]][[j]])
           if(j == 1){
             saveList(temp1, file = temp_name, append = F, compress = T)
             inds <- rownames(temp1[[1]]$data.name$geno)
