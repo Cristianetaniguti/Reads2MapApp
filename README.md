@@ -1,4 +1,5 @@
-[![Development](https://img.shields.io/badge/development-active-blue.svg)](https://img.shields.io/badge/development-active-blue.svg)
+![Development](https://img.shields.io/badge/development-active-blue.svg)
+[![R-CMD-check](https://github.com/Cristianetaniguti/Reads2MapApp/workflows/R-CMD-check/badge.svg)](https://github.com/Cristianetaniguti/Reads2MapApp/actions)
 
 <p align="center">
 <br>

@@ -40,6 +40,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 14
+          
+      - name: Install XQuartz on macOS
+        if: runner.os == 'macOS'
+        run: brew install xquartz --cask
 
       - uses: r-lib/actions/setup-pandoc@v2
 
