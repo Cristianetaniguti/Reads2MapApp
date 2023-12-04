@@ -137,7 +137,16 @@ app_server <- function( input, output, session ) {
   callModule(mod_emp_cM_Mb_server,"emp_cM_Mb_ui_1",
              datas_emp = datas$datas_emp)
   
-  callModule(mod_workflow_tasks_times_server, 
-             "workflow_tasks_times_ui_1")
+  callModule(mod_dat_poly_server,"dat_poly_ui_1",
+             datas_poly_emp = datas$datas_poly_emp)
+  
+  callModule(mod_size_poly_server,"size_poly_ui_1",
+             datas_poly_emp = datas$datas_poly_emp)
+ 
+  callModule(mod_haplo_emp_poly_server,"haplo_emp_poly_ui_1",
+             datas_poly_emp = datas$datas_poly_emp)
+  
+  # callModule(mod_workflow_tasks_times_server, 
+  #            "workflow_tasks_times_ui_1")
   
 }

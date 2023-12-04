@@ -43,7 +43,7 @@ test_geno_with_gus <- function(global, error){
 }
 
 stop_bam <- function(countsfrom, error){
-  if(countsfrom == "bam" & (error == "SNPCallerdefault" | error == "SNPCaller")){
+  if(countsfrom == "bam" & (grepl("SNPCallerdefault",error)  | grepl("SNPCaller", error))){
     stop(safeError("This option is not available. The SNP callers performs together the SNP 
                    and genotype calling using the same read counts, we did not find a way to 
                    substitute the depths already used. Please select other option."))

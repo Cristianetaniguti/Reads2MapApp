@@ -20,54 +20,6 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
   } else { ######## Only the toy_sample in the package - the rest in server
     if(example_simu == "toy_sample_multi"){
       data.gz <- c(system.file("ext", "toy_sample_simu/multiallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "toy_sample_bi"){
-      #   data.gz <- system.file("ext", "toy_sample_simu/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp")
-      # } else if(example_simu == "bi"){
-      #   data.gz <- c(system.file("ext", "simu_results/depth10/biallelics/SimulatedReads_results_depth10_seed8085.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth20/biallelics/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "bi_dev"){
-      #   data.gz <- c(system.file("ext", "simu_results/depth20/biallelics_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth10/biallelics_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "bi_filt_gq"){ 
-      #   data.gz <- c(system.file("ext", "simu_results/depth10/biallelics_filt_GQ/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth20/biallelics_filt_GQ/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "bi_filt_gq_dev"){
-      #   data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics_dev/SimulatedReads_results_depth20_seed8080.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth10/multiallelics_dev/SimulatedReads_results_depth10_seed8081.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "bi_filt_gq_noninfo"){ 
-      #   data.gz <- c(system.file("ext", "simu_results/depth20/biallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8296.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth20/biallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8297.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth10/biallelics_filt_GQ_noninfo/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "bi_filt_gq_noninfo_dev"){ 
-      #   data.gz <- c(system.file("ext", "simu_results/depth20/biallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20_seed8295.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth20/biallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth10/biallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth10/biallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth10_seed8294.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "bi_pl_filt"){
-      #   data.gz <- c(system.file("ext", "simu_results/depth10/biallelics_pl_filt/SimulatedReads_results_depth10_seed8090.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth20/biallelics_pl_filt/SimulatedReads_results_depth20_seed8089.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "multi"){
-      #   data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics/SimulatedReads_results_depth20_seed8082.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth10/multiallelics/SimulatedReads_results_depth10_seed8084.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "multi_dev"){
-      #   data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics_dev/SimulatedReads_results_depth20_seed8080.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth10/multiallelics_dev/SimulatedReads_results_depth10_seed8081.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "multi_filt_gq"){ 
-      #   data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics_filt_GQ/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth10/multiallelics_filt_GQ/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "multi_filt_gq_dev"){
-      #   data.gz <- c(system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "multi_filt_gq_noninfo"){ 
-      #   data.gz <- c(system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8299.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo/SimulatedReads_results_depth20_seed8300.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "multi_filt_gq_noninfo_dev"){ 
-      #   data.gz <- c(system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20_seed8303.tar.gz", package = "Reads2MapApp"),
-      #                system.file("ext", "simu_results/depth20/multiallelics_filt_GQ_noninfo_dev/SimulatedReads_results_depth20.tar.gz", package = "Reads2MapApp"))
-      # } else if(example_simu == "multi_filt_gq_noninfo_dev_replaced"){ 
-      #   data.gz <- c(system.file("ext", "simu_results/depth10/multiallelics_filt_GQ_noninfo_dev_replaced/SimulatedReads_results_depth10.tar.gz", package = "Reads2MapApp"))
     }
   }
   
@@ -134,10 +86,10 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
         } else if(all(grepl("sequences.llo", datas[[i]]))){
           temp1 <- largeList::readList(datas[[i]][[j]])
           if(j == 1){
-            saveList(temp1, file = temp_name, append = F, compress = T)
+            largeList::saveList(temp1, file = temp_name, append = F, compress = T)
             inds <- rownames(temp1[[1]]$data.name$geno)
           } else {
-            saveList(temp1, file = temp_name, append = T, compress = T)
+            largeList::saveList(temp1, file = temp_name, append = T, compress = T)
           }
         } else if(all(grepl("names.tsv.gz", datas[[i]]))){
           temp1 <-  vroom(datas[[i]][[j]], delim = "\t", show_col_types = FALSE)

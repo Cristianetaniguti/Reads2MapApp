@@ -121,7 +121,7 @@ mod_simu_progeny_haplotypes_server <- function(input, output, session, datas_sim
                          Please, choose other option."))
         } else {
           idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList(datas_simu()[[10]], index = idx)
+          data <- largeList::readList(datas_simu()[[10]], index = idx)
           if (!is.vector(data[[1]][[1]])) data <- data[[1]][[1]] else data <- data[[1]] # bugfix
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))

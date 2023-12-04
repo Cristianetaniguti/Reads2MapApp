@@ -50,12 +50,6 @@ mod_emp_depth_and_genotyping_ui <- function(id){
                  hr()
                ),
                fluidPage(
-                 radioButtons(ns("Global0.05.1"), label = p("Error rate"),
-                              choices = global0.05_choices,
-                              selected = "FALSE"),
-                 hr()
-               ),
-               fluidPage(
                  radioButtons(ns("SNPCall1"), label = p("SNP calling method"),
                               choices = "This will be updated",
                               selected = "This will be updated"),
@@ -104,12 +98,6 @@ mod_emp_depth_and_genotyping_ui <- function(id){
                  hr()
                ),
                fluidPage(
-                 radioButtons(ns("Global0.05.2"), label = p("Error rate"),
-                              choices = global0.05_choices,
-                              selected = "FALSE"),
-                 hr()
-               ),
-               fluidPage(
                  radioButtons(ns("SNPCall2"), label = p("SNP calling method"),
                               choices = "This will be updated",
                               selected = "This will be updated"),
@@ -140,11 +128,9 @@ mod_emp_depth_and_genotyping_server <- function(input, output, session, datas_em
       
       SNPCall_choice <- as.list(unique(datas_emp()[[1]]$SNPCall))
       names(SNPCall_choice) <- unique(datas_emp()[[1]]$SNPCall)
-      methods <- unique(datas_emp()[[1]]$GenoCall)
-      methods <- unique(gsub("0.05", "", methods))
-      
-      ErrorProb_choice <- as.list(methods)
-      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+
+      ErrorProb_choice <- as.list(unique(datas_emp()[[1]]$GenoCall))
+      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", unique(datas_emp()[[1]]$GenoCall))
       CountsFrom_choice <- as.list(unique(datas_emp()[[1]]$CountsFrom))
       names(CountsFrom_choice) <- unique(datas_emp()[[1]]$CountsFrom)
       
@@ -183,14 +169,13 @@ mod_emp_depth_and_genotyping_server <- function(input, output, session, datas_em
       withProgress(message = 'Building left graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         
-        geno <- test_geno_with_gus(input$Global0.05.1, input$ErrorProb1)
         stop_bam(input$CountsFrom1, input$ErrorProb1)
 
-        data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
+        data <- datas_emp()[[1]] %>% filter(GenoCall == input$ErrorProb1) %>%
           filter(SNPCall == input$SNPCall1) %>%
           filter(CountsFrom == input$CountsFrom1)
         incProgress(0.5, detail = paste("Doing part", 2))
-        perfumaria(data)
+        data
       })
     })
     
@@ -211,22 +196,21 @@ mod_emp_depth_and_genotyping_server <- function(input, output, session, datas_em
         progeny <- progeny[-which(is.na(progeny))]
       }
       
-      data.frame("progeny mean" = mean(progeny), "progeny se" = sd(progeny)/sqrt(length(progeny)),
-                 "parents mean" = mean(parents), "parents se" = sd(parents)/sqrt(length(parents)))
+      data.frame("progeny mean" = mean(progeny, na.rm=T), "progeny se" = sd(progeny, na.rm=T)/sqrt(length(progeny)),
+                 "parents mean" = mean(parents, na.rm=T), "parents se" = sd(parents, na.rm=T)/sqrt(length(parents)))
     })
     
     button2 <- eventReactive(input$go2, {
       withProgress(message = 'Building right graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
 
-        geno <- test_geno_with_gus(input$Global0.05.2, input$ErrorProb2)
         stop_bam(input$CountsFrom2, input$ErrorProb2)
         
-        data <- datas_emp()[[1]] %>% filter(GenoCall == geno) %>%
+        data <- datas_emp()[[1]] %>% filter(GenoCall == input$ErrorProb2) %>%
           filter(SNPCall == input$SNPCall2) %>%
           filter(CountsFrom == input$CountsFrom2)
         incProgress(0.5, detail = paste("Doing part", 2))
-        perfumaria(data)
+        data
       })
     })
     
@@ -236,18 +220,8 @@ mod_emp_depth_and_genotyping_server <- function(input, output, session, datas_em
     
     output$disper_depth2_emp_table <- renderTable({
       sum_depth <- button2()$alt + button2()$ref
-      data.frame("mean" = mean(sum_depth), "se" = sd(sum_depth)/sqrt(length(sum_depth)))
+      data.frame("mean" = mean(sum_depth, na.rm=T), "se" = sd(sum_depth, na.rm = T)/sqrt(length(sum_depth)))
     })
-    
-    # output$downloadData <- downloadHandler(
-    #   filename = function() { 
-    #     paste("alleles_depths-", Sys.Date(), ".png", sep="")
-    #   },
-    #   content = function(file) {
-    #     for(i in 1:length())
-    #     graphics[[i]] <- errorProb_graph_emp(button1(), input$real1, input$geno_from1)
-    #   })
-    
 }
 
 ## To be copied in the UI

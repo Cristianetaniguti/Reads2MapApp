@@ -60,11 +60,9 @@ mod_emp_markers_type_server <- function(input, output, session, datas_emp){
     
     SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
     names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
-    methods <- unique(datas_emp()[[2]]$GenoCall)
-    methods <- unique(gsub("0.05", "", methods))
-    
-    ErrorProb_choice <- as.list(methods)
-    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+
+    ErrorProb_choice <- as.list(unique(datas_emp()[[2]]$GenoCall))
+    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", unique(datas_emp()[[2]]$GenoCall))
     CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
     names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
     
@@ -93,7 +91,7 @@ mod_emp_markers_type_server <- function(input, output, session, datas_emp){
         group_by(type, GenoCall, SNPCall, CountsFrom) %>%
         summarise(n = n()) %>%
         gather(key, value, -GenoCall, -SNPCall, -CountsFrom,-n)
-      perfumaria(data)
+      data
     })
   })
   

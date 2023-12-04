@@ -29,12 +29,6 @@ mod_emp_breakpoints_count_ui <- function(id){
                        selected = "This will be updated"),
       ),
       box(solidHeader = T,
-          radioButtons(ns("Global0.05"), label = p("Error rate"),
-                       choices = global0.05_choices,
-                       selected = "FALSE"),
-      ),
-      
-      box(solidHeader = T,
           radioButtons(ns("SNPCall"), label = p("SNP calling method"),
                        choices = "This will be updated",
                        selected = "This will be updated"),
@@ -58,11 +52,9 @@ mod_emp_breakpoints_count_server <- function(input, output, session, datas_emp){
     
     SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
     names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
-    methods <- unique(datas_emp()[[2]]$GenoCall)
-    methods <- unique(gsub("0.05", "", methods))
-    
-    ErrorProb_choice <- as.list(methods)
-    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+
+    ErrorProb_choice <- as.list(unique(datas_emp()[[2]]$GenoCall))
+    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", unique(datas_emp()[[2]]$GenoCall))
     CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
     names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
     
@@ -86,19 +78,16 @@ mod_emp_breakpoints_count_server <- function(input, output, session, datas_emp){
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
-      geno <- test_geno_emp(input$Global0.05, input$ErrorProb)
-      
       stop_bam(input$CountsFrom, input$ErrorProb)
 
-      temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", geno, ".RData")
+      temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", input$ErrorProb, ".rds")
       
-      if(geno == "gusmap"){
+      if(grepl("gusmap", input$ErrorProb)){
         stop(safeError("We do not include in this app support to do it with GUSMap.
                          Please, select other option."))
       } else {
         idx <- which(datas_emp()[[6]] == temp_n)
         data <- datas_emp()[[8]][[idx]]
-        class(data) <- "sequence"
         inds <- 1:data$data.name$n.ind
         incProgress(0.3, detail = paste("Doing part", 2))
         df <- progeny_haplotypes(data, ind = inds, most_likely = T)
@@ -110,15 +99,6 @@ mod_emp_breakpoints_count_server <- function(input, output, session, datas_emp){
   
   output$counts_emp_out <- renderPlot({
     plot(button())
-  })
-  
-  output$counts_emp_df_out <- renderTable({
-    data.frame(total = sum(button()$counts),
-               mean = mean(button()$counts),
-               se = sd(button()$counts)/sqrt(length(button()$counts)),
-               var = var(button()$counts),
-               sd = sd(button()$counts),
-               median = median(button()$counts))
   })
 }
 

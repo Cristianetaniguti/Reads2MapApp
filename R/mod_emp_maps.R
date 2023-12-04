@@ -62,26 +62,13 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
   ns <- session$ns
   
   observe({
-    if(datas_emp()$software == "onemap"){
-      SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
-      names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
-      methods <- unique(datas_emp()[[2]]$GenoCall)
-      
-      ErrorProb_choice <- as.list(methods)
-      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
-      CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
-      names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
-    } else {
-      file_names <- strsplit(names(result_list[[1]]), "_")
-      SNPCall_choice <- as.list(unique(sapply(file_names, "[[", 1)))
-      names(SNPCall_choice) <- unique(sapply(file_names, "[[", 1))
-      
-      ErrorProb_choice <- as.list(unique(sapply(file_names, "[[",2)))
-      names(ErrorProb_choice) <- unique(sapply(file_names, "[[",2))
-      
-      CountsFrom_choice <- as.list(unique(sapply(file_names, "[[",3)))
-      names(CountsFrom_choice) <- unique(sapply(file_names, "[[",3))
-    }
+    SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
+    names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
+    
+    ErrorProb_choice <- as.list(unique(datas_emp()[[2]]$GenoCall))
+    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", unique(datas_emp()[[2]]$GenoCall))
+    CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
+    names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
     
     updateRadioButtons(session, "SNPCall",
                        label="SNP call method",
@@ -104,37 +91,25 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
       incProgress(0, detail = paste("Doing part", 1))
       
       stop_bam(input$CountsFrom, input$ErrorProb)
+      incProgress(0.25, detail = paste("Doing part", 2))
+      print(head(datas_emp()[[2]]))
       
-      if(datas_emp()$software == "onemap"){
-        incProgress(0.25, detail = paste("Doing part", 2))
-        print(head(datas_emp()[[2]]))
-
-        data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb) %>%
-          filter(SNPCall %in% input$SNPCall) %>%
-          filter(CountsFrom == input$CountsFrom)
-        
-        incProgress(0.5, detail = paste("Doing part", 3))
-        data <-   data.frame(data$mks, data$rf)
-      } else {
-        idx <- which(grepl(input$CountsFrom, names(datas_emp()$maps)) &
-                       grepl(input$SNPCall, names(datas_emp()$maps)) & 
-                       grepl(input$ErrorProb, names(datas_emp()$maps)))
-        data <- datas_emp()$maps[[idx]][[1]]
-      }
+      data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb) %>%
+        filter(SNPCall %in% input$SNPCall) %>%
+        filter(CountsFrom == input$CountsFrom)
+      
+      incProgress(0.5, detail = paste("Doing part", 3))
+      data <-   data.frame(data$mks, data$rf)
+      
       outfile <- tempfile(pattern="file", tmpdir = tempdir(), fileext = ".png")
-      print(outfile)
       list(data, outfile)
     })
   })
   
   output$map_emp_out <- renderImage({
-    if(datas_emp()$software == "onemap"){
-      draw_map2(button2()[[1]], output = button2()[[2]], col.tag = "darkblue", pos = T, id = F)
-    } else {
-      png(button2()[[2]])
-      mappoly:::plot.mappoly.map(button2()[[1]])
-      dev.off()
-    }
+    
+    draw_map2(button2()[[1]], output = button2()[[2]], col.tag = "darkblue", pos = T, id = F)
+    
     print(button2()[[2]])
     list(src = button2()[[2]],
          contentType = 'image/png',
@@ -148,44 +123,28 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
       
       stop_bam(input$CountsFrom, input$ErrorProb)
       
-      if(datas_emp()$software == "onemap"){
-        temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", input$ErrorProb, ".rds")
-        
-        incProgress(0.25, detail = paste("Doing part", 2))
-        if(input$ErrorProb == "gusmap"){
-          list(data = NULL, input$ErrorProb)
-        } else {
-          idx <- which(datas_emp()[[6]] == temp_n)
-          data <- datas_emp()[[8]][[idx]]
-          class(data) <- "sequence"
-          incProgress(0.5, detail = paste("Doing part", 3))
-        }
+      temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", input$ErrorProb, ".rds")
+      
+      incProgress(0.25, detail = paste("Doing part", 2))
+      if(input$ErrorProb == "gusmap"){
+        list(data = NULL, input$ErrorProb)
       } else {
-        idx <- which(grepl(input$CountsFrom, names(result_list$mat2)) &
-                       grepl(input$SNPCall, names(result_list$mat2)) & 
-                       grepl(input$ErrorProb, names(result_list$mat2)))
-        
-        idx2 <- which(grepl(input$CountsFrom, names(result_list$maps)) &
-                       grepl(input$SNPCall, names(result_list$maps)) & 
-                       grepl(input$ErrorProb, names(result_list$maps)))
-        
-        seq <- result_list$map_error[[idx2]][[1]]
-        data <- result_list$mat2[[idx]]
+        idx <- which(datas_emp()[[6]] == temp_n)
+        data <- datas_emp()[[8]][[idx]]
+        class(data) <- "sequence"
+        incProgress(0.5, detail = paste("Doing part", 3))
       }
-      list(data, input$ErrorProb, seq)
+      
+      list(data, input$ErrorProb)
     })
   })
   
   output$map1_emp_out <- renderPlot({
-    if(datas_emp()$software == "onemap"){
-      if(button1()[[2]] == "gusmap"){
-        stop("The app no longer support GUSMap recombination fraction data, once the package is not available in CRAN anymore. 
+    if(button1()[[2]] == "gusmap"){
+      stop("The app no longer support GUSMap recombination fraction data, once the package is not available in CRAN anymore. 
            Please, install the package from GitHub and visualize the recombination fraction matrix using its functions and the file gusmap_RDatas.RData contained in the Reads2Map tar.gz results.")
-      } else {
-        rf_graph_table(button1()[[1]], inter = F, mrk.axis = "none")
-      }
     } else {
-      mappoly:::plot.mappoly.rf.matrix(button1()[[1]], ord = button1()[[3]])
+      rf_graph_table(button1()[[1]], inter = F, mrk.axis = "none")
     }
   })
   
@@ -200,7 +159,7 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
         incProgress(0, detail = paste("Doing part", 1))
         
         stop_bam(input$CountsFrom, input$ErrorProb)
-        temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", input$ErrorProb, ".RData")
+        temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", input$ErrorProb, ".rds")
         
         incProgress(0.25, detail = paste("Doing part", 2))
         if(input$ErrorProb == "gusmap"){

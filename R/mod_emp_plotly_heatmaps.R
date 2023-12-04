@@ -29,13 +29,6 @@ mod_emp_plotly_heatmaps_ui <- function(id){
                    radioButtons(ns("ErrorProb"), label = p("Genotyping method"),
                                 choices = "This will be updated",
                                 selected = "This will be updated"),
-                   hr()
-                 ),
-                 fluidPage(
-                   radioButtons(ns("Global0.05"), label = p("Error rate"),
-                                choices = global0.05_choices,
-                                selected = "FALSE"),
-                   hr()
                  )
              )
       ),
@@ -71,11 +64,9 @@ mod_emp_plotly_heatmaps_server <- function(input, output, session, datas_emp){
       
       SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
       names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
-      methods <- unique(datas_emp()[[2]]$GenoCall)
-      methods <- unique(gsub("0.05", "", methods))
-      
-      ErrorProb_choice <- as.list(methods)
-      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+
+      ErrorProb_choice <- as.list(unique(datas_emp()[[2]]$GenoCall))
+      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", unique(datas_emp()[[2]]$GenoCall))
       CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
       names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
       
@@ -98,25 +89,15 @@ mod_emp_plotly_heatmaps_server <- function(input, output, session, datas_emp){
     button <- eventReactive(input$go, {
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        if(input$Global0.05){
-          if(input$ErrorProb == "OneMap_version2" | input$ErrorProb == "SNPCaller"){
-            geno <- paste0("default", 0.05)
-          } else if (input$ErrorProb == "gusmap"){
-            stop(safeError("Gusmap do not build plotly heatmaps.
-                           Please, select other option."))
-          } else {
-            geno <- paste0(input$ErrorProb, 0.05)
-          }
-        } else {
-          ifelse(input$ErrorProb == "OneMap_version2", geno <- "default", geno <- input$ErrorProb)
-        }
         
-        temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", geno, ".RData")
+        stop_bam(input$CountsFrom, input$ErrorProb)
+        
+        temp_n <- paste0("map_",input$SNPCall, "_", input$CountsFrom, "_", input$ErrorProb, ".rds")
         incProgress(0.25, detail = paste("Doing part", 2))
         idx <- which(datas_emp()[[6]] == temp_n)
         data <- datas_emp()[[8]][[idx]]
-        class(data) <- "sequence"
         incProgress(0.5, detail = paste("Doing part", 3))
+        if(length(data$seq.num) <= 2) stop("The sequence has only two markers, the interactive graphic cannot be plotted.")
         data
       })
     })

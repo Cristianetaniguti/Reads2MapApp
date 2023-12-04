@@ -34,7 +34,8 @@ app_ui <- function(request) {
                    menuSubItem("Maps", icon = icon("circle"), tabName = "map"),
                    menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo"),
                    menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts"),
-                   menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb")),
+                   menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb")
+          ),
           #menuSubItem("Overview", icon = icon("circle"), tabName = "overview")),
           
           menuItem("EmpiricalReads2Map", icon = icon("dot-circle" ), tabName = "empirical",
@@ -49,15 +50,21 @@ app_ui <- function(request) {
                    menuSubItem("Maps", icon = icon("circle"), tabName = "map_emp"),
                    menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp"),
                    menuSubItem("Breakpoints count", icon = icon("circle"), tabName = "counts_emp"),
-                   menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb_emp")),
-          menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times"),
+                   menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb_emp")
+          ),
+          menuItem("Polyploid EmpiricalReads2Map", icon = icon("dot-circle" ), tabName = "poly_empirical",
+                   menuSubItem("Data set overview", icon = icon("circle"), tabName = "dat_poly"),
+                   menuSubItem("Map size", icon = icon("circle"), tabName = "size_poly"),
+                   menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp_poly")
+          ),
+          #menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times"),
           tags$li(class = "dropdown",
                   tags$a(href="https://statgen-esalq.github.io/", target="_blank", 
                          tags$img(height = "55px", alt="Logo", src="www/logo_fundo_azul.png")
                   ),
                   tags$a(href="https://www.polyploids.org/", target="_blank", 
                          tags$img(height = "55px", alt="Logo", src="www/logo_white.png"))
-                  )
+          )
         )
       ),
       
@@ -210,6 +217,16 @@ app_ui <- function(request) {
           ),
           tabItem(tabName = "cmxmb_emp",
                   mod_emp_cM_Mb_ui("emp_cM_Mb_ui_1")
+          ),
+          # Polyploids
+          tabItem(tabName = "dat_poly",
+                  mod_dat_poly_ui("dat_poly_ui_1")
+          ),
+          tabItem(tabName = "size_poly",
+                  mod_size_poly_ui("size_poly_ui_1")
+          ),
+          tabItem(tabName = "haplo_emp_poly",
+                  mod_haplo_emp_poly_ui("haplo_emp_poly_ui_1")
           ),
           # workflow times
           tabItem(tabName = "wf_times",

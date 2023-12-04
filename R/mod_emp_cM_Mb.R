@@ -42,12 +42,6 @@ mod_emp_cM_Mb_ui <- function(id){
                    hr()
                  ),
                  fluidPage(
-                   radioButtons(ns("Global0.05"), label = p("Error rate"),
-                                choices = global0.05_choices,
-                                selected = "FALSE"),
-                   hr()
-                 ),
-                 fluidPage(
                    
                    checkboxGroupInput(ns("CountsFrom"), label = p("Counts from"),
                                       choices = "This will be updated",
@@ -69,11 +63,9 @@ mod_emp_cM_Mb_server <- function(input, output, session, datas_emp){
       
       SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
       names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
-      methods <- unique(datas_emp()[[2]]$GenoCall)
-      methods <- unique(gsub("0.05", "", methods))
       
-      ErrorProb_choice <- as.list(methods)
-      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+      ErrorProb_choice <- as.list(unique(datas_emp()[[2]]$GenoCall))
+      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", unique(datas_emp()[[2]]$GenoCall))
       CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
       names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
       
@@ -98,13 +90,11 @@ mod_emp_cM_Mb_server <- function(input, output, session, datas_emp){
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
         
-        geno <- test_geno(input$Global0.05, input$ErrorProb)
-        
-        data <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
+        data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb) %>%
           filter(SNPCall %in% input$SNPCall) %>%
           filter(CountsFrom %in% input$CountsFrom)
         data$pos <- data$pos/1000
-        perfumaria(data)
+        data
       })
     })
     

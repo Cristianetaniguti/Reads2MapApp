@@ -42,13 +42,6 @@ mod_emp_ind_size_ui <- function(id){
                    hr()
                  ),
                  fluidPage(
-                   radioButtons(ns("Global0.05"), label = p("Error rate"),
-                                choices = global0.05_choices,
-                                selected = "FALSE"),
-                   hr()
-                 ),
-                 fluidPage(
-                   
                    checkboxGroupInput(ns("CountsFrom"), label = p("Counts from"),
                                       choices = "This will be updated",
                                       selected = "This will be updated")
@@ -69,11 +62,9 @@ mod_emp_ind_size_server <- function(input, output, session, datas_emp){
       
       SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
       names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
-      methods <- unique(datas_emp()[[2]]$GenoCall)
-      methods <- unique(gsub("0.05", "", methods))
       
-      ErrorProb_choice <- as.list(methods)
-      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+      ErrorProb_choice <- as.list(unique(datas_emp()[[2]]$GenoCall))
+      names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", unique(datas_emp()[[2]]$GenoCall))
       CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
       names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
       
@@ -97,26 +88,14 @@ mod_emp_ind_size_server <- function(input, output, session, datas_emp){
       
       withProgress(message = 'Building graphic', value = 0, {
         incProgress(0, detail = paste("Doing part", 1))
-        
-        if(input$Global0.05){
-          geno <- paste0(input$ErrorProb, 0.05)
-          if(any(input$ErrorProb %in% "OneMap_version2"))
-            geno[which(input$ErrorProb == "OneMap_version2")] <- "SNPCaller0.05"
-          if(any(input$ErrorProb %in% "gusmap"))
-            stop(safeError("Gusmap do not allow to change the error rate.
-                           Please, select other option."))
-        } else {
-          geno <- input$ErrorProb
-        }
-        
+        geno <- input$ErrorProb
+    
         data <- datas_emp()[[2]] %>% 
           filter(GenoCall %in% geno) %>%
           filter(SNPCall %in% input$SNPCall) %>%
           filter(CountsFrom %in% input$CountsFrom) %>%
           group_by(CountsFrom, SNPCall, GenoCall) %>%
           mutate(interv.diff = sqrt(c(0,rf[-1] - rf[-length(rf)])^2))
-        
-        data <- perfumaria(data)
         
         data_df <- data %>% group_by(GenoCall, SNPCall, CountsFrom) %>%
           summarise(tot_size = round(rf[length(rf)],3),
@@ -141,10 +120,6 @@ mod_emp_ind_size_server <- function(input, output, session, datas_emp){
     
     output$ind_size_emp_out <- renderPlot({
       ind_size_graph_emp(button()[[1]])
-    })
-    
-    output$ind_size_emp_df_out <- renderDataTable({
-      button()[[2]]
     })
 }
 

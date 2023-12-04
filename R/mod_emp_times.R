@@ -40,12 +40,6 @@ mod_emp_times_ui <- function(id){
              box(
                width = NULL, solidHeader = TRUE,
                fluidPage(
-                 radioButtons(ns("Global0.05"), label = p("Error rate"),
-                              choices = global0.05_choices,
-                              selected = "FALSE"),
-                 hr()
-               ),
-               fluidPage(
                  checkboxGroupInput(ns("CountsFrom"), label = p("Counts from"),
                                     choices = "This will be updated",
                                     selected = "This will be updated")
@@ -63,17 +57,15 @@ mod_emp_times_server <-  function(input, output, session, datas_emp){
   ns <- session$ns
   
   observe({
-
+    
     SNPCall_choice <- as.list(unique(datas_emp()[[2]]$SNPCall))
     names(SNPCall_choice) <- unique(datas_emp()[[2]]$SNPCall)
-    methods <- unique(datas_emp()[[2]]$GenoCall)
-    methods <- unique(gsub("0.05", "", methods))
-
-    ErrorProb_choice <- as.list(methods)
-    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+    
+    ErrorProb_choice <- as.list(unique(datas_emp()[[2]]$GenoCall))
+    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", unique(datas_emp()[[2]]$GenoCall))
     CountsFrom_choice <- as.list(unique(datas_emp()[[2]]$CountsFrom))
     names(CountsFrom_choice) <- unique(datas_emp()[[2]]$CountsFrom)
-     
+    
     updateCheckboxGroupInput(session, "SNPCall",
                              label="SNP call method",
                              choices = SNPCall_choice,
@@ -93,16 +85,8 @@ mod_emp_times_server <-  function(input, output, session, datas_emp){
   button <- eventReactive(input$go, {
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
-      if(input$Global0.05){
-        geno <- paste0(input$ErrorProb, 0.05)
-        if(any(input$ErrorProb %in% "OneMap_version2"))
-          geno[which(input$ErrorProb == "OneMap_version2")] <- "SNPCaller0.05"
-        if(any(input$ErrorProb %in% "gusmap"))
-          stop(safeError("Gusmap do not allow to change the error rate.
-                           Please, select other option."))
-      } else {
-        geno <- input$ErrorProb
-      }
+      
+      geno <- input$ErrorProb
       
       data_n <- datas_emp()[[2]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall) %>%
@@ -110,13 +94,9 @@ mod_emp_times_server <-  function(input, output, session, datas_emp){
         group_by(GenoCall, SNPCall, CountsFrom) %>%
         summarise(n = n())
       
-      data_n <- perfumaria(data_n)
-      
       data <- datas_emp()[[4]] %>% filter(GenoCall %in% geno) %>%
         filter(SNPCall %in% input$SNPCall) %>%
         filter(CountsFrom %in% input$CountsFrom)
-      
-      data <- perfumaria(data)
       
       data_df<- merge(data, data_n)
       

@@ -62,11 +62,9 @@ mod_emp_filters_server <- function(input, output, session, datas_emp){
     
     SNPCall_choice <- as.list(unique(datas_emp()[[3]]$SNPCall))
     names(SNPCall_choice) <- unique(datas_emp()[[3]]$SNPCall)
-    methods <- unique(datas_emp()[[3]]$GenoCall)
-    methods <- unique(gsub("0.05", "", methods))
-    
-    ErrorProb_choice <- as.list(methods)
-    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", methods)
+
+    ErrorProb_choice <- as.list(unique(datas_emp()[[3]]$GenoCall))
+    names(ErrorProb_choice) <- gsub("default", "_OneMap2.0", unique(datas_emp()[[3]]$GenoCall))
     CountsFrom_choice <- as.list(unique(datas_emp()[[3]]$CountsFrom))
     names(CountsFrom_choice) <- unique(datas_emp()[[3]]$CountsFrom)
     
@@ -92,33 +90,29 @@ mod_emp_filters_server <- function(input, output, session, datas_emp){
 
       data <- datas_emp()[[3]] %>% filter(GenoCall %in% input$ErrorProb) %>%
         filter(SNPCall %in% input$SNPCall) %>%
-        filter(CountsFrom %in% input$CountsFrom)  %>%
+        filter(CountsFrom %in% input$CountsFrom)  
+
+      data1 <- data %>%
         gather(key, value, -CountsFrom, -GenoCall, -SNPCall) %>%
-        filter(key %in% c("n_markers", "miss", "distorted_markers",
+        filter(key %in% c("n_markers", "higher.than.25..missing", "distorted_markers",
                           "redundant_markers",  "selected_chr_no_dist"))
       
-      new_names <- c(`Without filters` = "n_markers", `Missing data` = "miss",
+      new_names <- c(`Without filters` = "n_markers", `Missing data` = "higher.than.25..missing",
                      `Segregation test` = "distorted_markers", Redundants = "redundant_markers",
                      `After all filters`= "selected_chr_no_dist")
-      data$key <- names(new_names)[match(data$key, new_names)]
-      data$key <- factor(data$key, levels = c("Without filters",
+      data1$key <- names(new_names)[match(data1$key, new_names)]
+      data1$key <- factor(data1$key, levels = c("Without filters",
                                               "Missing data",
                                               "Segregation test",
                                               "Redundants",
                                               "After all filters"))
-      
-      perfumaria(data)
-      
+      data1
     })
   })
   
   output$filters_emp_out <- renderPlot({
     filters_graph_emp(button())
   })
-  
-  output$filters_emp_df_out <- renderDataTable({
-    button()
-  }) 
 }
 
 ## To be copied in the UI

@@ -157,7 +157,7 @@ mod_simu_maps_server <- function(input, output, session, datas_simu){
                              snpcall = input$SNPCall, countsfrom = input$CountsFrom,
                              data_names = datas_simu()[[8]])
           idx <- which(datas_simu()[[8]] == temp_n)
-          data <- readList(datas_simu()[[10]], index = idx)
+          data <- largeList::readList(datas_simu()[[10]], index = idx)
           if (!is.vector(data[[1]][[1]])) data <- data[[1]][[1]] else data <- data[[1]] # bugfix
           class(data) <- "sequence"
           incProgress(0.5, detail = paste("Doing part", 3))
@@ -204,7 +204,7 @@ mod_simu_maps_server <- function(input, output, session, datas_simu){
                                snpcall = input$SNPCall, countsfrom = input$CountsFrom,
                                data_names = datas_simu()[[8]])
             idx <- which(datas_simu()[[8]] == temp_n)
-            data <- readList(datas_simu()[[10]], index = idx)
+            data <- largeList::readList(datas_simu()[[10]], index = idx)
             if (!is.vector(data[[1]][[1]])) data <- data[[1]][[1]] else data <- data[[1]] # bugfix
             class(data) <- "sequence"
             incProgress(0.5, detail = paste("Doing part", 3))
