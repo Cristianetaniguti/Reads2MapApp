@@ -13,11 +13,10 @@ mod_upload_ui <- function(id){
     tagList(
       "This shiny app build several graphics using results from Reads2Map workflows. 
             If you run the", tags$b("SimulatedReads2Map.wdl"),"and/or", tags$b("EmpiricalReads2Map.wdl"), 
-      "workflows you can upload the outputted data in", tags$b("Upload SimulatedReads2Map outputs"), "and/or",
-      tags$b("Upload EmpiricalReads2Map outputs"), "sections. If you don't have your own results yet,
-            you can explore the ones generated with the datasets described in the tables bellow.
-            Select the available dataset results in", tags$b("SimulatedReads2Map.wdl results"),"and/or", 
-      tags$b("EmpiricalReads2Map.wdl results"),".",
+      "workflows for a diploid specie you can upload the outputted tar.gz data in", tags$b("SimulatedReads2Map"), "and/or",
+      tags$b("EmpiricalReads2Map"), "sections. If you run the", tags$b("EmpiricalReads2Map.wdl"),"for a polyploid specie,
+      upload the outputted tar.gz file in the", tags$b("Polyploid EmpiricalReads2Map"),". If you don't have your own results yet,
+            you can explore the App features with the example subsets.",
       hr(),
       fluidPage(
         column(width = 6,
@@ -31,8 +30,8 @@ mod_upload_ui <- function(id){
                    
                    fluidPage(
                      # Copy the line below to make a select box 
-                     "See description of each dataset in the tables bellow.",
-                     selectInput(ns("example_simu"), label = h4(tags$b("SimulatedReads2Map.wdl results for P. tremula 38cM of chromosome 10")), 
+                     "Available results for example subsets:",
+                     selectInput(ns("example_simu"), label = h4(tags$b("SimulatedReads2Map.wdl results")), 
                                  choices = list(
                                    "Toy sample diploid with multiallelics" = "toy_sample_multi"),
                                  selected = "toy_sample_multi"),
@@ -43,15 +42,14 @@ mod_upload_ui <- function(id){
                box(width = 12, solidHeader = TRUE, collapsible = FALSE, status="primary", title= "EmpiricalReads2Map",
                    fluidPage(
                      
-                     tags$h4(tags$b("Upload EmpiricalReads2Map results:")),
+                     tags$h4(tags$b("Upload EmpiricalReads2Map results for diploids:")),
                      # Copy the line below to make a file upload manager
-                     "If you have more than one depth value, submit all them together.", br(),
                      fileInput(ns("empiricalreads"), label = h6("File: EmpiricalReads2Map.tar.gz"), multiple = T, accept = ".tar.gz"),
                    ),
                    fluidPage(
                      # Copy the line below to make a select box 
-                     "See description of each dataset in the tables bellow.",
-                     selectInput(ns("example_emp"), label = h4(tags$b("EmpiricalReads2Map.wdl results")), 
+                     "Available results for example subsets:",
+                     selectInput(ns("example_emp"), label = h4(tags$b("EmpiricalReads2Map.wdl results for diploids")), 
                                  choices = list(
                                    "Toy sample diploids" = "toy_sample_diplo",
                                    "Toy sample polyploids" = "toy_sample_poly"), 
@@ -63,14 +61,13 @@ mod_upload_ui <- function(id){
                box(width = 12, solidHeader = TRUE, collapsible = FALSE, status="primary", title= "Polyploid EmpiricalReads2Map",
                    fluidPage(
                      
-                     tags$h4(tags$b("Upload EmpiricalReads2Map results:")),
+                     tags$h4(tags$b("Upload EmpiricalReads2Map results for polyploids:")),
                      # Copy the line below to make a file upload manager
-                     "If you have more than one depth value, submit all them together.", br(),
                      fileInput(ns("empiricalpolyreads"), label = h6("File: EmpiricalReads2Map.tar.gz"), multiple = T, accept = ".tar.gz"),
                    ),
                    fluidPage(
                      # Copy the line below to make a select box 
-                     "See description of each dataset in the tables bellow.",
+                     "Available results for example subsets:",
                      selectInput(ns("example_poly_emp"), label = h4(tags$b("EmpiricalReads2Map.wdl results for polyploids")), 
                                  choices = list(
                                    "Toy sample polyploids" = "toy_sample_poly"), 
