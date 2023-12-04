@@ -49,9 +49,7 @@ mod_dat_poly_ui <- function(id){
 
 #' dat_poly Server Functions
 #' 
-#' @importFrom ggpubr ggarrange
-#' @import onemap
-#' @import GUSMap
+#' @import mappoly
 #' @importFrom grDevices dev.off pdf rainbow
 #'
 #' @noRd 

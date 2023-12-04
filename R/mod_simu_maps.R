@@ -71,7 +71,6 @@ mod_simu_maps_ui <- function(id){
 #' simu_maps Server Functions
 #'
 #' @import onemap
-#' @import GUSMap
 #' 
 #' @noRd 
 mod_simu_maps_server <- function(input, output, session, datas_simu){
@@ -150,7 +149,7 @@ mod_simu_maps_server <- function(input, output, session, datas_simu){
                                  snpcall = input$SNPCall, countsfrom = input$CountsFrom,
                                  data_names = names(datas_simu()[[6]]))
           data <- datas_simu()[[6]][[temp_n]]
-          data$rf_2pt()
+          GUSMap::data$rf_2pt()
           incProgress(0.5, detail = paste("Doing part", 3))
         } else {
           temp_n <- map_name(depth, seed, geno, fake,
@@ -168,7 +167,7 @@ mod_simu_maps_server <- function(input, output, session, datas_simu){
     
     output$map_out <- renderPlot({
       if(button1()[[2]] == "gusmap"){
-        button1()[[1]]$plotChr(mat="rf", parent = "both")
+        GUSMap::button1()[[1]]$plotChr(mat="rf", parent = "both")
       } else {
         rf_graph_table(button1()[[1]], inter = F, mrk.axis = "none")
       }

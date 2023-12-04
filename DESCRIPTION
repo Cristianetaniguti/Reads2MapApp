@@ -18,7 +18,6 @@ Imports:
     dplyr,
     tidyr,
     onemap,
-    GUSMap,
     ggpubr,
     plotly,
     ggplot2,
