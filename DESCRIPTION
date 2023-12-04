@@ -6,7 +6,10 @@ Authors@R:
            family = "Taniguti",
            role = c("aut", "cre"),
            email = "chtaniguti@tamu.edu")
+Maintainer: Cristiane Taniguti <chtaniguti@tamu.edu>
 Description: Build graphics for Reads2Map results.
+Depends:
+    R (>= 4.0)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -18,6 +21,7 @@ Imports:
     dplyr,
     tidyr,
     onemap,
+    mappoly,
     ggpubr,
     plotly,
     ggplot2,
