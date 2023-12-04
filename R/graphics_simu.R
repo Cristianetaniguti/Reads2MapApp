@@ -23,9 +23,12 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
     }
   }
   
+  is_largeList_available <- require("largeList")
+  is_GUSMap_available <- require("GUSMap")
+  
   if(data.gz == "Wait"){
     cat("Waiting...\n")
-  } else {
+  } else if(is_largeList_available & is_GUSMap_available){
     
     list_files <- list()
     for(i in 1:length(data.gz)){
@@ -132,6 +135,12 @@ prepare_datas_simu <- function(x=NULL, example_simu=NULL){
     system(paste("rm -r", paste(for_rm, collapse = " ")))
     
     result_list
+  } else {
+    cat("Install LargeList:\n devtools::install_github('Yuchun-Zhang/R_largeList', ref = 'v0.3.1', subdir = 'largeList') \n 
+        and GUSMap: \n
+        devtools::install_github('tpbilton/GUSbase', ref = '92119b9c57faa7abeede8236d24a4a8e85fb3df7') \n
+        devtools::install_github('tpbilton/GUSMap@4d7d4057049819d045750d760a45976c8f30dac6') \n
+        packages to visualize these results.")
   }
 }
 

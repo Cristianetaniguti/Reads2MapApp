@@ -91,8 +91,7 @@ mod_emp_maps_server <- function(input, output, session, datas_emp){
       
       stop_bam(input$CountsFrom, input$ErrorProb)
       incProgress(0.25, detail = paste("Doing part", 2))
-      print(head(datas_emp()[[2]]))
-      
+
       data <- datas_emp()[[2]] %>% filter(GenoCall %in% input$ErrorProb) %>%
         filter(SNPCall %in% input$SNPCall) %>%
         filter(CountsFrom == input$CountsFrom)
