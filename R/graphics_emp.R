@@ -158,13 +158,13 @@ ind_size_graph_emp <- function(data){
     geom_text(aes(label= value), position=position_dodge(width=0.9), vjust=-0.25) +
     scale_y_continuous(expand = c(.1,.1)) +
     labs(x="Genotype call", y = "Number of markers", fill = "SNP call", title = "Number of markers") +
-    scale_fill_viridis_d(begin=0, end = 0.6) + facet_grid(CountsFrom~.) + theme_bw()
+    scale_fill_viridis_d(begin=0, end = 0.6) + facet_grid(CountsFrom~.) + theme_bw() + theme(axis.text.x = element_text(angle = 30, hjust=1))
   
   p2 <- data %>% filter(key == "Distance between markers (cM)") %>% 
     ggplot(aes(x=GenoCall, y=value, color=SNPCall)) +
     geom_point(position=position_dodge(width = 0.5)) + 
     labs(x="Genotype call", y = "Distance between markers (cM)", fill = "SNP call", title = "Genetic distances") +
-    scale_color_viridis_d(begin=0, end = 0.6) + facet_grid(CountsFrom~.) + theme_bw()
+    scale_color_viridis_d(begin=0, end = 0.6) + facet_grid(CountsFrom~.) + theme_bw() + theme(axis.text.x = element_text(angle = 30, hjust=1))
   
   ggarrange(p1,p2, common.legend=T)  
 }
@@ -177,7 +177,7 @@ all_size_graph_emp <- function(data, stat){
   data %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
     geom_boxplot() + geom_hline(yintercept=0, color="red") +
     scale_fill_manual(name="SNP call", values = colors) + 
-    labs(x = "Genotyping method", y = paste(stat, "cM (haldane)")) 
+    labs(x = "Genotyping method", y = paste(stat, "cM (haldane)")) + theme(axis.text.x = element_text(angle = 30, hjust=1))
 }
 
 marker_type_graph_emp <- function(data){
@@ -186,7 +186,7 @@ marker_type_graph_emp <- function(data){
     geom_bar(stat="identity", position=position_dodge())  +
     scale_fill_viridis_d() + 
     labs(x = "Genotyping method", y = "Number of markers", fill="Marker type") +
-    facet_grid(CountsFrom~SNPCall) + theme_bw()
+    facet_grid(CountsFrom~SNPCall) + theme_bw() + theme(axis.text.x = element_text(angle = 30, hjust=1))
 }
 
 times_graph_emp <- function(data){
@@ -197,7 +197,7 @@ times_graph_emp <- function(data){
     scale_y_continuous(expand = c(.1,.1)) +
     scale_fill_viridis_d(begin=0, end = 0.6) + 
     labs(x = "Genotyping method", y = "", fill="SNP call", title = "Number of markers") +
-    facet_grid(CountsFrom~., scales = "free") + theme_bw()
+    facet_grid(CountsFrom~., scales = "free") + theme_bw() + theme(axis.text.x = element_text(angle = 30, hjust=1))
   
   p2 <- data %>% filter(key == "time (seconds)") %>% ggplot(aes(x=GenoCall, y=value, fill=SNPCall)) +
     geom_bar(stat="identity", position=position_dodge())  +
@@ -205,7 +205,7 @@ times_graph_emp <- function(data){
     scale_y_continuous(expand = c(.1,.1)) +
     scale_fill_viridis_d(begin=0, end = 0.6) + 
     labs(x = "Genotyping method", y = "", fill="SNP call", title = "Time spent (seconds)") +
-    facet_grid(CountsFrom~., scales = "free") + theme_bw()
+    facet_grid(CountsFrom~., scales = "free") + theme_bw() + theme(axis.text.x = element_text(angle = 30, hjust=1))
   
   ggarrange(p2, p1, common.legend = T)
 }
