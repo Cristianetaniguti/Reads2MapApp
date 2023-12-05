@@ -40,8 +40,5 @@ Imports:
     ggVennDiagram,
     lubridate,
     markdown
-Suggests:
-    largeList,
-    GUSMap
 URL: https://github.com/Cristianetaniguti/Reads2MapApp
 BugReports: https://github.com/Cristianetaniguti/Reads2MapApp/issues
