@@ -61,7 +61,7 @@ mod_size_poly_server <- function(input, output, session, datas_poly_emp){
   
   observe({
     
-    file_names <- strsplit(names(datas_poly_emp()[[4]]), "_")
+    file_names <- strsplit(names(datas_poly_emp()[[3]]), "_")
     SNPCall_choice <- as.list(unique(sapply(file_names, "[[", 1)))
     names(SNPCall_choice) <- unique(sapply(file_names, "[[", 1))
     
@@ -92,18 +92,21 @@ mod_size_poly_server <- function(input, output, session, datas_poly_emp){
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
-      file_names <- strsplit(names(datas_poly_emp()[[4]]), "_")
+      file_names <- strsplit(names(datas_poly_emp()[[3]]), "_")
       SNPCall_choice <- unique(sapply(file_names, "[[", 1))
       ErrorProb_choice <- unique(sapply(file_names, "[[",2))
       CountsFrom_choice <- unique(sapply(file_names, "[[",3))
       
-      SNPCall_choice <- SNPCall_choice %in% input$SNPCall
-      ErrorProb_choice <- ErrorProb_choice %in% input$ErrorProb
-      CountsFrom_choice <- CountsFrom_choice %in% input$CountsFrom
+      SNPCall_choice <- SNPCall_choice[which(SNPCall_choice %in% input$SNPCall)]
+      ErrorProb_choice <- ErrorProb_choice[which(ErrorProb_choice %in% input$ErrorProb)]
+      CountsFrom_choice <- CountsFrom_choice[which(CountsFrom_choice %in% input$CountsFrom)]
       
-      idx <- which(SNPCall_choice & ErrorProb_choice & CountsFrom_choice)
+      choices <- apply(expand.grid(SNPCall_choice, ErrorProb_choice), 1, paste, collapse="_")
+      choices <- apply(expand.grid(choices, CountsFrom_choice), 1, paste, collapse="_")
       
-      #seqs <- result_list$map[idx]      
+      idx <- which(names(datas_poly_emp()$map) %in% choices)
+      
+      #seqs <- datas_poly_emp()$map[idx]      
       seqs <- datas_poly_emp()$map[idx]
       choosed_files <- file_names[idx]
       

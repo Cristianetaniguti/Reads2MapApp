@@ -28,19 +28,27 @@ mod_dat_poly_ui <- function(id){
              )
       ), hr(),
       column(width = 12,
+             
              box(title = "Dataset overview",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                 div(downloadButton(ns("dats_down"), label = "Download PDF with all"),style="float:right"),
+                 actionButton(ns("go1"), "Update",icon("refresh", verify_fa = FALSE)),
                  plotOutput(ns("dat_out")),hr(),
              ),
-             box(title = "Recombination fraction heatmap",
-                 width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                 plotOutput(ns("rf_out")),hr(),
-                 actionButton(ns("go1"), "Update",icon("refresh", verify_fa = FALSE)),
+             column(width = 6,
+                    box(title = "Recombination fraction heatmap",
+                        width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                        div(downloadButton(ns("rf_down"), label = "Download PDF with all"),style="float:right"),
+                        plotOutput(ns("rf_out"), width = "600px", height = "600px"),hr(),
+                    )
              ),
-             box(title = "Genetic map",
-                 width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
-                 actionButton(ns("go2"), "Update",icon("refresh", verify_fa = FALSE)),
-                 imageOutput(ns("map_out"), width = "100%", height = "100%"),
+             column(width = 6,
+                    box(title = "Genetic map",
+                        width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
+                        actionButton(ns("go2"), "Update",icon("refresh", verify_fa = FALSE)),
+                        div(downloadButton(ns("map_down"), label = "Download PDF with all"),style="float:right"),
+                        imageOutput(ns("map_out"), width = "100%", height = "100%"),
+                    )
              )
       )
     )
@@ -57,7 +65,7 @@ mod_dat_poly_server <- function(input, output, session, datas_poly_emp){
   ns <- session$ns
   
   observe({
-    file_names <- strsplit(names(datas_poly_emp()[[4]]), "_")
+    file_names <- strsplit(names(datas_poly_emp()[[3]]), "_")
     SNPCall_choice <- as.list(unique(sapply(file_names, "[[", 1)))
     names(SNPCall_choice) <- unique(sapply(file_names, "[[", 1))
     
@@ -89,18 +97,35 @@ mod_dat_poly_server <- function(input, output, session, datas_poly_emp){
       
       stop_bam(input$CountsFrom, input$ErrorProb)
       
+      if(input$SNPCall %in% c("stacks", "tassel") & grepl("SNPCaller", input$ErrorProb)) 
+        stop("STACKs and TASSEL do not provide polyploid genotype calls.")
+      
+      if(!(input$SNPCall %in% c("gatk")) & input$ErrorProb %in% "SNPCaller") 
+        stop("MAPpoly current version only reads genotype probabilities from GATK SNPCaller vcf.")
+      
       idx <- which(grepl(input$CountsFrom, names(datas_poly_emp()$mat2)) &
                      grepl(input$SNPCall, names(datas_poly_emp()$mat2)) & 
                      grepl(sapply(strsplit(input$ErrorProb, "0"), "[[",1), names(datas_poly_emp()$mat2)))
       
+      idx1 <- which(grepl(input$CountsFrom, names(datas_poly_emp()$dat)) &
+                     grepl(input$SNPCall, names(datas_poly_emp()$dat)) & 
+                     grepl(sapply(strsplit(input$ErrorProb, "0"), "[[",1), names(datas_poly_emp()$dat)))
+      
       idx2 <- which(grepl(input$CountsFrom, names(datas_poly_emp()$map)) &
                       grepl(input$SNPCall, names(datas_poly_emp()$map)) & 
-                      grepl(input$ErrorProb, names(datas_poly_emp()$map)))
+                      grepl(paste0(input$ErrorProb, "_"), names(datas_poly_emp()$map)))
       
+      
+      cat(paste("map:", names(datas_poly_emp()$map)[idx2], "\n"))
       seq <- datas_poly_emp()$map[[idx2]][[1]]
-      mat <- datas_poly_emp()$mat2[[idx]]
-      dat <- datas_poly_emp()$dat[[idx]]
       
+      cat(idx, "\n")
+      cat(paste("mat:", names(datas_poly_emp()$mat2)[idx], "\n"))
+      mat <- datas_poly_emp()$mat2[[idx]]
+
+      cat(paste("dat:", names(datas_poly_emp()$dat)[idx1], "\n"))
+      dat <- datas_poly_emp()$dat[[idx1]]
+          
       list(dat, mat, seq, input$ErrorProb)
     })
   })
@@ -110,7 +135,7 @@ mod_dat_poly_server <- function(input, output, session, datas_poly_emp){
   })
   
   output$rf_out <- renderPlot({
-    mappoly:::plot.mappoly.rf.matrix(button1()[[2]], ord = button1()[[3]]$info$mrk.names)
+    mappoly:::plot.mappoly.rf.matrix(button1()[[2]], ord = button1()[[3]]$info$mrk.names, type = "lod")
   })
   
   button2 <- eventReactive(input$go2, {
@@ -136,10 +161,75 @@ mod_dat_poly_server <- function(input, output, session, datas_poly_emp){
     mappoly:::plot.mappoly.map(button2()[[1]])
     dev.off()
     
-    print(button2()[[2]])
     list(src = button2()[[2]],
          contentType = 'image/png')
   }, deleteFile = TRUE)
+  
+  
+  ## download all 
+  output$dats_down <- downloadHandler(
+    filename =  function() {
+      tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      withProgress(message = 'Building heatmap', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        pdf(file = file, onefile = T)
+        for(i in 1:length(datas_poly_emp()$dat)){
+          
+          mappoly:::plot.mappoly.data(datas_poly_emp()$dat[[i]])
+          mtext(text = names(datas_poly_emp()$dat)[i], side = 4)
+        }
+        dev.off()
+      })
+    }
+  )
+  
+  
+  ## download all onemap heatmaps
+  output$rf_down <- downloadHandler(
+    filename =  function() {
+      tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      withProgress(message = 'Building heatmap', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        pdf(file = file, onefile = T)
+        for(i in 1:length(datas_poly_emp()$mat2)){
+          idx <- match(names(datas_poly_emp()$mat2)[i], gsub("0.05", "", names(datas_poly_emp()$map)))[1]
+          mappoly:::plot.mappoly.rf.matrix(datas_poly_emp()$mat2[[i]], 
+                                           ord = datas_poly_emp()$map[[idx]][[1]]$info$mrk.names, type = "lod")
+          mtext(text = names(datas_poly_emp()$mat2)[i], side = 1)
+        }
+        dev.off()
+      })
+    }
+  )
+  
+  
+  ## download all onemap heatmaps
+  output$map_down <- downloadHandler(
+    filename =  function() {
+      tempfile(pattern = "file", tmpdir = tempdir(), fileext = ".pdf")
+    },
+    # content is a function with argument file. content writes the plot to the device
+    content = function(file) {
+      withProgress(message = 'Building heatmap', value = 0, {
+        incProgress(0, detail = paste("Doing part", 1))
+        
+        pdf(file = file, onefile = T)
+        for(i in 1:length(datas_poly_emp()$map)){
+          mappoly:::plot.mappoly.map(datas_poly_emp()$map[[i]][[1]])
+          mtext(text = names(datas_poly_emp()$map)[i], side = 3)
+        }
+        dev.off()
+      })
+    }
+  )
 }
 
 ## To be copied in the UI

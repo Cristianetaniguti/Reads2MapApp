@@ -52,7 +52,7 @@ mod_haplo_emp_poly_server <- function(input, output, session, datas_poly_emp){
   
   observe({
     
-    file_names <- strsplit(names(datas_poly_emp()[[4]]), "_")
+    file_names <- strsplit(names(datas_poly_emp()[[3]]), "_")
     SNPCall_choice <- as.list(unique(sapply(file_names, "[[", 1)))
     names(SNPCall_choice) <- unique(sapply(file_names, "[[", 1))
     

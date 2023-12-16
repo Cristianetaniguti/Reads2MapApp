@@ -21,6 +21,7 @@ prepare_poly_datas_emp <- function(x = NULL, example_emp = NULL){
     if(example_emp == "toy_sample_poly"){
       data.gz <- system.file("ext", "toy_sample_emp/polyploid/EmpiricalReads_results.tar.gz", package = "Reads2MapApp")
     }
+    #data.gz <- "C:/Users/Rose_Lab/Documents/Cris_temp/GBS-test_results/EmpiricalReads_results.tar.gz"
   }
   
   if(data.gz == "Wait"){
@@ -48,7 +49,7 @@ prepare_poly_datas_emp <- function(x = NULL, example_emp = NULL){
     
     software <- "mappoly"
     datas <- unlist(datas)
-    list_items <- c("dat", "mat2", "mds", "map")
+    list_items <- c("dat", "mat2", "map")
     result_list <- list()
     for(j in 1:length(list_items)){
       files <- datas[grep(list_items[j], datas)]
@@ -60,7 +61,7 @@ prepare_poly_datas_emp <- function(x = NULL, example_emp = NULL){
           } else temp_item[[i]] <- readRDS(files[i])
         }
       } else temp_item <- NULL
-      names(temp_item) <- sapply(strsplit(basename(datas[grep(list_items[j], datas)]), "_"), function(x) paste0(x[1:3], collapse = "_"))
+      names(temp_item) <- sapply(strsplit(basename(files), "_"), function(x) paste0(x[1:3], collapse = "_"))
       result_list[[j]] <- temp_item
     }
     names(result_list) <- list_items
