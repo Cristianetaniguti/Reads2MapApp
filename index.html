@@ -84,48 +84,6 @@
 </ul>
 <p><code>{r, eval=FALSE} devtools::install_github('Cristianetaniguti/Reads2MapApp') Reads2MapApp::run_app()</code></p>
 </div>
-<div class="section level3">
-<h3 id="reads2mapapp-versions">Reads2MapApp versions<a class="anchor" aria-label="anchor" href="#reads2mapapp-versions"></a>
-</h3>
-<p>We adapt the Reads2MapApp according to Reads2Map updates, if you have datasets from older versions of Reads2Map, use the compatible docker images Reads2MapApp version:</p>
-<table class="table">
-<thead><tr class="header">
-<th>Reads2Map workflow</th>
-<th>workflow version</th>
-<th>Reads2MapApp version</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>SimulatedReads2Map</td>
-<td>1.0.2</td>
-<td>0.0.1</td>
-</tr>
-<tr class="even">
-<td>EmpiricalReads2Map</td>
-<td>1.5.0</td>
-<td>0.0.1</td>
-</tr>
-<tr class="odd">
-<td>EmpiricalMap</td>
-<td>1.3.0</td>
-<td>0.0.1</td>
-</tr>
-<tr class="even">
-<td>EmpiricalReads2Map</td>
-<td>1.5.1</td>
-<td>0.0.2</td>
-</tr>
-<tr class="odd">
-<td>EmpiricalMap</td>
-<td>1.3.1</td>
-<td>0.0.2</td>
-</tr>
-</tbody>
-</table>
-<p>To download and deploy the image use:</p>
-<p><code>{bash, eval=FALSE} docker pull cristaniguti/reads2mapapp:0.0.2   docker run --rm -e USERID=$(id -u) -e GROUPID=$(id -g) -p 8085:80 -e DISABLE_AUTH=true cristaniguti/reads2mapapp:0.0.2</code></p>
-<p>This will make the container available in port 8085 (choose other if you prefer). After, you just need to go to your favorite browser and search for <your_localhost>:8085 (example: 127.0.0.1:8085). That is it! Everything you need is there.</your_localhost></p>
-</div>
 </div>
 <div class="section level2">
 <h2 id="how-to-cite">How to cite<a class="anchor" aria-label="anchor" href="#how-to-cite"></a>
