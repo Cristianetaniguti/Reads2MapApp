@@ -10,18 +10,8 @@
 mod_size_poly_ui <- function(id){
   ns <- NS(id)
   tagList(
-    "The graphic show the distribuition of the difference between estimated and simulated distances between each pair markers of the generated maps.",
     hr(),
     fluidRow(
-      column(width = 12,
-             box(title = "Map size",
-                 width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
-                 plotOutput(ns("size_poly_out")),
-                 hr(),
-                 actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
-             )
-      ),
-      
       column(width = 6,
              box(
                width = NULL, solidHeader = TRUE,
@@ -30,7 +20,8 @@ mod_size_poly_ui <- function(id){
                                     choices = "This will be updated",
                                     selected = "This will be updated"),
                  hr()
-               )
+               ),
+               actionButton(ns("go"), "Update",icon("refresh", verify_fa = FALSE)),
              )
       ),
       column(width = 6,
@@ -42,11 +33,23 @@ mod_size_poly_ui <- function(id){
                    hr()
                  ),
                  fluidPage(
-                   
                    checkboxGroupInput(ns("CountsFrom"), label = p("Counts from"),
                                       choices = "This will be updated",
                                       selected = "This will be updated")
                  )
+             )
+      ),
+      column(width = 12,
+             box(title = "Number of markers after filters",
+                 width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
+                 plotOutput(ns("filters_poly_out")),
+             )
+      ),
+      column(width = 12,
+             box(title = "Map size",
+                 width = NULL,solidHeader = TRUE, collapsible = FALSE, status="primary",
+                 plotOutput(ns("size_poly_out"), height = 700),
+                 p("* Dashed red line correspond to 100 cM"),
              )
       )
     )
@@ -54,6 +57,8 @@ mod_size_poly_ui <- function(id){
 }
 
 #' size_poly Server Functions
+#' 
+#' @importFrom ggrepel geom_text_repel
 #'
 #' @noRd 
 mod_size_poly_server <- function(input, output, session, datas_poly_emp){
@@ -92,7 +97,7 @@ mod_size_poly_server <- function(input, output, session, datas_poly_emp){
     withProgress(message = 'Building graphic', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
-      file_names <- strsplit(names(datas_poly_emp()[[3]]), "_")
+      file_names <- strsplit(names(datas_poly_emp()[[1]]), "_")
       SNPCall_choice <- unique(sapply(file_names, "[[", 1))
       ErrorProb_choice <- unique(sapply(file_names, "[[",2))
       CountsFrom_choice <- unique(sapply(file_names, "[[",3))
@@ -104,50 +109,52 @@ mod_size_poly_server <- function(input, output, session, datas_poly_emp){
       choices <- apply(expand.grid(SNPCall_choice, ErrorProb_choice), 1, paste, collapse="_")
       choices <- apply(expand.grid(choices, CountsFrom_choice), 1, paste, collapse="_")
       
-      idx <- which(names(datas_poly_emp()$map) %in% choices)
+      idx <- which(names(datas_poly_emp()$summaries) %in% choices)
+      idx2 <- which(names(datas_poly_emp()$info) %in% choices)
+            
+      summaries <- datas_poly_emp()$summaries[idx]
+      summaries <- do.call(rbind, summaries)
+      info <- datas_poly_emp()$info[idx2]
+      info <- do.call(rbind, info)
+      info$step <- factor(info$step, levels = c("raw", "miss filtered", 
+                                                "segr filtered", "p1", "p2"))
       
-      #seqs <- datas_poly_emp()$map[idx]      
-      seqs <- datas_poly_emp()$map[idx]
-      choosed_files <- file_names[idx]
-      
-      data <- data.frame()
-      for(i in 1:length(seqs)){
-        dist <- cumsum(datas_poly_emp()$map[[idx[i]]][[1]]$maps[[1]]$seq.rf)
-        
-        data_temp <- data.frame(SNPCall = choosed_files[[i]][1], 
-                                GenoCall = choosed_files[[i]][2], 
-                                CountsFrom = choosed_files[[i]][3],
-                                rf = c(0,dist))  
-        data <- rbind(data, data_temp)
-      }
-      
-      data_df <- data %>% group_by(GenoCall, SNPCall, CountsFrom) %>%
-        summarise(tot_size = round(rf[length(rf)],3),
-                  n = n())
-      
-      data1 <- data %>% mutate(interv.diff = sqrt(c(0,rf[-1] - rf[-length(rf)])^2))
-      
-      data_n <- data1 %>%  group_by(GenoCall, SNPCall, CountsFrom) %>%
-        summarise(n = n())
-      
-      data2 <- merge(data1, data_n) %>%
-        gather(key, value, -GenoCall, -SNPCall, - CountsFrom, -rf)
+      summaries$`Map length (cM)` <- as.numeric(summaries$`Map length (cM)`)
+      summaries$Total <- as.numeric(summaries$Total)
+      summaries_long <- summaries %>% select(`Map length (cM)`, Total, map, data) %>% pivot_longer(cols = 1:2)
+      summaries_long$map1 <- sapply(strsplit(summaries_long$map, "[.]"), "[[", 1)
+      summaries_long$map1 <- gsub("error", "global error 5%",summaries_long$map1)
+      summaries_long$map1 <- gsub("prob", "geno call \n probabilities",summaries_long$map1)
+      summaries_long$map2 <- sapply(strsplit(summaries_long$map, "[.]"), "[[", 2)
+      summaries_long$map2 <- gsub("p1", "parent 1",summaries_long$map2)
+      summaries_long$map2 <- gsub("p2", "parent 2",summaries_long$map2)
       
       incProgress(0.5, detail = paste("Doing part", 2))
       
-      n <- c(`n markers` = "n", `Distance between markers (cM)` = "interv.diff")
-      data2$key <- names(n)[match(data2$key, n)]
-      
-      list(data2, data_df)
+      list(info, summaries_long)
     })
   })
   
-  output$size_poly_out <- renderPlot({
-    ind_size_graph_emp(button()[[1]])
+  output$filters_poly_out <- renderPlot({
+    button()[[1]] %>% ggplot(aes(x=step, y = n.markers, color = dat, group=dat, label = n.markers)) + 
+      geom_point() + geom_line() + geom_text_repel() + theme_bw() +
+      labs(x = "", y = "number of markers", color = "dataset") + theme(text = element_text(size = 15))
   })
   
-  output$size_poly_df_out <- renderDataTable({
-    button()[[2]]
+  output$size_poly_out <- renderPlot({
+    p1 <- button()[[2]] %>% filter(name != "Total") %>% ggplot(aes(x=value, fill = data, color = data)) + 
+      geom_density(alpha=0.1) + facet_grid(map1 + map2~.) + theme_bw() + ggtitle("Map size (cM)") +
+      labs(x = "map size (cM)") +
+      theme(text = element_text(size = 15)) +
+      geom_vline(xintercept = 100, linetype="dotted", 
+                 color = "red", linewidth=1.5) 
+    
+    p2 <- button()[[2]] %>% filter(name == "Total") %>% ggplot(aes(x=value, fill = data, color = data)) + 
+      geom_density(alpha=0.1) + facet_grid(map1 + map2~.) + theme_bw() + ggtitle("Number of Markers") + 
+      labs(x = "Number of Markers") +
+      theme(text = element_text(size = 15)) 
+    
+    ggarrange(p1, p2,common.legend = TRUE, legend = "bottom")
   })
 }
 

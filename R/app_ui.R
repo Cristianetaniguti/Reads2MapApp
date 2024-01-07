@@ -53,9 +53,9 @@ app_ui <- function(request) {
                    menuSubItem("cM x Mb", icon = icon("circle"), tabName = "cmxmb_emp")
           ),
           menuItem("Polyploid EmpiricalReads2Map", icon = icon("dot-circle" ), tabName = "poly_empirical",
-                   menuSubItem("Data set overview", icon = icon("circle"), tabName = "dat_poly"),
                    menuSubItem("Map size", icon = icon("circle"), tabName = "size_poly"),
-                   menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp_poly")
+                   menuSubItem("Data set overview", icon = icon("circle"), tabName = "dat_poly")
+                   #menuSubItem("Progeny haplotypes", icon = icon("circle"), tabName = "haplo_emp_poly")
           ),
           #menuItem("Workflow tasks times", icon = icon("circle"), tabName = "wf_times"),
           tags$li(class = "dropdown",
