@@ -23,15 +23,16 @@ RUN Rscript -e 'remotes::install_version("golem",upgrade="never", version = "0.3
 RUN Rscript -e 'remotes::install_version("shinymanager",upgrade="never", version = "1.0.400")'
 RUN Rscript -e 'remotes::install_version("pROC",upgrade="never", version = "1.18.0")'
 RUN Rscript -e 'remotes::install_version("vroom",upgrade="never", version = "1.5.3")'
-RUN Rscript -e 'remotes::install_version("largeList",upgrade="never", version = "0.3.1")'
 RUN Rscript -e 'remotes::install_version("shinydashboard",upgrade="never", version = "0.7.2")'
 RUN Rscript -e 'remotes::install_github("tpbilton/GUSbase", ref = "92119b9c57faa7abeede8236d24a4a8e85fb3df7")'
 RUN Rscript -e 'remotes::install_github("tpbilton/GUSMap@4d7d4057049819d045750d760a45976c8f30dac6")'
 RUN Rscript -e 'remotes::install_github("Cristianetaniguti/onemap@7f5ac29d65d0bd82d9e46fcc2a26e3fc904a0782")'
-RUN mkdir /build_zone
-ADD . /build_zone
-WORKDIR /build_zone
-RUN R -e 'remotes::install_local(upgrade="never")'
-RUN rm -rf /build_zone
-EXPOSE 3838
-CMD  ["R", "-e", "options('shiny.port'=3838,shiny.host='0.0.0.0');Reads2MapApp::run_app()"]
+RUN Rscript -e 'remotes::install_github("Yuchun-Zhang/R_largeList", ref = "v0.3.1", subdir = "largeList")'
+
+RUN apt-get update && apt-get install -y libtcl libtk
+
+RUN Rscript -e 'remotes::install_github("mmollina/mappoly")'
+RUN Rscript -e 'remotes::install_github("Cristianetaniguti/Reads2MapApp")'
+
+EXPOSE 80
+CMD  ["R", "-e", "options('shiny.port'=80,shiny.host='0.0.0.0');Reads2MapApp::run_app()"]

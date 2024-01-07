@@ -57,8 +57,8 @@ prepare_poly_datas_emp <- function(x = NULL, example_emp = NULL){
         temp_item <- list()
         for(i in 1:length(files)){
           if(grepl("map", files[i]) & !grepl("0", files[i])){
-            temp_item[[i]] <- list(readRDS(files[i]))
-          } else temp_item[[i]] <- readRDS(files[i])
+            temp_item[[i]] <- list(readRDS(gsub("/$", "", files[i])))
+          } else temp_item[[i]] <- readRDS(gsub("/$", "", files[i]))
         }
       } else temp_item <- NULL
       names(temp_item) <- sapply(strsplit(basename(files), "_"), function(x) paste0(x[1:3], collapse = "_"))
