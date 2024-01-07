@@ -46,6 +46,8 @@ prepare_poly_datas_emp <- function(x = NULL, example_emp = NULL){
       datas[[i]] <- sapply(list_files, "[", i)
     }
     
+    datas <- lapply(datas,function(x) gsub("/$", "", x))
+    
     software <- "mappoly"
     datas <- unlist(datas)
     list_items <- c("dat", "mat2", "maps", "summaries", "info")

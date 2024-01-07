@@ -49,6 +49,8 @@ prepare_datas_emp <- function(x = NULL, example_emp = NULL){
     software <- "onemap"
     for_rm <- sapply(list_files, "[", -grep("sequences",datas))
     
+    datas <- lapply(datas,function(x) gsub("/$", "", x))
+    
     # Support to several versions
     if(length(grep("sequences",datas)) > 1){
       temp_dat <- list()
@@ -276,5 +278,4 @@ SNPCalling_efficiency_graph_emp <- function(data, data_names){
   ggVennDiagram(data, label = "both", color = 1) + 
     scale_color_grey() + scale_fill_viridis_c() + theme_bw() + coord_sf(clip = "off") 
 }
-
 

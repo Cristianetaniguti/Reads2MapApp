@@ -32,7 +32,8 @@ RUN Rscript -e 'remotes::install_github("Yuchun-Zhang/R_largeList", ref = "v0.3.
 RUN apt-get update && apt-get install -y libtcl libtk
 
 RUN Rscript -e 'remotes::install_github("mmollina/mappoly")'
-RUN Rscript -e 'remotes::install_github("Cristianetaniguti/Reads2MapApp", ref = "5ef4c306fcf7425138592807eae806feb54cd08b")'
+RUN Rscript -e 'remotes::install_github("Cristianetaniguti/Reads2MapApp"  )'
 
 EXPOSE 80
 CMD  ["R", "-e", "options('shiny.port'=80,shiny.host='0.0.0.0');Reads2MapApp::run_app()"]
+
