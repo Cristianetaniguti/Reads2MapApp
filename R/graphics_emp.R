@@ -54,13 +54,13 @@ prepare_datas_emp <- function(x = NULL, example_emp = NULL){
       temp_dat <- list()
       idx <- grep("sequences",datas)[-1]
       for(i in 1:length(idx)){
-        temp_dat[[i]] <- readRDS(datas[[idx[i]]])
+        temp_dat[[i]] <- readRDS(gsub("/$", "", datas[[idx[i]]]))
       }
       names_rdatas <- basename(unlist(datas[idx]))
     } else {
       ext <- sapply(strsplit(basename(datas[[grep("sequences",datas)]]), "[.]"),  function(x) x[length(x)])
       if(ext == "llo")  temp_dat <- largeList::readList(datas[[grep("sequences",datas)]]) else
-        temp_dat <- readRDS(datas[[grep("sequences",datas)]])
+        temp_dat <- readRDS(gsub("/$", "", datas[[grep("sequences",datas)]]))
       names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t", show_col_types = FALSE)
       names_rdatas <- as.data.frame(names_rdatas)[,1]
       if(length(grep("gusmap", names_rdatas)) > 0){
