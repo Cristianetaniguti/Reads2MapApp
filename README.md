@@ -17,11 +17,11 @@ By now, only one chromosome is evaluated in both workflows. However, the Empiric
 
 ### How to use 
 
-**warning**: The App current version is 0.0.1, it is compatible with Reads2Map workflows:
+**warning**: The App current version is 0.0.2, it is compatible with Reads2Map workflows:
 
 * SimulatedReads2Map_v1.0.2 or above
-* EmpiricalReads2Map_v1.5.0 or above
-* EmpiricalMap_v1.3.0 or above
+* EmpiricalReads2Map_v1.5.1 or above
+* EmpiricalMap_v1.3.1 or above
 
 
 ```{r, eval=FALSE}
