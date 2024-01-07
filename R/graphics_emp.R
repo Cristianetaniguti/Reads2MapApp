@@ -49,18 +49,20 @@ prepare_datas_emp <- function(x = NULL, example_emp = NULL){
     software <- "onemap"
     for_rm <- sapply(list_files, "[", -grep("sequences",datas))
     
+    datas <- lapply(datas,function(x) gsub("/$", "", x))
+    
     # Support to several versions
     if(length(grep("sequences",datas)) > 1){
       temp_dat <- list()
       idx <- grep("sequences",datas)[-1]
       for(i in 1:length(idx)){
-        temp_dat[[i]] <- readRDS(gsub("/$", "", datas[[idx[i]]]))
+        temp_dat[[i]] <- readRDS(datas[[idx[i]]])
       }
       names_rdatas <- basename(unlist(datas[idx]))
     } else {
       ext <- sapply(strsplit(basename(datas[[grep("sequences",datas)]]), "[.]"),  function(x) x[length(x)])
       if(ext == "llo")  temp_dat <- largeList::readList(datas[[grep("sequences",datas)]]) else
-        temp_dat <- readRDS(gsub("/$", "", datas[[grep("sequences",datas)]]))
+        temp_dat <- readRDS(datas[[grep("sequences",datas)]])
       names_rdatas <- vroom(datas[[grep("names.tsv.gz", datas)]], delim = "\t", show_col_types = FALSE)
       names_rdatas <- as.data.frame(names_rdatas)[,1]
       if(length(grep("gusmap", names_rdatas)) > 0){
@@ -276,5 +278,4 @@ SNPCalling_efficiency_graph_emp <- function(data, data_names){
   ggVennDiagram(data, label = "both", color = 1) + 
     scale_color_grey() + scale_fill_viridis_c() + theme_bw() + coord_sf(clip = "off") 
 }
-
 
