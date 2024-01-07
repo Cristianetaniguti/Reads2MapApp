@@ -29,6 +29,27 @@ devtools::install_github('Cristianetaniguti/Reads2MapApp')
 Reads2MapApp::run_app()
 ```
 
+### Reads2MapApp versions
+
+We adapt the Reads2MapApp according to Reads2Map updates, if you have datasets from older versions of Reads2Map, use the compatible docker images Reads2MapApp version:
+
+Reads2Map workflow | workflow version | Reads2MapApp version
+--- | --- | --- 
+SimulatedReads2Map | 1.0.2 | 0.0.1 
+EmpiricalReads2Map | 1.5.0 | 0.0.1
+EmpiricalMap | 1.3.0 | 0.0.1
+EmpiricalReads2Map | 1.5.1 | 0.0.2
+EmpiricalMap | 1.3.1 | 0.0.2
+
+To download and deploy the image use:
+
+```{bash, eval=FALSE}
+docker pull cristaniguti/reads2mapapp:0.0.2  
+docker run --rm -e USERID=$(id -u) -e GROUPID=$(id -g) -p 8085:80 -e DISABLE_AUTH=true cristaniguti/reads2mapapp:0.0.2
+```
+
+This will make the container available in port 8085 (choose other if you prefer). After, you just need to go to your favorite browser and search for <your_localhost>:8085 (example: 127.0.0.1:8085). That is it! Everything you need is there.
+
 ## How to cite
 
 * [Taniguti, C. H.; Taniguti, L. M.; Amadeu, R. R.; Lau, J.; de Siqueira Gesteira, G.; Oliveira, T. de P.; Ferreira, G. C.; Pereira, G. da S.;  Byrne, D.;  Mollinari, M.; Riera-Lizarazu, O.; Garcia, A. A. F. Developing best practices for genotyping-by-sequencing analysis in the construction of linkage maps. GigaScience, 12, giad092. https://doi.org/10.1093/gigascience/giad092](https://doi.org/10.1093/gigascience/giad092)

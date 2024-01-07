@@ -14,7 +14,6 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
 Imports: 
     shiny,
     shinydashboard,
@@ -39,6 +38,8 @@ Imports:
     htmltools,
     ggVennDiagram,
     lubridate,
-    markdown
+    markdown,
+    ggrepel
 URL: https://github.com/Cristianetaniguti/Reads2MapApp
 BugReports: https://github.com/Cristianetaniguti/Reads2MapApp/issues
+RoxygenNote: 7.2.3

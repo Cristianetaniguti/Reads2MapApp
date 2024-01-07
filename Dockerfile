@@ -36,3 +36,4 @@ RUN Rscript -e 'remotes::install_github("Cristianetaniguti/Reads2MapApp"  )'
 
 EXPOSE 80
 CMD  ["R", "-e", "options('shiny.port'=80,shiny.host='0.0.0.0');Reads2MapApp::run_app()"]
+
