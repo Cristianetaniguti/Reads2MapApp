@@ -50,16 +50,14 @@ prepare_poly_datas_emp <- function(x = NULL, example_emp = NULL){
     
     software <- "mappoly"
     datas <- unlist(datas)
-    list_items <- c("dat", "mat2", "map")
+    list_items <- c("dat", "mat2", "maps", "summaries", "info")
     result_list <- list()
     for(j in 1:length(list_items)){
       files <- datas[grep(list_items[j], datas)]
       if(length(files) > 0){
         temp_item <- list()
         for(i in 1:length(files)){
-          if(grepl("map", files[i]) & !grepl("0", files[i])){
-            temp_item[[i]] <- list(readRDS(files[i]))
-          } else temp_item[[i]] <- readRDS(files[i])
+          temp_item[[i]] <- readRDS(files[i])
         }
       } else temp_item <- NULL
       names(temp_item) <- sapply(strsplit(basename(files), "_"), function(x) paste0(x[1:3], collapse = "_"))
@@ -67,6 +65,12 @@ prepare_poly_datas_emp <- function(x = NULL, example_emp = NULL){
     }
     names(result_list) <- list_items
     result_list$software <- software
+    result_list1 <- result_list
+    
+    for(i in 1:5){
+     idx <- which(sapply(result_list[[i]], is.list))
+     if(length(result_list[[i]]) > length(idx)) result_list[[i]][-idx] <- NULL
+    }
     
     return(result_list)
   }
