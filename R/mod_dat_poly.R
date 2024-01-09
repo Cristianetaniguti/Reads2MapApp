@@ -53,7 +53,6 @@ mod_dat_poly_ui <- function(id){
              box(title = "Build map",
                  width = NULL, solidHeader = TRUE, collapsible = FALSE, status="primary",
                  p("Building the map will take a while, make sure you selected your best pipeline and interval."), br(),
-                 numericInput(ns("ncores"), label = "Set number of cores to be used for the analysis", value =1), br(),
                  actionButton(ns("go3"), "Update",icon("refresh", verify_fa = FALSE)),
                  plotOutput(ns("built_map"),height = "600px"), br(),
                  plotOutput(ns("rf_built_map"), width = "600px", height = "600px"),
@@ -205,7 +204,7 @@ mod_dat_poly_server <- function(input, output, session, datas_poly_emp){
     content = function(file) {
       
       datas_lst <- data.frame(selected_markers = button2())
-      white.csv(datas_lst, file = file)
+      write.csv(datas_lst, file = file)
       
     }
   )
@@ -214,10 +213,10 @@ mod_dat_poly_server <- function(input, output, session, datas_poly_emp){
     withProgress(message = 'Building map', value = 0, {
       incProgress(0, detail = paste("Doing part", 1))
       
-      dat <- button1()[[1]]
+      dat <<- button1()[[1]]
       seq_dat <- make_seq_mappoly(dat, button2())
       
-      tpt <- est_pairwise_rf(seq_dat, ncpus = input$ncores)
+      tpt <- est_pairwise_rf(seq_dat, ncpus = 1)
       incProgress(0.3, detail = paste("Doing part", 2))
       
       map <- est_rf_hmm_sequential(input.seq = seq_dat,
